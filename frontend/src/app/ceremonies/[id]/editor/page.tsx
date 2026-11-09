@@ -23,6 +23,16 @@ interface Occasion {
   order: number;
 }
 
+interface InvitationBlock {
+  id: string;
+  type: 'title' | 'subtitle' | 'paragraph' | 'quote' | 'cta';
+  text: string;
+}
+interface InvitationJson {
+  palette: 'wax' | 'gold' | 'ivory' | 'indigo';
+  blocks: InvitationBlock[];
+}
+
 interface Ceremony {
   id: string;
   type: CeremonyType;
@@ -32,6 +42,7 @@ interface Ceremony {
   musicLabel: string | null;
   musicUrl: string | null;
   coverImageUrl: string | null;
+  invitationJson: InvitationJson | null;
   occasions: Occasion[];
   _count?: { guests: number; invitations: number };
 }
@@ -96,6 +107,8 @@ export default function InvitationEditorPage() {
   const [editOccasion, setEditOccasion] = useState<Occasion | null>(null);
   const [showAddOccasion, setShowAddOccasion] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [aiCreditsRemaining, setAiCreditsRemaining] = useState<number | null>(null);
 
   // Draft state for top-level editable fields. Sync when ceremony loads.
   const [draftTitle, setDraftTitle] = useState('');
@@ -176,6 +189,47 @@ export default function InvitationEditorPage() {
     }
   }
 
+  async function handleGenerate() {
+    if (!ceremony || generating) return;
+    if (ceremony.description.trim().length < 10) {
+      return showToast('Enregistrez d’abord une description (10 caractères minimum).');
+    }
+    if (ceremony.occasions.length === 0) {
+      return showToast('Ajoutez au moins une occasion avant de générer.');
+    }
+    setGenerating(true);
+    try {
+      const res = await api<{
+        ceremony: Ceremony;
+        aiCreditsRemaining: number;
+      }>(`/api/ceremonies/${ceremonyId}/ai-generate`, {
+        method: 'POST',
+        body: { locale: 'fr' },
+      });
+      setCeremony(res.ceremony);
+      setAiCreditsRemaining(res.aiCreditsRemaining);
+      showToast('Invitation générée avec succès.');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.code === 'AI_QUOTA_EXCEEDED') {
+          showToast('Crédits IA épuisés. Passez en VIP pour la génération illimitée.');
+        } else if (err.code === 'AI_NOT_CONFIGURED') {
+          showToast('Génération IA non configurée côté serveur (ANTHROPIC_API_KEY manquant).');
+        } else if (err.code === 'AI_CALL_FAILED') {
+          showToast('La génération a échoué. Réessayez.');
+        } else if (err.code === 'CEREMONY_NO_OCCASIONS') {
+          showToast('Ajoutez au moins une occasion avant de générer.');
+        } else {
+          showToast('Erreur lors de la génération.');
+        }
+      } else {
+        showToast('Erreur réseau.');
+      }
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function deleteOccasion(occId: string) {
     if (!confirm('Supprimer cette occasion ?')) return;
     setBusy(true);
@@ -223,8 +277,46 @@ export default function InvitationEditorPage() {
   return (
     <AppLayout pageTitle="Éditer l'invitation" tier="premium">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
-        {/* Left — Editable top-level + music */}
+        {/* Left — AI panel + top-level + music */}
         <div className="flex flex-col gap-5">
+          <div className="bg-gold-light border border-gold rounded-xl p-5 flex flex-col gap-3">
+            <div className="flex items-start gap-3">
+              <Icon name="sparkles" size={20} className="text-gold mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-headings font-bold text-sm text-foreground">Génération IA</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {ceremony?.invitationJson
+                    ? 'Invitation générée. Régénérez pour ré-essayer avec la description actuelle.'
+                    : 'Transformez votre description en texte d’invitation personnalisé.'}
+                </p>
+                {aiCreditsRemaining !== null && aiCreditsRemaining !== -1 && (
+                  <p className="text-xs text-gold mt-1 font-bold">
+                    {aiCreditsRemaining} crédit{aiCreditsRemaining > 1 ? 's' : ''} IA restant
+                    {aiCreditsRemaining > 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={generating || busy || topDirty}
+              title={topDirty ? 'Enregistrez d’abord les modifications' : undefined}
+              className="bg-gold text-background font-body font-bold py-2.5 rounded-lg text-sm hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {generating ? (
+                <>
+                  <span className="animate-pulse">●</span>
+                  Génération en cours…
+                </>
+              ) : ceremony?.invitationJson ? (
+                '🔁 Régénérer'
+              ) : (
+                '✨ Générer avec l’IA'
+              )}
+            </button>
+          </div>
+
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
             <PageHeader title="Détails principaux" subtitle="Titre, type, texte" />
 
@@ -318,17 +410,33 @@ export default function InvitationEditorPage() {
 
         {/* Center — Live preview */}
         <div className="flex flex-col gap-4">
-          <PageHeader title="Aperçu en direct" subtitle="Rendu mobile" />
+          <PageHeader
+            title={ceremony.invitationJson ? 'Invitation générée' : 'Aperçu en direct'}
+            subtitle={
+              ceremony.invitationJson
+                ? `Palette ${ceremony.invitationJson.palette}`
+                : 'Rendu mobile'
+            }
+          />
           <div className="mx-auto w-full max-w-sm">
-            <InvitationPreview
-              emoji={EMOJI[ceremony.type]}
-              title={draftTitle || ceremony.title}
-              body={draftDescription || ceremony.description}
-              date={firstHuman.date}
-              time={firstHuman.time}
-              location={firstOcc?.locationName ?? '—'}
-              family=""
-            />
+            {ceremony.invitationJson ? (
+              <GeneratedInvitation
+                invitation={ceremony.invitationJson}
+                dateLabel={firstHuman.date}
+                timeLabel={firstHuman.time}
+                location={firstOcc?.locationName ?? '—'}
+              />
+            ) : (
+              <InvitationPreview
+                emoji={EMOJI[ceremony.type]}
+                title={draftTitle || ceremony.title}
+                body={draftDescription || ceremony.description}
+                date={firstHuman.date}
+                time={firstHuman.time}
+                location={firstOcc?.locationName ?? '—'}
+                family=""
+              />
+            )}
           </div>
         </div>
 
@@ -490,6 +598,84 @@ export default function InvitationEditorPage() {
         </div>
       )}
     </AppLayout>
+  );
+}
+
+const PALETTE_STYLES: Record<
+  InvitationJson['palette'],
+  { bg: string; accent: string; body: string }
+> = {
+  wax: { bg: 'bg-amber-50', accent: 'text-amber-800', body: 'text-amber-900' },
+  gold: { bg: 'bg-yellow-50', accent: 'text-yellow-800', body: 'text-yellow-900' },
+  ivory: { bg: 'bg-stone-50', accent: 'text-stone-700', body: 'text-stone-900' },
+  indigo: { bg: 'bg-indigo-50', accent: 'text-indigo-800', body: 'text-indigo-900' },
+};
+
+function GeneratedInvitation(props: {
+  invitation: InvitationJson;
+  dateLabel: string;
+  timeLabel: string;
+  location: string;
+}) {
+  const { invitation, dateLabel, timeLabel, location } = props;
+  const s = PALETTE_STYLES[invitation.palette] ?? PALETTE_STYLES.ivory;
+  return (
+    <div className={`rounded-2xl ${s.bg} border border-border p-6 flex flex-col gap-3 shadow-sm`}>
+      {invitation.blocks.map((b) => {
+        if (b.type === 'title') {
+          return (
+            <h2
+              key={b.id}
+              className={`font-headings font-bold text-xl md:text-2xl ${s.accent} text-center`}
+            >
+              {b.text}
+            </h2>
+          );
+        }
+        if (b.type === 'subtitle') {
+          return (
+            <h3
+              key={b.id}
+              className={`font-headings text-sm md:text-base ${s.accent} text-center uppercase tracking-wide`}
+            >
+              {b.text}
+            </h3>
+          );
+        }
+        if (b.type === 'quote') {
+          return (
+            <blockquote
+              key={b.id}
+              className={`border-l-2 border-current pl-3 italic text-sm ${s.body}`}
+            >
+              {b.text}
+            </blockquote>
+          );
+        }
+        if (b.type === 'cta') {
+          return (
+            <div key={b.id} className="pt-2 text-center">
+              <span
+                className={`inline-block border border-current ${s.accent} px-4 py-2 rounded-full text-sm font-bold`}
+              >
+                {b.text}
+              </span>
+            </div>
+          );
+        }
+        return (
+          <p key={b.id} className={`text-sm leading-relaxed ${s.body}`}>
+            {b.text}
+          </p>
+        );
+      })}
+      <div className={`mt-2 pt-3 border-t border-current/20 text-center text-xs ${s.body}`}>
+        <div className="font-bold">{dateLabel}</div>
+        <div>
+          {timeLabel} — {location}
+        </div>
+      </div>
+    </div>
   );
 }
 
