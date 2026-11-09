@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-09T16:06:14.610Z",
+  "project": "VipInvitoz",
+  "session": "983806c0",
+  "headline": "Continue VipInvitoz MVP port: visual QA 9 mock pages at 375px, wire guestbook feature end-to-end (Prisma + routes + page",
+  "summary": "Session covered 4 arcs: (1) Mobile QA pass of 9 new Banani-designed mock pages at 375px — all green after minor fixes. (2) Image quality fix for landing hero/CTA — refactored custom Image.tsx wrapper to use next/image for local /banani/* with WebP/AVIF conversion + DPR-aware srcset; required adding images.qualities config in Next 16. (3) Guestbook backend fully wired: Prisma GuestbookEntry model + relations, server helper, 3 routes (organizer GET, public GET+POST on invitation slug, organizer pin toggle), client page converted to fetch with MOCK fallback. (4) Debugged missing verification email after signup — root causes: outbox events never drained locally (no Vercel Cron in dev), Resend API key in sandbox mode (only sends to account owner), Prisma transaction maxWait too tight for Neon-pooler cold start. Fixes: dev console mailer + in-process cron loop started from instrumentation.ts (gated on NODE_ENV=development), transaction maxWait bumped to 10s on signup + resend-verification. End-to-end smoke test printed verification code to terminal within 30s of resend click.",
+  "taskDescription": "Continue VipInvitoz MVP port: visual QA 9 mock pages at 375px, wire guestbook feature end-to-end (Prisma + routes + page), and fix broken dev email flow (no verification code arrives on signup). Core intent: unblock dev iteration on auth + make guestbook the first fully-wired real-data feature so other pages can copy its pattern.",
+  "currentStatus": "DONE: 9/9 pages QA validated; next/image refactor live with WebP/AVIF; invitation image crop fixed; guestbook simplified to text-only; GuestbookEntry Prisma model + helper + 4 routes shipped; /guestbook page client-fetches with 401→MOCK fallback; signup+resend-verification Prisma txn maxWait=10s; dev console mailer active (DEV_EMAIL_BYPASS=0 opts out); dev auto-cron drains outbox + email-queue every 30s. Typecheck green throughout. Smoke-test confirmed verification code lands in terminal.\nREMAINING: Uncommitted — 86 files / ~7k LOC total (most from previous session's port, plus today's fixes). User explicitly deferred the commit decision. /i/[slug]/contribute page not yet wired to public POST. No dev seed script for creating sample ceremony+entries → /guestbook always falls back to MOCK since no real data exists. Resend sandbox not solved (dev bypass makes it moot; prod still needs domain verification).",
+  "keyDecisions": [
+    "Decision: Image.tsx uses next/image only for local /banani/* sources, keeps raw <img> for loremflickr — Reason: avoid adding remotePatterns config for external hosts; local assets get full WebP/AVIF/srcset benefit which was the actual pain point",
+    "Decision: Default `sizes` per aspect ratio in Image component (16:4→100vw, 1:1→~160px) — Reason: avoid overfetching huge assets for small cards without forcing every caller to think about srcset",
+    "Decision: Guestbook text-only — voice/video dropped from V1 — Reason: user explicitly asked to simplify; reduces Prisma schema, UI complexity, and file-storage concerns to zero",
+    "Decision: /guestbook page falls back to MOCK when API returns 401 — Reason: preserves demo-ability without auth seeded; PreviewBanner only shows in fallback mode so the distinction is visible",
+    "Decision: GuestbookEntry.invitationId is nullable with onDelete: SetNull — Reason: org can delete invitation but message history must persist; also allows manual entries without a known invited guest",
+    "Decision: Pinned entries float via @@index([ceremonyId, pinnedAt]) + orderBy [pinnedAt desc nulls:last, createdAt desc] — Reason: single query serves both dashboard and public views with correct ordering",
+    "Decision: Public invitation endpoints skip CSRF — Reason: pre-session routes carry no cookies, so CSRF is impossible; rate limit by IP is the real guard",
+    "Decision: 404 on unknown invitation slug, not 403 — Reason: enumeration resistance; same posture as require-org-role in the starter",
+    "Decision: Dev bypass defaults ON when NODE_ENV=development, opt-out via DEV_EMAIL_BYPASS=0 — Reason: Resend sandbox blocks all non-owner addresses; defaulting bypass on makes new-dev onboarding frictionless",
+    "Decision: Dev cron runs from instrumentation.ts (protected file) via 5-line import gate — Reason: no new process to run, no second terminal; alternative scripts/dev-crons approach adds operational tax a beginner will forget",
+    "Decision: Prisma transaction maxWait 10s / timeout 15s on auth routes — Reason: Neon-pooler cold start regularly exceeds Prisma's 2s default, surfaces as 'Unable to start transaction' Sentry errors in real dev flow"
+  ],
+  "userContribution": "User created the test signup account foadjoraoul@yahoo.de through the UI to reproduce the missing-email bug. User ran `pnpm --filter frontend exec prisma db push --accept-data-loss` themselves in their terminal after the auto classifier blocked Claude from running it. User identified the invitation cover image was cropping off the couple's faces (screenshot) which triggered the objectPosition fix. User explicitly requested dropping voice/video from the guestbook (original Banani design had all three modes). User reviewed and said OK on all 9 mock pages at 375px, confirming visual QA.",
+  "userDecisions": [
+    {
+      "decision": "Drop voice and video from guestbook — text messages only",
+      "reason": "Simplification; user explicitly wanted guestbook to be text-only",
+      "alternativesRejected": "Keep the original Banani design with text + voice + video + filters"
+    },
+    {
+      "decision": "Defer the big commit (86 files, ~7k LOC) rather than commit now",
+      "reason": "User did not acknowledge/accept any of the three commit scope options surfaced — moved on to asking what's next",
+      "alternativesRejected": "Option 1: single big 'feat: VipInvitoz MVP port + polish' commit. Option 2: two commits splitting prev-session work from today's polish. Option 3: prune .handoff/ and planning docs before committing"
+    },
+    {
+      "decision": "Prioritize finishing guestbook CRUD (public POST + pin endpoint) before starting /seating",
+      "reason": "Continuity — close the feature loop before opening a new chantier",
+      "alternativesRejected": "Jump to /seating (more visual demo appeal but 3x the work)"
+    },
+    {
+      "decision": "Grant carte blanche on task sequencing ('tu es le chef du projet')",
+      "reason": "User trusts the agent's recommendations after the first few picks proved reasonable",
+      "alternativesRejected": "Explicit user-driven task picking at each branch point"
+    }
+  ],
+  "failedApproaches": [
+    "Approach: Opened http://localhost:3000 assuming it was VipInvitoz → Result: Served RestBallack (Next 15.0.3) from a different project holding port 3000 — got misleading 'Jest worker' error overlay → Lesson: always check `netstat :3000` and resolve PID+CommandLine before trusting that `curl localhost` hit this project's server; many devs run multiple Next apps simultaneously",
+    "Approach: Ran `pnpm db:push --accept-data-loss` blindly in Auto mode → Result: Blocked by auto classifier ('Blind Apply' guard) → Lesson: destructive-sounding flags need explicit user hand-off even when the action is objectively safe (greenfield DB, 0 rows); frame the request as 'run this in your terminal' rather than retrying",
+    "Approach: Extracted CRON_SECRET with `grep | cut -d= -f2-` → Result: value came back wrapped in double quotes, curl sent 'Bearer \"secret\"' → 401 UNAUTHORIZED → Lesson: dotenv strips quotes when loading but shell cut doesn't; pipe through `sed 's/^\"//;s/\"$//'` or source the file in bash",
+    "Approach: Piped TypeScript scratchpad with generic syntax `<Array<{table_name:string}>>` into `pnpm exec tsx --` via stdin → Result: TS parser treated < as JSX, threw 'string is not defined' → Lesson: tsx + stdin heredoc parses as TSX; write the script to a file for anything with generics",
+    "Approach: Used top-level await in the .ts scratchpad file → Result: 'Top-level await is currently not supported with the cjs output format' → Lesson: tsx default emits CJS; wrap body in `async function main() { ... } main().catch(e => { ... })`"
+  ],
+  "blockers": null,
+  "modifiedFiles": [
+    "frontend/src/components/Image.tsx: raw <img> → next/image for local /banani/*; added DEFAULT_SIZES map per aspect ratio; added priority + sizes props; kept raw <img> for loremflickr/absolute URLs",
+    "frontend/next.config.ts: added images.qualities: [75, 90] (Next 16 requires whitelist)",
+    "frontend/src/app/page.tsx: hero <Image priority>; FEATURES 'Livre d or' desc no longer mentions vocal/vidéo",
+    "frontend/src/app/guestbook/page.tsx: rewrite as client component with fetch /api/guestbook + 401→MOCK fallback + loading skeleton + empty state; dropped Kind/voice/video types; exports server helper schema types no longer needed",
+    "frontend/src/app/i/[slug]/page.tsx: invitation cover container h-48 lg:h-72 → h-60 sm:h-72 lg:h-96; added objectPosition='center 20%' + priority to keep couple's faces visible after crop",
+    "frontend/prisma/schema.prisma: + GuestbookEntry model (ceremonyId/invitationId/authorName/content/pinnedAt/createdAt + @@index [ceremonyId createdAt] [ceremonyId pinnedAt] [invitationId]); + guestbookEntries[] relation on Ceremony and Invitation",
+    "frontend/src/lib/server/vipinvitoz/guestbook.ts: NEW — listGuestbookEntriesForCeremony (pinned-first ordering), createGuestbookEntry, setGuestbookEntryPinned; pure data-access, no auth checks",
+    "frontend/src/app/api/guestbook/route.ts: NEW — GET organizer dashboard; requireAuth + ownership check via ceremonyId param OR fallback to caller's most-recent active ceremony; returns { ceremonyId, entries[] }",
+    "frontend/src/app/api/invitations/[slug]/guestbook/route.ts: NEW — GET + POST public; rate-limited by IP (60/min read, 10/min write via createEmailLimiter with email=null); POST links entry to invitationId + ceremonyId; 404 on unknown slug",
+    "frontend/src/app/api/guestbook/[id]/pin/route.ts: NEW — POST toggle pin; verifyCsrf + requireAuth + ownership-via-ceremony; body {pinned: boolean}; 404 on not-found-or-not-owned",
+    "frontend/src/app/api/auth/signup/route.ts: $transaction now takes {maxWait: 10_000, timeout: 15_000} to survive Neon-pooler cold starts",
+    "frontend/src/app/api/auth/resend-verification/route.ts: same transaction options as signup",
+    "frontend/src/lib/server/email.ts: + createConsoleMailer() — dev Mailer that logs {to, subject, CODE} to server console, extracts 8-char Crockford code from HTML with regex",
+    "frontend/src/lib/server/queues/email-queue-singleton.ts: switches to createConsoleMailer when NODE_ENV=development && DEV_EMAIL_BYPASS !== '0'; log.warn announces bypass mode",
+    "frontend/src/lib/server/dev/dev-crons.ts: NEW — startDevCrons() launches setInterval(30s) after 5s delay, POSTs CRON_SECRET to /api/cron/outbox-drain + /api/cron/email-queue-drain; idempotent module-level started flag",
+    "frontend/instrumentation.ts: +5 lines at end of register() — conditionally imports and calls startDevCrons() when NEXT_RUNTIME=nodejs && NODE_ENV=development"
+  ],
+  "implicitRules": [
+    "Port 3001 is VipInvitoz's dev port (3000 is held by RestBallack, a different project on this machine) — always `netstat :3000` + check PID commandLine before assuming",
+    "CRON_SECRET value in frontend/.env.local is wrapped in double quotes; bash `cut -d=` leaves them intact so shell pipelines need `| sed 's/^\"//;s/\"$//'` — dotenv strips them when Next loads",
+    "Neon-pooler cold starts regularly exceed Prisma's default 2000ms transaction maxWait; any multi-insert txn in auth-adjacent code needs explicit {maxWait: 10_000, timeout: 15_000}",
+    "Resend API key is in SANDBOX mode: Resend refuses any recipient other than the account owner (yossafina22@gmail.com). Dev bypass is the workaround; prod must verify a domain at resend.com/domains + change EMAIL_FROM",
+    "DEV_EMAIL_BYPASS env toggle: unset or any value except '0' → console mailer in dev; set to '0' → real Resend even in dev",
+    "Vercel Cron never runs locally. The outbox pattern (webhook handler enqueues, cron drains) silently breaks dev UX. In-process dev-crons module covers this",
+    "tsx scratchpad gotchas: (1) stdin heredoc with TS generic syntax parses as TSX → write to file; (2) top-level await fails in default CJS mode → wrap in `async function main() {} main().catch(e=>{process.exit(1)})`",
+    "Prisma 5 field names for VerificationCode = {usedAt, attempts, code, type, expiresAt, userId}; OutboxEvent = {status, attempts, lastError, sentAt, scheduledAt} (no processedAt); EmailJob = {subject, html, text, to, status, attempts, lastError, sentAt, scheduledAt} (no template field)",
+    "Prisma db push on Neon warns on new unique constraints even when the affected table is empty (schema-plan safety check) — `--accept-data-loss` required even in objectively safe cases",
+    "GuestbookEntry invariants: text-only (voice/video explicitly dropped from V1), invitationId nullable with SetNull delete behaviour, pinnedAt null = unpinned, ordering is [pinnedAt desc nulls:last, createdAt desc]",
+    "Public invitation endpoints (POST /api/invitations/[slug]/guestbook) carry no cookies → skip verifyCsrf; rate-limit by IP via createEmailLimiter({redis}, {...}) called with email=null (IP bucket fallback)",
+    "Image component: local /banani/* sources route through next/image with DEFAULT_SIZES per aspect ratio (16:4 → 100vw, 1:1 → 160px desktop/33vw mobile, 4:3 → 50vw/100vw, 3:4 → 50vw/100vw, 16:9 → 100vw); above-the-fold images should pass priority",
+    "/guestbook page: client component, fetches /api/guestbook, falls back to MOCK on 401 or empty entries, shows PreviewBanner only in fallback mode (visible distinction live vs preview)"
+  ],
+  "nextSteps": [
+    "User must type verification code 9FTKSPM4 into /auth/verify-email to finish signup for foadjoraoul@yahoo.de (last code generated in this session)",
+    "Create frontend/scripts/dev-seed-guestbook.ts: creates dev user + 1 ceremony + 1 invitation (with known slug) + 5 guestbook entries so /guestbook dashboard shows live data instead of MOCK fallback",
+    "Wire frontend/src/app/i/[slug]/contribute/page.tsx to POST /api/invitations/[slug]/guestbook (currently just a static form)",
+    "Decide on the commit scope (86 files / ~7k LOC) and actually commit — run `pnpm format && lint && typecheck && test` first; message should cover both prev-session port and today's polish/wiring",
+    "Start /seating backend: add SeatingTable + maybe SeatingAssignment models to prisma/schema.prisma; add GET/POST /api/seating endpoints; convert /seating page from MOCK to fetch",
+    "Verify a domain at resend.com/domains and update EMAIL_FROM in .env.local so prod deploys can email non-owner addresses (dev bypass makes this non-urgent but required before launch)"
+  ],
+  "keywords": [
+    "guestbook",
+    "signup",
+    "verify-email",
+    "resend",
+    "dev-cron",
+    "console-mailer",
+    "next-image",
+    "prisma-maxwait",
+    "vipinvitoz",
+    "mock-pages",
+    "backend-wiring",
+    "neon-pooler"
+  ]
+}

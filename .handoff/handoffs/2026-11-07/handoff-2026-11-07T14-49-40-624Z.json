@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-07T14:49:40.624Z",
+  "project": "VipInvitoz",
+  "session": "34401022",
+  "headline": "Port 15 Banani-designed screens to Next.js 16 for VipInvitoz SaaS (African family ceremonies: mariage/baptême/anniversai",
+  "summary": "Session built 9 new mock screens across 3 batches: Premium (seating/projection/guestbook), VIP (budget/vendors/orientation), Guest-side (/i/[slug]/contribute, /live, /nav). Fixed landing page mobile issues: hero overlay badges hidden sub-sm, ceremony cards switched from horizontal scroll to grid-cols-3. Fixed /guests table alignment via shared CSS Grid constant GUEST_GRID_COLS and added missing column titles (Invité + Actions). Added missing Icon entries (bookmark, mic, move). Removed orphaned @next/next/no-img-element eslint-disable comments. All checks green: typecheck ✓, lint ✓, 571/571 tests ✓, 6 desktop screenshots captured.",
+  "taskDescription": "Port 15 Banani-designed screens to Next.js 16 for VipInvitoz SaaS (African family ceremonies: mariage/baptême/anniversaire/deuil, targeting African continent + diaspora). Build mock preview pages first, wire backend later. Core intent: ship a visually complete MVP preview so user can validate UX before backend integration.",
+  "currentStatus": "15 planned mock pages all ported (100%). Zero backend wiring on new pages — they consume hardcoded MOCK arrays. i18n explicitly deferred. Dev server running on localhost:3000 (background task byhwyuvqy). User paused to verify visually; said \"sauvegarde je verifie plus tard\". Ready for visual QA + backend wiring decisions in next session.",
+  "keyDecisions": [
+    "Decision: Defer next-intl full setup to dedicated post-MVP session — Reason: full refactor touches middleware + layout + all 15 pages and brings zero value until screens are visually validated; copy is already in correct French",
+    "Decision: Shared CSS Grid constant GUEST_GRID_COLS exported from GuestRow.tsx — Reason: hard-coded tracks (1fr_180px_120px_60px_90px_84px) guarantee header↔row alignment even when guest content varies",
+    "Decision: Hero overlay badges use hidden sm:block — Reason: on 375px mobile the two cards covered the couple's face; user explicitly asked to free the image",
+    "Decision: Ceremony cards switch from flex overflow-x-auto to grid grid-cols-3 lg:flex on mobile — Reason: horizontal scroll hid 3/6 items; grid shows all 6 on 2 rows at 375px",
+    "Decision: Mobile GuestRow uses stacked layout (avatar + name+badge row + phone + acc·table·actions) — Reason: original compact flex clipped badge off right edge",
+    "Decision: /i/[slug]/nav is standalone route with 6 action shortcuts — Reason: dedicated hub cleaner than cramming into existing /i/[slug] invitation page",
+    "Decision: Budget page detects over-budget per category via catOver flag (red bar + red amount) — Reason: Traiteur line is deliberately 820k > 800k to demo warning state",
+    "Decision: Live projection display /i/[slug]/live uses dark theme + 16:9 photo + QR footer — Reason: optimized for big-screen projector, not mobile"
+  ],
+  "userContribution": "User tested landing page mobile view and surfaced two issues: (1) hero overlay badges covered the couple's face — 'il occupe trop de place et empeche d admirer la beaute du couple'; (2) not all ceremony images visible — 'toutes les images n apparaissent pas'. User validated the fix with 'c est beaucoup mieux'. Earlier in the session user tested the /guests page alignment fix and approved it. User delegated full project lead to the assistant mid-session: 'c est toi le chef de projet je pourrai toujours ajuster si c est necessaire'. User provided the attached mobile screenshot of the broken landing hero.",
+  "userDecisions": [
+    {
+      "decision": "Hide hero overlay badges on mobile instead of shrinking them",
+      "reason": "Wanted to admire the couple's photo without occlusion",
+      "alternativesRejected": "Keep badges but reduce size — implicitly rejected by framing as 'occupe trop de place'"
+    },
+    {
+      "decision": "Full project autonomy delegated to assistant",
+      "reason": "User trusts the chef de projet role; will adjust after seeing results",
+      "alternativesRejected": "Step-by-step approval gate between each page"
+    },
+    {
+      "decision": "Pause to verify later instead of committing now",
+      "reason": "Wants to review the 9 new pages visually first",
+      "alternativesRejected": "Immediate git commit of in-progress work"
+    }
+  ],
+  "failedApproaches": [
+    "Approach: Puppeteer via node script for fresh mobile screenshot → Result: ERR_MODULE_NOT_FOUND (not installed in frontend) → Lesson: use msedge --headless=new --window-size=W,H --screenshot which is preinstalled on Windows 11 and zero-dep",
+    "Approach: eslint-disable-next-line @next/next/no-img-element comments on raw <img> tags → Result: ESLint flat config at repo root does not register that rule, disable comment itself errors → Lesson: remove disable comments; the rule is inactive so no-op anyway",
+    "Approach: Original mobile GuestRow compact flex with badge shrink-0 → Result: badge rendered off the right edge at 375px due to flex-1 phone text competing with avatar + gap → Lesson: on mobile stack name+badge in a justify-between inner flex instead of racing for horizontal space"
+  ],
+  "blockers": "No active blockers. Tests green, lint green, typecheck green. Dev server running (background task byhwyuvqy). User paused to verify visually.",
+  "modifiedFiles": [
+    "frontend/src/app/page.tsx: hero overlay badges switched to hidden sm:block; ceremonies grid changed to grid grid-cols-3 gap-3 sm:gap-4 lg:flex lg:gap-5 lg:justify-center; ceremony cards use w-full aspect-square on mobile",
+    "frontend/src/app/seating/page.tsx: NEW — plan de table with 4 mock tables + 5 unassigned guests pool + auto-placement IA CTA",
+    "frontend/src/app/projection/page.tsx: NEW — live photo config, 4 switches (enable/moderate/caption/timer slider) + moderation queue 3 photos",
+    "frontend/src/app/guestbook/page.tsx: NEW — feed texte/vocal/vidéo with filter chips, mock audio/video players, export souvenir CTA",
+    "frontend/src/app/budget/page.tsx: NEW — 3 KPI summary + 6 category bars (Traiteur deliberately over budget to demo warning) + recent expenses table",
+    "frontend/src/app/vendors/page.tsx: NEW — 6 vendor cards by category (photo/traiteur/DJ/salle/décor/transport) with status badges + WhatsApp/call CTAs",
+    "frontend/src/app/orientation/page.tsx: NEW — map preview with pins + 3-step venue timeline + transport cards + practical infos",
+    "frontend/src/app/i/[slug]/contribute/page.tsx: NEW — mobile photo upload for guests with caption + success state + live feed grid",
+    "frontend/src/app/i/[slug]/live/page.tsx: NEW — big-screen projection display (dark theme, 16:9 current photo + QR code + upcoming thumbnails + counter)",
+    "frontend/src/app/i/[slug]/nav/page.tsx: NEW — guest hub with hero + 6 action shortcut cards (invitation/RSVP/directions/contribute/guestbook/QR)",
+    "frontend/src/components/SideBar.tsx: added Orientation nav item (href /orientation, tier vip, icon navigation)",
+    "frontend/src/components/Icon.tsx: added Bookmark + Mic + Move imports and map entries (bookmark/mic/move)",
+    "frontend/src/components/GuestRow.tsx: refactored — exports GUEST_GRID_COLS constant for shared grid; separate desktop (hidden md:grid) and mobile (md:hidden) layouts; mobile row now stacked with badge + accompanants + table + actions always visible",
+    "frontend/src/app/guests/page.tsx: imports GUEST_GRID_COLS; header uses same grid for perfect header↔row alignment; renamed 2 empty columns to Invité + Actions",
+    "frontend/src/components/Image.tsx: removed orphaned eslint-disable-next-line @next/next/no-img-element comment"
+  ],
+  "implicitRules": [
+    "Stack: Next.js 16 App Router + Turbopack, Tailwind v4 (@theme + @source), React 19, Prisma 5 + Neon, TypeScript strict noUncheckedIndexedAccess + exactOptionalPropertyTypes",
+    "Mobile-first Tailwind: base classes target 375px, use md:/lg:/xl: prefixes to add upward — never desktop-first with mobile overrides",
+    "Tier values are literal 'freemium' | 'premium' | 'vip' — Premium pages pass tier=premium to AppLayout, VIP pages pass tier=vip; SideBar locks items whose tier > current tier",
+    "All mock pages wrap body in <AppLayout> and start with <PreviewBanner /> (shows yellow stripe announcing mock state)",
+    "FCFA amounts: n.toLocaleString('fr-FR') + ' FCFA' — microcents are used for AI cost tracking on backend (1 µcent = 10⁻⁶ cents)",
+    "UserAvatar takes index prop for deterministic color — pass unique index per guest to avoid color collisions",
+    "Icon component is a name→LucideIcon MAP in Icon.tsx — add import + map entry BEFORE using a new icon name, else it falls back to HelpCircle",
+    "Design brief rules: NO sparkles on primary CTAs (use plus-circle for 'Et bien plus' etc.), NO glassmorphism/backdrop-blur on badges (use opaque bg-card + shadow), NO 'AI slop' imagery",
+    "Images under /banani/* are the real Banani-rendered assets; Image component also supports keywords prop (loremflickr fallback) and objectPosition + fit props",
+    "Dev server defaults to localhost:3000 only — for phone LAN access need --hostname 0.0.0.0 + Windows firewall rule",
+    "Project root is Windows path — handoff + scripts must use absolute paths, never rely on process.cwd()",
+    "Protected files list in CLAUDE.md must never be edited: auth.ts, crypto.ts, logger.ts, redis.ts, webhook/handler.ts, oauth/google.ts, outbox/dispatcher.ts, admin/audit.ts, middleware/index.ts, instrumentation.ts, api.ts, payments/circuit-breaker.ts",
+    "next-intl is already installed (v4.14.9) but NOT configured — middleware + provider wrap + dictionaries still to do",
+    "Prisma schema already has VipInvitoz models (Subscription, Ceremony, CeremonyOccasion, Guest, Invitation, AiGeneration) + User extensions (phone, locale) — new pages are NOT yet wired to them"
+  ],
+  "nextSteps": [
+    "Open DevTools 375px and QA all 9 new pages visually before wiring backend — mobile fidelity is non-negotiable per project brief",
+    "Wire /seating + /projection + /guestbook to Prisma — schema needs new models (SeatingTable, GuestbookEntry, ProjectionPhoto) not yet created",
+    "Wire /budget + /vendors + /orientation — decide if they are per-ceremony (nested route /ceremonies/[id]/budget) or user-wide",
+    "Setup next-intl: middleware config + FR/EN/DE dictionaries + locale switcher in AppLayout header — all pages currently hardcode French strings",
+    "Decide whether /i/[slug]/nav replaces or augments existing /i/[slug] invitation page",
+    "Audit Budget page: category .color prop uses 'bg-wax-teal'/${color}/20 pattern which may not compile correctly in Tailwind JIT — verify color opacity classes render",
+    "Convert MOCK_* arrays to real API fetches via /lib/api.ts wrapper once backend ready",
+    "Generate screenshots at 375px mobile for all 9 new pages (desktop set already in scratchpad/batch-*-1280.png)"
+  ],
+  "keywords": [
+    "vipinvitoz",
+    "banani",
+    "mock-pages",
+    "seating",
+    "projection",
+    "guestbook",
+    "budget",
+    "vendors"
+  ]
+}

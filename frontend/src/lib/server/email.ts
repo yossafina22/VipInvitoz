@@ -97,3 +97,38 @@ export function createMailer(env: CreateMailerEnv, options: CreateMailerOptions 
     },
   };
 }
+
+/**
+ * Dev-only mailer: prints the email to the server console instead of calling
+ * Resend. Useful when Resend is in sandbox mode (sender restricted to the
+ * account owner) or when you want to iterate on auth flows without burning
+ * Resend quota. The verification code — the one bit you actually need — is
+ * surfaced as the first line of the dump so it's easy to copy out of the log.
+ *
+ * Opted in via `NODE_ENV === 'development'` by default; set
+ * `DEV_EMAIL_BYPASS=0` to force-use the real Resend mailer in dev.
+ */
+export function createConsoleMailer(): Mailer {
+  return {
+    async send(input: SendEmailInput): Promise<{ id: string }> {
+      // Try to pull an 8-char Crockford verification code out of the HTML
+      // body — matches the format emitted by generateVerificationCode().
+      const codeMatch = input.html.match(/\b[0-9A-HJKMNP-TV-Z]{8}\b/);
+      const header = codeMatch ? `  CODE: ${codeMatch[0]}` : '  (no 8-char code pattern found)';
+
+      console.log(
+        [
+          '',
+          '────── [DEV MAILER] email bypassed (no Resend call) ──────',
+          `  to     : ${input.to}`,
+          `  subject: ${input.subject}`,
+          header,
+          '──────────────────────────────────────────────────────────',
+          '',
+        ].join('\n'),
+      );
+
+      return { id: `dev-${Date.now().toString(36)}` };
+    },
+  };
+}

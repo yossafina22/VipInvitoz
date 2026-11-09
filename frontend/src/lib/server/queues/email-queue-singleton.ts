@@ -17,7 +17,7 @@ import 'server-only';
 import { EmailQueue } from './email-queue';
 import { prisma } from '../prisma';
 import { redis } from '../redis';
-import { createMailer } from '../email';
+import { createConsoleMailer, createMailer } from '../email';
 import { createLogger } from '../logger';
 
 const log = createLogger();
@@ -49,10 +49,25 @@ export function getEmailQueue(): EmailQueue | null {
     return null;
   }
 
-  const mailer = createMailer({
-    RESEND_API_KEY: resendKey,
-    EMAIL_FROM: emailFrom,
-  });
+  // Dev bypass — Resend's sandbox restricts sender to the account owner and
+  // crons don't run locally, making signup/verify-email awkward to iterate on.
+  // In dev we default to printing the verification code to the server console
+  // instead of calling Resend. Opt out with DEV_EMAIL_BYPASS=0.
+  const useDevBypass =
+    process.env.NODE_ENV === 'development' && process.env.DEV_EMAIL_BYPASS !== '0';
+
+  const mailer = useDevBypass
+    ? createConsoleMailer()
+    : createMailer({
+        RESEND_API_KEY: resendKey,
+        EMAIL_FROM: emailFrom,
+      });
+
+  if (useDevBypass) {
+    log.warn(
+      'email-queue-singleton: dev bypass active — emails will be printed to the console (set DEV_EMAIL_BYPASS=0 to use real Resend)',
+    );
+  }
 
   _queue = new EmailQueue({ redis, prisma, mailer });
   _initialized = true;

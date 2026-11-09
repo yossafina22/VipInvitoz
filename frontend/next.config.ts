@@ -30,6 +30,11 @@ const config: NextConfig = {
   // into .next/standalone — required by the Docker runtime image (frontend/Dockerfile).
   // Has no impact on `next dev` / `next start` workflows.
   output: 'standalone',
+  images: {
+    // Next 16 requires every <Image quality={...}> value to be whitelisted.
+    // 90 is used by the shared Image component for landing/banani assets.
+    qualities: [75, 90],
+  },
   async headers() {
     return [
       {

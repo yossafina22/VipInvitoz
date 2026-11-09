@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-03T19:43:15.262Z",
+  "project": "VipInvitoz",
+  "session": "d63d2239",
+  "headline": "Finish /setup-kit on izikit (Next.js 16 monolith starter) for VipInvitoz. Core intent: French-speaking beginner lands wi",
+  "summary": "Resumed from 2026-11-01 handoff mid Phase 6. Completed providers 6a-e (Upstash, Resend, Cloudinary, Sentry, Google OAuth). Chose scénario B for Bictorys (placeholder, user awaits 24-48h validation). Added Banani MCP via HTTP transport in .mcp.json then gitignored it after detecting Bearer token exposure risk. Phase 7 smoke tests: hit TS2694 Prisma types missing — fixed via `prisma generate`. Hit 3 bcrypt test timeouts in scripts/seed-dev.test.ts (Windows + bcryptjs = ~3s/hash > 5s default) — fixed by bumping testTimeout to 15000 in vitest.config.ts. Final: 570/570 tests green, `pnpm dev` Ready in 16.4s on :3000. User asked for a reusable setup checklist for all future SaaS projects — generated 3 artifacts in ~/.claude/: markdown, styled HTML, PNG rendered via `msedge --headless --screenshot` (1240×2400). Linked all 3 in ~/.claude/CLAUDE.md section 3bis + saved memory entry so Claude surfaces them on future SaaS starts.",
+  "taskDescription": "Finish /setup-kit on izikit (Next.js 16 monolith starter) for VipInvitoz. Core intent: French-speaking beginner lands with a fully-configured dev env (DB, auth, uploads, emails, monitoring, OAuth, design-MCP) so first commit focuses on product UI, not infra plumbing.",
+  "currentStatus": "DONE: Phases 0-7 of /setup-kit complete. All providers configured except Bictorys (placeholder, awaiting account validation). Banani MCP wired. 570/570 tests green. Dev server verified. Reusable SaaS checklist generated in ~/.claude/ (MD + HTML + PNG) and referenced in global CLAUDE.md. REMAINING: Bictorys real keys when validated, actual UI build, Vercel deploy.",
+  "keyDecisions": [
+    "Decision: scénario B for Bictorys (empty placeholder) — Reason: account validation 24-48h, user wanted to close setup now; empty vars = route returns 503 cleanly, no silent corruption",
+    "Decision: bump vitest testTimeout 5000 → 15000 globally — Reason: scripts/seed-dev.test.ts does 3 bcrypt.hash(cost=12) per test, bcryptjs on Windows ~3s/hash blows past default; chose global bump over per-test override to be portable",
+    "Decision: ran `pnpm prisma generate` after migrations to fix TS2694 errors — Reason: postinstall hook had generated client before schema was finalized; types for Prisma.NotificationWhereInput etc. only exist after regen",
+    "Decision: gitignore .mcp.json + `git rm --cached` — Reason: Banani Bearer token hardcoded in file, was tracked by git (starter shipped it with empty mcpServers); without untracking, token would ship to GitHub on next push",
+    "Decision: generate 3 formats of SaaS checklist (MD + HTML + PNG) in ~/.claude/ not in project — Reason: user wants it reusable across ALL future SaaS projects, so lives at user level alongside CLAUDE.md; project-level would scope to only VipInvitoz",
+    "Decision: rendered PNG via msedge headless rather than Playwright/Puppeteer — Reason: Edge is preinstalled on Windows 11, zero deps; `msedge --headless=new --screenshot=... --window-size=1240,2400` is one shot",
+    "Decision: saved checklist refs in global CLAUDE.md section 3bis + memory entry — Reason: ensures Claude surfaces checklist in every future session (CLAUDE.md auto-loaded), memory entry adds semantic trigger on 'new SaaS'"
+  ],
+  "userContribution": "User completed Google OAuth setup in Google Cloud Console (project vipinvitoz, External audience, OAuth client vipinvitoz-dev with correct redirect URI) and pasted Client ID + Client Secret. User navigated Banani UI to the MCP tab, clicked 'Claude Code', revealed the connection command, and pasted it verbatim. User explicitly chose scénario B over scénario A for Bictorys (placeholder now, real keys later). User later asked for the setup to be captured as a reusable checklist across all future SaaS projects — triggered the ~/.claude/ artifacts generation. User chose 'Les deux' when asked between markdown-only vs PNG-only format.",
+  "userDecisions": [
+    {
+      "decision": "Scénario B for Bictorys (placeholder, close setup now)",
+      "reason": "Account validation takes 24-48h and user wanted the rest of the setup finalized today",
+      "alternativesRejected": "Scénario A — wait for Bictorys validation before closing the session"
+    },
+    {
+      "decision": "Generate SaaS checklist in BOTH markdown and PNG formats",
+      "reason": "Wants an editable file (future updates) AND a shareable visual (screenshot-friendly)",
+      "alternativesRejected": "Markdown-only, PNG-only"
+    },
+    {
+      "decision": "Include Banani MCP in the setup",
+      "reason": "Mid-turn request to 'install bictorys banani for complete setup' — treating Banani as production-ready config, not optional-later",
+      "alternativesRejected": "Skip Banani (previous session's default per handoff)"
+    }
+  ],
+  "failedApproaches": [
+    "Approach: ran `pnpm format && lint && typecheck && test` as one chain → Result: typecheck failed with ~50 TS2694 errors on Prisma types (NotificationWhereInput, OrderWhereInput, JsonValue, InputJsonValue, TransactionIsolationLevel, etc.) → Lesson: Prisma client in node_modules was stale (generated by postinstall before schema finalization); must run `pnpm --filter frontend exec prisma generate` whenever schema or migrations change",
+    "Approach: ran default vitest with 5000ms timeout on Windows → Result: 3 tests in scripts/seed-dev.test.ts timed out doing 3 bcrypt.hash(cost=12) each → Lesson: bcryptjs is pure JS and slow on Windows (~3s/hash at cost 12); default 5s Vitest timeout is insufficient when a test does multiple hashes",
+    "Approach: pasted Banani MCP block into .mcp.json without gitignore check → Result: .mcp.json was already tracked by git (starter kit shipped it empty-but-committed), Bearer token would leak on push → Lesson: always `git check-ignore` and `git ls-files` on config files containing secrets BEFORE pasting; untrack with `git rm --cached` not just add to .gitignore"
+  ],
+  "blockers": "Bictorys: user chose scénario B (placeholder) — not a technical blocker but a product dependency on their account validation (24-48h). Dev + build + tests all pass without it.",
+  "modifiedFiles": [
+    "frontend/.env.local: added GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REDIRECT_URI (section 7); added TODO comment block above Bictorys section 8 listing the 4 keys to fill after validation",
+    "frontend/.env: mirror of .env.local for Prisma CLI; same Google OAuth values + Bictorys TODO comment",
+    "frontend/vitest.config.ts: added `testTimeout: 15000` with comment explaining bcrypt-on-Windows reason",
+    "frontend/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client: regenerated via `prisma generate` — now exposes Prisma.NotificationWhereInput, OrderWhereInput, JsonValue, InputJsonValue, TransactionIsolationLevel, JsonNull, DateTimeFilter, etc.",
+    "/.mcp.json: added banani HTTP MCP server block with Bearer token; file then untracked from git",
+    "/.gitignore: added `.mcp.json` line at bottom with comment",
+    "SETUP_STATE.md: date header updated to 2026-11-03; Phase 6 and 7 tables rewritten with final states; added 'Prochaines étapes' and 'Checklist réutilisable' sections",
+    "~/.claude/CLAUDE.md: added section 3bis referencing the 3 SaaS checklist files",
+    "~/.claude/SAAS_SETUP_CHECKLIST.md: created — 9-phase markdown checklist for all future SaaS projects",
+    "~/.claude/saas-setup-checklist.html: created — styled HTML (dark theme, gradient header, grid of cards) matching the markdown",
+    "~/.claude/saas-setup-checklist.png: created — 1240×2400 ~220KB, rendered via msedge headless",
+    "~/.claude/projects/c--Users-PC-OneDrive-Dokumente-Onedrive-Desktop-VipInvitoz/memory/MEMORY.md: created — index pointing to saas_setup_checklist.md",
+    "~/.claude/projects/c--Users-PC-OneDrive-Dokumente-Onedrive-Desktop-VipInvitoz/memory/saas_setup_checklist.md: created — user memory entry for the 3 checklist files"
+  ],
+  "implicitRules": [
+    "frontend/.env.local for Next.js runtime + frontend/.env for Prisma CLI; must keep in sync for every edit",
+    "Every optional provider absent = corresponding route returns 503 cleanly; empty strings are the correct placeholder, not fake tokens",
+    "`pnpm prisma generate` is required after any schema or migration change — the postinstall hook does not re-run on schema edits",
+    "Windows + bcryptjs = 3s/hash at cost=12; vitest testTimeout must be >=15000 for any test doing multiple bcrypt rounds",
+    "Starter ships .mcp.json tracked by git (empty); adding a Bearer-token server block requires untracking + gitignoring",
+    "Google OAuth GOOGLE_REDIRECT_URI must match exactly between Google Cloud Console authorized redirect URIs and the env var (byte-exact, case-sensitive, trailing-slash-sensitive)",
+    "When Sentry UI offers 'Set up with your coding agent', always pick 'Set up manually' — the agent flow modifies frontend/instrumentation.ts and other protected files",
+    "User explicit security rule: secrets stay local to project folder, never copied to ~/.claude/; the 3 checklist files in ~/.claude/ contain NO secrets, only workflow steps",
+    "French by default per /setup-kit skill contract; beginner-friendly explanations before each command",
+    "Protected files list (never edit): auth.ts, crypto.ts, logger.ts, redis.ts, webhook/handler.ts, oauth/google.ts, outbox/dispatcher.ts, admin/audit.ts, middleware/index.ts, instrumentation.ts, api.ts, payments/circuit-breaker.ts"
+  ],
+  "nextSteps": [
+    "Fill 4 BICTORYS_* keys in frontend/.env.local + frontend/.env once account validated (TODO comment visible in Section 8 of both files)",
+    "Build minimal UI pages: /signup, /login, /dashboard — reference examples/frontend-pages/*.tsx",
+    "Run `pnpm smoke:auth` end-to-end after a minimal UI exists",
+    "Deploy: `gh repo create vipinvitoz --private --source=. --push` then import on vercel.com with Root Directory=frontend",
+    "After Vercel URL known, update GOOGLE_REDIRECT_URI in both .env + Google Cloud Console authorized redirect URIs",
+    "Restart Claude Code so .mcp.json picks up Banani; verify with /mcp"
+  ],
+  "keywords": [
+    "vipinvitoz",
+    "izikit",
+    "setup-kit",
+    "bictorys",
+    "banani",
+    "google-oauth",
+    "sentry",
+    "vitest-timeout",
+    "prisma-generate",
+    "mcp-config",
+    "saas-checklist",
+    "phase-7"
+  ]
+}

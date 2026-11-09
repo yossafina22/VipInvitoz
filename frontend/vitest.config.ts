@@ -13,6 +13,10 @@ export default defineConfig({
     // Without this, Vitest 2.x exits 1 on zero tests, blocking the plan's own
     // acceptance criterion ("`pnpm --filter frontend test` exits 0").
     passWithNoTests: true,
+    // Bumped from Vitest's 5s default: scripts/seed-dev.test.ts runs 3
+    // bcrypt.hash(…, cost=12) per test, which on Windows with bcryptjs
+    // (pure JS) can exceed 5s.
+    testTimeout: 15000,
     // Phase 1 D-27: setupFile sets JWT_SECRET / ENCRYPTION_KEY before any
     // test module imports `@/lib/server/auth` (which throws at import time
     // when JWT_SECRET is missing or < 32 chars).

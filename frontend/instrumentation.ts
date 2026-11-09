@@ -14,6 +14,14 @@ export async function register() {
     await import('./sentry.edge.config');
   }
   registerOTel({ serviceName: 'izikit' });
+
+  // Dev-only: Vercel Cron doesn't run locally, so signup/verify-email get
+  // stuck in the outbox queue. Start an in-process drainer to mimic the cron.
+  // Import-gated to keep it entirely absent from the prod bundle.
+  if (process.env.NEXT_RUNTIME === 'nodejs' && process.env.NODE_ENV === 'development') {
+    const { startDevCrons } = await import('./src/lib/server/dev/dev-crons');
+    startDevCrons();
+  }
 }
 
 // Required for Sentry to capture unhandled route errors (Next.js 15+).

@@ -49,6 +49,16 @@ model User {
   ownedOrganizations Organization[]      @relation("OrgOwner")
   memberships        OrganizationMember[] @relation("OrgMembership")
 
+  // VipInvitoz domain
+  subscription      Subscription?
+  ceremonies        Ceremony[]
+  aiGenerations     AiGeneration[]
+  // Optional phone for SMS OTP fallback when email is missing. Format E.164.
+  phone             String?   @unique
+  phoneVerifiedAt   DateTime?
+  // Interface language choice (FR default). Changeable via settings.
+  locale            String    @default("fr") // fr | en | de
+
   @@index([email])
   @@index([role])
   @@index([status])
@@ -331,4 +341,223 @@ model Withdrawal {
   @@index([userId, requestedAt])
   @@index([status, requestedAt])
   @@index([provider, providerPayoutId])
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// VipInvitoz domain — ceremony organization
+// ═════════════════════════════════════════════════════════════════════════
+
+// ─── Subscription ──────────────────────────────────────────────────────
+// One active subscription per user (unique by userId). Tier drives quotas:
+//   FREEMIUM : 1 cérémonie, 20 invités max, 6 crédits IA
+//   PREMIUM  : cérémonies illimitées, invités illimités, 12 crédits IA + chatbot,
+//              plan de table, projection live, livre d'or
+//   VIP      : tout Premium + modif IA illimitées, budget, prestataires, orientation
+// Renouvellement MANUEL trimestriel (PRD §6) — pas d'autorenew en V1.
+// orderId lie la souscription active à l'Order de paiement qui l'a créée.
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier                 String    @default("FREEMIUM") // FREEMIUM | PREMIUM | VIP
+  status               String    @default("ACTIVE") // ACTIVE | EXPIRED | CANCELLED
+  startedAt            DateTime  @default(now())
+  // Null pour FREEMIUM (jamais expiré). Daté pour PREMIUM/VIP (fin de trimestre).
+  expiresAt            DateTime?
+  // Crédits IA restants pour le trimestre courant. -1 = illimité (VIP).
+  // Reset à chaque renouvellement.
+  aiCreditsRemaining   Int       @default(6)
+  // Nombre max de cérémonies simultanées. 1 = Freemium+Premium, -1 = VIP illimité.
+  // (La règle Premium/VIP multi-cérémonie est arbitrée côté app en lisant tier.)
+  maxCeremonies        Int       @default(1)
+  // Référence au dernier Order réglé qui a activé / renouvelé la souscription.
+  orderId              String?   @unique
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([tier, status])
+  @@index([status, expiresAt])
+}
+
+// ─── Ceremony ──────────────────────────────────────────────────────────
+// Événement racine : mariage, baptême, anniversaire, deuil, autre.
+// Possède N `CeremonyOccasion` pour supporter plusieurs dates/lieux
+// (ex: mariage civil + religieux + réception — PRD §4 "Création & gestion").
+// status DRAFT → ACTIVE (invitations envoyables) → PAST (date dépassée)
+//                      → ARCHIVED (effacée par l'orga).
+model Ceremony {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           String // MARIAGE | BAPTEME | ANNIVERSAIRE | DEUIL | AUTRE
+  title          String // ex: "Mariage de Fatoumata & Ibrahima"
+  // Description libre (1 phrase) utilisée comme prompt pour la génération IA.
+  description    String
+  status         String   @default("DRAFT") // DRAFT | ACTIVE | PAST | ARCHIVED
+  coverImageUrl  String?
+  // Fichier musical de fond pour la page invitation (Cloudinary URL).
+  musicUrl       String?
+  musicLabel     String? // ex: "Jazz africain doux"
+  // Résultat de la génération IA — stocké en JSON pour pouvoir éditer
+  // par bloc sans re-générer tout. Structure : { blocks: [...] }
+  invitationJson Json?
+  // Compteur de modifications IA consommées sur cette cérémonie.
+  aiModCount     Int      @default(0)
+
+  occasions        CeremonyOccasion[]
+  guests           Guest[]
+  invitations      Invitation[]
+  aiGens           AiGeneration[]
+  guestbookEntries GuestbookEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+// ─── CeremonyOccasion ──────────────────────────────────────────────────
+// Une date+lieu dans une cérémonie. Minimum 1 par cérémonie.
+// Ex pour un mariage : "Cérémonie civile" (14 juin 15h, mairie), "Religieuse"
+// (14 juin 17h, église), "Réception" (14 juin 20h, Terrou-Bi).
+// `order` sert au tri d'affichage (0 = premier).
+model CeremonyOccasion {
+  id              String   @id @default(cuid())
+  ceremonyId      String
+  ceremony        Ceremony @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+  label           String // ex: "Cérémonie civile", "Réception"
+  startsAt        DateTime
+  // Durée optionnelle (minutes). Null si non précisé.
+  durationMinutes Int?
+  locationName    String // ex: "Hôtel Terrou-Bi"
+  locationAddress String
+  // Lat/lng pour deeplink navigation. Null si non géocodé.
+  locationLat     Float?
+  locationLng     Float?
+  // Instructions libres pour l'invité ("Parking à droite après le portail bleu").
+  instructions    String?
+  order           Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ceremonyId, order])
+}
+
+// ─── Guest ─────────────────────────────────────────────────────────────
+// Liste des invités d'une cérémonie (sans compte utilisateur requis).
+// phone est le canal principal (WhatsApp), email optionnel.
+// (ceremonyId, phone) unique pour éviter les doublons sur le même événement.
+model Guest {
+  id         String   @id @default(cuid())
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+  name       String
+  phone      String? // E.164 recommandé
+  email      String?
+  notes      String?
+
+  invitations Invitation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ceremonyId, phone])
+  @@index([ceremonyId])
+}
+
+// ─── Invitation ────────────────────────────────────────────────────────
+// Instance d'invitation envoyée à un Guest. Un Guest peut recevoir plusieurs
+// invitations (ex: relance). `slug` est l'URL opaque publique /i/[slug].
+// `qrToken` est un identifiant court pour le QR code (scan jour J).
+// RSVP et check-in sont attachés ici — un invité = une invitation active.
+model Invitation {
+  id         String   @id @default(cuid())
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+  guestId    String
+  guest      Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  // URL publique /i/[slug] — opaque (nanoid 12 chars par défaut).
+  slug     String  @unique
+  // QR code identifier (nanoid 10 chars). Imprimable séparément.
+  qrToken  String  @unique
+  // Canal d'envoi utilisé. Null = pas encore envoyée.
+  channel  String? // WHATSAPP | LINK | EMAIL | SMS
+  sentAt   DateTime?
+  viewedAt DateTime? // 1ère ouverture de la page /i/[slug]
+
+  rsvpStatus     String    @default("PENDING") // PENDING | CONFIRMED | DECLINED
+  rsvpAt         DateTime?
+  // 0 = l'invité vient seul ; N = N accompagnants en plus de lui-même.
+  companionCount Int       @default(0)
+
+  // Jour J — scan QR
+  checkedInAt       DateTime?
+  checkedInByUserId String?
+
+  guestbookEntries GuestbookEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ceremonyId, rsvpStatus])
+  @@index([ceremonyId, checkedInAt])
+  @@index([guestId])
+}
+
+// ─── AiGeneration ──────────────────────────────────────────────────────
+// Audit log des appels Claude (coûts + anti-abus + debug prompt engineering).
+// kind : INITIAL (première génération), MODIFICATION (modif ponctuelle),
+// CHATBOT (tour de chat Premium/VIP). costCents pour reporting.
+model AiGeneration {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ceremonyId String?
+  ceremony   Ceremony? @relation(fields: [ceremonyId], references: [id], onDelete: SetNull)
+  kind       String // INITIAL | MODIFICATION | CHATBOT
+  model      String // ex: "claude-sonnet-5-5"
+  prompt     String
+  response   String
+  // Tokens from provider response.
+  inputTokens  Int
+  outputTokens Int
+  // Coût estimé en centimes de centime (1000 = 1 cent). Permet de tracker
+  // sans arrondi au call et de sommer précisément par user/mois.
+  costMicrocents Int
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([ceremonyId, kind])
+}
+
+// ─── GuestbookEntry ────────────────────────────────────────────────────
+// Un message laissé par un invité dans le livre d'or d'une cérémonie.
+// Texte uniquement (le vocal/vidéo a été retiré du périmètre V1).
+//
+// `invitationId` est optionnel : un invité peut poster sans Invitation
+// identifiée (ex: ajouté manuellement par l'organisateur au jour J).
+// Si Invitation présente, suppression = SetNull plutôt que Cascade pour
+// garder la trace du message même si l'invitation est supprimée.
+//
+// `pinnedAt` : l'organisateur peut épingler un message depuis le
+// dashboard /guestbook (bouton "Épingler" déjà présent dans l'UI).
+model GuestbookEntry {
+  id           String      @id @default(cuid())
+  ceremonyId   String
+  ceremony     Ceremony    @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+  invitationId String?
+  invitation   Invitation? @relation(fields: [invitationId], references: [id], onDelete: SetNull)
+
+  authorName String
+  content    String
+  pinnedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([ceremonyId, createdAt])
+  @@index([ceremonyId, pinnedAt])
+  @@index([invitationId])
 }
