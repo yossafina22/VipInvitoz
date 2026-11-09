@@ -9,6 +9,14 @@ import { PreviewBanner } from '@/components/PreviewBanner';
 import { Icon } from '@/components/Icon';
 import { api, ApiError } from '@/lib/api';
 
+interface InvitationState {
+  slug: string;
+  rsvpStatus: 'PENDING' | 'CONFIRMED' | 'DECLINED';
+  companionCount: number;
+  rsvpAt: string | null;
+  viewedAt: string | null;
+}
+
 interface Guest {
   id: string;
   name: string;
@@ -16,6 +24,13 @@ interface Guest {
   email: string | null;
   notes: string | null;
   createdAt: string;
+  invitation: InvitationState | null;
+}
+
+function toRowStatus(s: string | undefined): 'confirmed' | 'declined' | 'pending' {
+  if (s === 'CONFIRMED') return 'confirmed';
+  if (s === 'DECLINED') return 'declined';
+  return 'pending';
 }
 
 interface GuestsResponse {
@@ -37,6 +52,8 @@ export default function GuestsPage() {
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
     try {
@@ -69,11 +86,18 @@ export default function GuestsPage() {
   }, [guests, search]);
 
   const stats = useMemo(() => {
-    // Invitation.rsvpStatus is not wired yet — every guest counts as pending
-    // until invitations are sent and RSVPs come in.
     const total = guests.length;
-    const pending = total;
-    return { total, confirmed: 0, declined: 0, pending };
+    let confirmed = 0;
+    let declined = 0;
+    let companionSum = 0;
+    for (const g of guests) {
+      const s = g.invitation?.rsvpStatus;
+      if (s === 'CONFIRMED') confirmed += 1;
+      else if (s === 'DECLINED') declined += 1;
+      companionSum += g.invitation?.companionCount ?? 0;
+    }
+    const pending = total - confirmed - declined;
+    return { total, confirmed, declined, pending, companionSum };
   }, [guests]);
 
   async function handleAdd(e: React.FormEvent) {
@@ -110,6 +134,34 @@ export default function GuestsPage() {
       }
     } finally {
       setAdding(false);
+    }
+  }
+
+  async function handleInvite(id: string) {
+    setInvitingId(id);
+    try {
+      const res = await api<{ publicUrl: string }>(`/api/guests/${id}/invite`, {
+        method: 'POST',
+      });
+      const absoluteUrl = res.publicUrl.startsWith('http')
+        ? res.publicUrl
+        : `${window.location.origin}${res.publicUrl}`;
+      try {
+        await navigator.clipboard.writeText(absoluteUrl);
+        setToast(`Lien copié: ${absoluteUrl}`);
+      } catch {
+        setToast(`Lien: ${absoluteUrl}`);
+      }
+      setTimeout(() => setToast(null), 4000);
+    } catch (err) {
+      const msg =
+        err instanceof ApiError && err.code === 'GUEST_NOT_FOUND'
+          ? 'Invité introuvable.'
+          : 'Impossible de générer le lien.';
+      setToast(msg);
+      setTimeout(() => setToast(null), 4000);
+    } finally {
+      setInvitingId(null);
     }
   }
 
@@ -151,16 +203,28 @@ export default function GuestsPage() {
             {stats.confirmed}
           </div>
           <div className="text-xs text-muted-foreground">
-            RSVP branchés dès que les invitations seront envoyées.
+            {stats.companionSum > 0
+              ? `+ ${stats.companionSum} accompagnant${stats.companionSum > 1 ? 's' : ''} annoncé${stats.companionSum > 1 ? 's' : ''}`
+              : stats.confirmed === 0
+                ? 'Aucune réponse positive pour le moment.'
+                : 'Aucun accompagnant annoncé.'}
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
-          <div className="text-xs text-muted-foreground mb-1">En attente</div>
-          <div className="font-headings font-bold text-3xl text-warning mb-3">{stats.pending}</div>
+          <div className="text-xs text-muted-foreground mb-1">
+            {stats.declined > 0 ? 'Déclinés' : 'En attente'}
+          </div>
+          <div
+            className={`font-headings font-bold text-3xl mb-3 ${stats.declined > 0 ? 'text-danger' : 'text-warning'}`}
+          >
+            {stats.declined > 0 ? stats.declined : stats.pending}
+          </div>
           <div className="text-xs text-muted-foreground">
             {stats.total === 0
               ? 'Ajoutez votre premier invité ci-dessous.'
-              : 'Aucune réponse enregistrée pour l’instant.'}
+              : stats.declined > 0
+                ? `${stats.pending} encore en attente.`
+                : 'Aucune réponse enregistrée pour l’instant.'}
           </div>
         </div>
       </div>
@@ -278,28 +342,37 @@ export default function GuestsPage() {
               name={g.name}
               phone={g.phone ?? '—'}
               {...(g.email ? { email: g.email } : {})}
-              status="pending"
-              companions={0}
+              status={toRowStatus(g.invitation?.rsvpStatus)}
+              companions={g.invitation?.companionCount ?? 0}
               table="—"
               index={i}
               onDelete={() => handleDelete(g.id)}
-              deleting={deletingId === g.id}
+              onSend={() => handleInvite(g.id)}
+              deleting={deletingId === g.id || invitingId === g.id}
             />
           ))
         )}
       </div>
 
-      {/* Partage direct — mock pending invitation routes */}
-      <div className="bg-card border border-dashed border-border rounded-xl p-5 md:p-6 text-center">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Bientôt</div>
+      <div className="bg-card border border-border rounded-xl p-5 md:p-6">
         <h3 className="font-headings font-bold text-lg text-foreground mb-1">
-          Envoi des invitations
+          Générer et partager les invitations
         </h3>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          L’envoi WhatsApp / email + le partage de lien seront câblés dès que la génération des
-          invitations sera branchée.
+        <p className="text-sm text-muted-foreground">
+          Cliquez sur l’icône{' '}
+          <span className="inline-block align-middle">
+            <Icon name="send" size={14} className="inline" />
+          </span>{' '}
+          à côté d’un invité pour générer son lien personnel et le copier dans le presse-papiers.
+          L’envoi WhatsApp / email automatique viendra ensuite.
         </p>
       </div>
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm max-w-md break-words">
+          {toast}
+        </div>
+      )}
     </AppLayout>
   );
 }

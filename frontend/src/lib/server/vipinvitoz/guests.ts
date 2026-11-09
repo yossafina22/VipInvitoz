@@ -6,7 +6,14 @@
 
 import 'server-only';
 
-import type { Guest, PrismaClient } from '@prisma/client';
+import type { Guest, Invitation, PrismaClient } from '@prisma/client';
+
+export type GuestWithLatestInvitation = Guest & {
+  invitations: Pick<
+    Invitation,
+    'id' | 'slug' | 'rsvpStatus' | 'companionCount' | 'rsvpAt' | 'viewedAt' | 'sentAt'
+  >[];
+};
 
 export class GuestConflictError extends Error {
   readonly code = 'GUEST_PHONE_DUPLICATE';
@@ -19,11 +26,26 @@ export class GuestConflictError extends Error {
 export async function listGuestsForCeremony(
   prisma: PrismaClient,
   ceremonyId: string,
-): Promise<Guest[]> {
+): Promise<GuestWithLatestInvitation[]> {
   return prisma.guest.findMany({
     where: { ceremonyId },
     orderBy: [{ createdAt: 'asc' }],
     take: 1000,
+    include: {
+      invitations: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: {
+          id: true,
+          slug: true,
+          rsvpStatus: true,
+          companionCount: true,
+          rsvpAt: true,
+          viewedAt: true,
+          sentAt: true,
+        },
+      },
+    },
   });
 }
 

@@ -51,14 +51,24 @@ async function resolveCeremonyId(
   return defaultCeremony?.id ?? null;
 }
 
-function serialize(g: {
+interface SerializableGuest {
   id: string;
   name: string;
   phone: string | null;
   email: string | null;
   notes: string | null;
   createdAt: Date;
-}) {
+  invitations?: Array<{
+    slug: string;
+    rsvpStatus: string;
+    companionCount: number;
+    rsvpAt: Date | null;
+    viewedAt: Date | null;
+  }>;
+}
+
+function serialize(g: SerializableGuest) {
+  const latest = g.invitations?.[0];
   return {
     id: g.id,
     name: g.name,
@@ -66,6 +76,15 @@ function serialize(g: {
     email: g.email,
     notes: g.notes,
     createdAt: g.createdAt.toISOString(),
+    invitation: latest
+      ? {
+          slug: latest.slug,
+          rsvpStatus: latest.rsvpStatus,
+          companionCount: latest.companionCount,
+          rsvpAt: latest.rsvpAt?.toISOString() ?? null,
+          viewedAt: latest.viewedAt?.toISOString() ?? null,
+        }
+      : null,
   };
 }
 
