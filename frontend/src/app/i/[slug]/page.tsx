@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { Image } from '@/components/Image';
+import { QRCode } from '@/components/QRCode';
 
 type RSVPStatus = 'idle' | 'confirmed' | 'declined';
 type Status = 'loading' | 'ready' | 'not-found' | 'error';
@@ -171,6 +172,22 @@ export default function GuestInvitationPage() {
   const { ceremony, guest, occasions } = data;
   const firstOcc = occasions[0];
   const emoji = CEREMONY_EMOJI[ceremony.type] ?? '✨';
+  const invitationUrl =
+    typeof window !== 'undefined' ? window.location.href : `/i/${data.invitation.slug}`;
+
+  function handleShare() {
+    if (typeof window === 'undefined') return;
+    const payload = {
+      title: ceremony.title,
+      text: `Vous êtes invité(e) à ${ceremony.title}`,
+      url: invitationUrl,
+    };
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      void navigator.share(payload).catch(() => {});
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      void navigator.clipboard.writeText(invitationUrl);
+    }
+  }
 
   return (
     <div className="bg-background font-body min-h-screen pb-6">
@@ -180,15 +197,21 @@ export default function GuestInvitationPage() {
           <Icon name="arrow-left" size={18} />
         </Link>
         <div className="text-xs text-gold font-bold tracking-widest">INVITATION</div>
-        <button type="button" className="text-primary-foreground" aria-label="Partager">
+        <button
+          type="button"
+          onClick={handleShare}
+          className="text-primary-foreground"
+          aria-label="Partager"
+        >
           <Icon name="share-2" size={18} />
         </button>
       </div>
 
-      <div className="max-w-md mx-auto lg:max-w-2xl">
-        <div className="px-4 py-6">
-          <div className="bg-card border border-border rounded-2xl overflow-hidden">
-            <div className="relative h-60 sm:h-72 lg:h-96 bg-input overflow-hidden">
+      <div className="max-w-md mx-auto lg:max-w-5xl">
+        <div className="px-4 py-6 lg:grid lg:grid-cols-5 lg:gap-6">
+          {/* Main invitation card — spans 3 cols on desktop */}
+          <div className="bg-card border border-border rounded-2xl overflow-hidden lg:col-span-3">
+            <div className="relative bg-input overflow-hidden aspect-[4/3] lg:aspect-[16/10]">
               <Image
                 ar="4:3"
                 src={ceremony.coverImageUrl ?? '/banani/invitation-cover.jpg'}
@@ -270,93 +293,120 @@ export default function GuestInvitationPage() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Details */}
-        {firstOcc && (
-          <div className="px-4 pb-6">
-            <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <Icon name="map-pin" size={14} className="text-primary mt-1 shrink-0" />
-                <div className="flex-1 text-xs">
-                  <div className="font-bold text-foreground mb-0.5">Lieu complet</div>
-                  <div className="text-muted-foreground">{firstOcc.locationAddress}</div>
-                </div>
-              </div>
-              {firstOcc.instructions && (
+          {/* Right column — details + accompagnants + QR + CTA */}
+          <div className="mt-4 lg:mt-0 lg:col-span-2 flex flex-col gap-4">
+            {/* Details */}
+            {firstOcc && (
+              <div className="bg-card border border-border rounded-xl p-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <Icon name="info" size={14} className="text-primary mt-1 shrink-0" />
+                  <Icon name="map-pin" size={14} className="text-primary mt-1 shrink-0" />
                   <div className="flex-1 text-xs">
-                    <div className="font-bold text-foreground mb-0.5">Indications</div>
-                    <div className="text-muted-foreground">{firstOcc.instructions}</div>
+                    <div className="font-bold text-foreground mb-0.5">Lieu complet</div>
+                    <div className="text-muted-foreground">{firstOcc.locationAddress}</div>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        )}
+                {firstOcc.instructions && (
+                  <div className="flex items-start gap-3">
+                    <Icon name="info" size={14} className="text-primary mt-1 shrink-0" />
+                    <div className="flex-1 text-xs">
+                      <div className="font-bold text-foreground mb-0.5">Indications</div>
+                      <div className="text-muted-foreground">{firstOcc.instructions}</div>
+                    </div>
+                  </div>
+                )}
+                {occasions.length > 1 && (
+                  <div className="flex items-start gap-3 pt-3 border-t border-border">
+                    <Icon name="calendar" size={14} className="text-primary mt-1 shrink-0" />
+                    <div className="flex-1 text-xs">
+                      <div className="font-bold text-foreground mb-1">Autres occasions</div>
+                      <ul className="text-muted-foreground space-y-0.5">
+                        {occasions.slice(1).map((o) => (
+                          <li key={o.id}>
+                            {o.label} — {DATE_FMT.format(new Date(o.startsAt))}{' '}
+                            {TIME_FMT.format(new Date(o.startsAt))} · {o.locationName}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-        {/* Accompagnants */}
-        {rsvp !== 'declined' && (
-          <div className="px-4 pb-6">
-            <div className="bg-secondary border border-border rounded-xl p-4">
-              <div className="text-sm font-body font-bold text-secondary-foreground mb-3">
-                Nombre d&apos;accompagnants
+            {/* Accompagnants */}
+            {rsvp !== 'declined' && (
+              <div className="bg-secondary border border-border rounded-xl p-4">
+                <div className="text-sm font-body font-bold text-secondary-foreground mb-3">
+                  Nombre d&apos;accompagnants
+                </div>
+                <div className="flex gap-2 mb-3">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setGuests(n)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-body font-bold border transition-colors ${
+                        n === guests
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'border-border text-foreground hover:border-primary'
+                      }`}
+                    >
+                      {n === 1 ? '+ Moi seul' : `+ ${n - 1}`}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-xs text-secondary-foreground">
+                  {rsvp === 'confirmed'
+                    ? companionsSaved
+                      ? '✓ Nombre d’accompagnants enregistré'
+                      : guests !== savedGuests
+                        ? 'Enregistrement…'
+                        : 'Modifiez librement, l’enregistrement est automatique.'
+                    : 'Indiquez combien de personnes vous accompagneront.'}
+                </div>
               </div>
-              <div className="flex gap-2 mb-3">
-                {[1, 2, 3, 4].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setGuests(n)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-body font-bold border transition-colors ${
-                      n === guests
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border text-foreground hover:border-primary'
-                    }`}
-                  >
-                    {n === 1 ? '+ Moi seul' : `+ ${n - 1}`}
-                  </button>
-                ))}
+            )}
+
+            {/* QR code */}
+            <div className="bg-card border border-border rounded-xl p-5 flex flex-col items-center gap-3">
+              <div className="text-sm font-body font-bold text-foreground">
+                Votre badge d&apos;entrée
               </div>
-              <div className="text-xs text-secondary-foreground">
-                {rsvp === 'confirmed'
-                  ? companionsSaved
-                    ? '✓ Nombre d’accompagnants enregistré'
-                    : guests !== savedGuests
-                      ? 'Enregistrement…'
-                      : 'Modifiez librement, l’enregistrement est automatique.'
-                  : 'Indiquez combien de personnes vous accompagneront.'}
+              <QRCode value={invitationUrl} size={180} />
+              <p className="text-xs text-muted-foreground text-center max-w-xs">
+                Présentez ce QR code à l&apos;entrée le jour de la cérémonie.
+              </p>
+            </div>
+
+            {/* CTA */}
+            <div>
+              <button
+                type="button"
+                className="block w-full text-center bg-primary text-primary-foreground font-body font-bold py-3 rounded-lg text-sm"
+              >
+                Ajouter au calendrier
+              </button>
+              <div className="flex gap-2 mt-2">
+                <a
+                  href="https://wa.me/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center bg-secondary text-secondary-foreground font-body font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1"
+                >
+                  <Icon name="message-circle" size={12} />
+                  WhatsApp
+                </a>
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="flex-1 text-center bg-muted text-muted-foreground font-body font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1"
+                >
+                  <Icon name="share-2" size={12} />
+                  Partager
+                </button>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* CTA */}
-        <div className="px-4 pb-6">
-          <button
-            type="button"
-            className="block w-full text-center bg-primary text-primary-foreground font-body font-bold py-3 rounded-lg text-sm"
-          >
-            Ajouter au calendrier
-          </button>
-          <div className="flex gap-2 mt-2">
-            <a
-              href="https://wa.me/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 text-center bg-secondary text-secondary-foreground font-body font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1"
-            >
-              <Icon name="message-circle" size={12} />
-              WhatsApp
-            </a>
-            <button
-              type="button"
-              className="flex-1 text-center bg-muted text-muted-foreground font-body font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1"
-            >
-              <Icon name="share-2" size={12} />
-              Partager
-            </button>
           </div>
         </div>
       </div>
