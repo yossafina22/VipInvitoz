@@ -643,6 +643,15 @@ export default function InvitationEditorPage() {
               Étapes suivantes
             </div>
             <Link
+              href={`/ceremonies/${ceremonyId}/preview`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gold text-background text-center font-body font-bold py-2.5 rounded-lg text-sm hover:bg-gold/90 transition-colors flex items-center justify-center gap-2"
+            >
+              <Icon name="eye" size={14} />
+              Voir en tant qu&apos;invité
+            </Link>
+            <Link
               href="/guests"
               className="bg-primary text-primary-foreground text-center font-body font-bold py-2.5 rounded-lg text-sm hover:bg-primary/90 transition-colors"
             >

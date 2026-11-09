@@ -103,10 +103,13 @@ export function CeremonyCard({
         </div>
         <div className="flex gap-2 mt-4">
           <Link
-            href={`/ceremonies/${id}/editor`}
+            href={`/ceremonies/${id}/preview`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex-1 text-center text-sm font-body font-medium bg-secondary text-secondary-foreground py-2 rounded-md"
+            aria-label="Voir en tant qu'invité"
           >
-            Gérer
+            Aperçu
           </Link>
           <Link
             href={`/ceremonies/${id}/editor`}
