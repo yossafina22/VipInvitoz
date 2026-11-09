@@ -30,6 +30,21 @@ interface Ceremony {
   _count?: { guests: number; invitations: number };
 }
 
+interface DashboardStats {
+  tier: 'FREEMIUM' | 'PREMIUM' | 'VIP';
+  guestsTotal: number;
+  guestsConfirmed: number;
+  guestsDeclined: number;
+  guestsPending: number;
+  companions: number;
+  invitationsTotal: number;
+  aiCredits: {
+    remaining: number;
+    initial: number;
+    unlimited: boolean;
+  };
+}
+
 const TYPE_MAP: Record<string, CeremonyCardType> = {
   MARIAGE: 'mariage',
   BAPTEME: 'bapteme',
@@ -66,6 +81,7 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [ceremonies, setCeremonies] = useState<Ceremony[] | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/auth/login');
@@ -75,11 +91,18 @@ export default function DashboardPage() {
     if (!user) return;
     let cancelled = false;
     (async () => {
-      try {
-        const res = await api<{ ceremonies: Ceremony[] }>('/api/ceremonies');
-        if (!cancelled) setCeremonies(res.ceremonies);
-      } catch {
-        if (!cancelled) setCeremonies([]);
+      const [ceremoniesRes, statsRes] = await Promise.allSettled([
+        api<{ ceremonies: Ceremony[] }>('/api/ceremonies'),
+        api<DashboardStats>('/api/dashboard/stats'),
+      ]);
+      if (cancelled) return;
+      if (ceremoniesRes.status === 'fulfilled') {
+        setCeremonies(ceremoniesRes.value.ceremonies);
+      } else {
+        setCeremonies([]);
+      }
+      if (statsRes.status === 'fulfilled') {
+        setStats(statsRes.value);
       }
     })();
     return () => {
@@ -149,27 +172,50 @@ export default function DashboardPage() {
           color="primary"
           sub={ceremonies === null ? 'Chargement…' : `${ceremonies.length} au total`}
         />
-        {/* TODO: wire from Invitation.rsvpStatus aggregation once endpoint ships */}
         <StatCard
           label="Invités confirmés"
-          value="87"
+          value={stats === null ? '…' : String(stats.guestsConfirmed)}
           icon="user-check"
           color="success"
-          sub="sur 200 invités"
+          sub={
+            stats === null
+              ? 'Chargement…'
+              : stats.guestsTotal === 0
+                ? 'Aucun invité encore'
+                : `sur ${stats.guestsTotal} invité${stats.guestsTotal > 1 ? 's' : ''}${stats.companions > 0 ? ` (+${stats.companions} accomp.)` : ''}`
+          }
         />
         <StatCard
           label="RSVP en attente"
-          value="41"
+          value={stats === null ? '…' : String(stats.guestsPending)}
           icon="clock"
           color="gold"
-          sub="relance automatique possible"
+          sub={
+            stats === null
+              ? 'Chargement…'
+              : stats.guestsPending === 0
+                ? 'Tout le monde a répondu'
+                : 'relance automatique possible'
+          }
         />
         <StatCard
           label="Crédits IA restants"
-          value="8"
+          value={
+            stats === null
+              ? '…'
+              : stats.aiCredits.unlimited
+                ? '∞'
+                : String(stats.aiCredits.remaining)
+          }
           icon="sparkles"
           color="muted"
-          sub="sur 12 (Premium)"
+          sub={
+            stats === null
+              ? 'Chargement…'
+              : stats.aiCredits.unlimited
+                ? `illimité (${stats.tier})`
+                : `sur ${stats.aiCredits.initial} (${stats.tier === 'FREEMIUM' ? 'Freemium' : stats.tier === 'PREMIUM' ? 'Premium' : 'VIP'})`
+          }
         />
       </div>
 
@@ -230,13 +276,29 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4">
           <div className="bg-card border border-border rounded-xl p-5">
             <h3 className="font-headings font-bold text-base text-foreground mb-4">
-              Statut RSVP — Mariage
+              Statut RSVP global
             </h3>
-            <RSVPStatusBar confirmed={87} declined={12} pending={41} total={140} />
+            {stats === null ? (
+              <div className="h-10 bg-muted rounded animate-pulse" />
+            ) : stats.guestsTotal === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Ajoutez des invités pour voir vos RSVP apparaître ici.
+              </p>
+            ) : (
+              <RSVPStatusBar
+                confirmed={stats.guestsConfirmed}
+                declined={stats.guestsDeclined}
+                pending={stats.guestsPending}
+                total={stats.guestsTotal}
+              />
+            )}
             <div className="mt-4 pt-4 border-t border-border">
               <div className="text-xs text-muted-foreground mb-1">Accompagnants</div>
               <div className="font-headings font-bold text-xl text-foreground">
-                +34 <span className="text-sm text-muted-foreground font-body">personnes</span>
+                +{stats?.companions ?? 0}{' '}
+                <span className="text-sm text-muted-foreground font-body">
+                  personne{(stats?.companions ?? 0) > 1 ? 's' : ''}
+                </span>
               </div>
             </div>
           </div>
