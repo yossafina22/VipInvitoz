@@ -54,6 +54,8 @@ export default function GuestsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [shareGuest, setShareGuest] = useState<Guest | null>(null);
+  const [sharingChannel, setSharingChannel] = useState<'EMAIL' | 'WHATSAPP' | 'LINK' | null>(null);
 
   const refetch = useCallback(async () => {
     try {
@@ -137,31 +139,81 @@ export default function GuestsPage() {
     }
   }
 
-  async function handleInvite(id: string) {
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  async function handleInviteOpen(id: string) {
+    const g = guests.find((x) => x.id === id);
+    if (!g) return;
+    // Pre-generate the invitation so copy/WhatsApp/email all share the same slug.
     setInvitingId(id);
     try {
-      const res = await api<{ publicUrl: string }>(`/api/guests/${id}/invite`, {
-        method: 'POST',
-      });
-      const absoluteUrl = res.publicUrl.startsWith('http')
-        ? res.publicUrl
-        : `${window.location.origin}${res.publicUrl}`;
-      try {
-        await navigator.clipboard.writeText(absoluteUrl);
-        setToast(`Lien copié: ${absoluteUrl}`);
-      } catch {
-        setToast(`Lien: ${absoluteUrl}`);
-      }
-      setTimeout(() => setToast(null), 4000);
+      await api(`/api/guests/${id}/invite`, { method: 'POST' });
+      setShareGuest(g);
     } catch (err) {
       const msg =
         err instanceof ApiError && err.code === 'GUEST_NOT_FOUND'
           ? 'Invité introuvable.'
-          : 'Impossible de générer le lien.';
-      setToast(msg);
-      setTimeout(() => setToast(null), 4000);
+          : 'Impossible de préparer l’invitation.';
+      showToast(msg);
     } finally {
       setInvitingId(null);
+    }
+  }
+
+  async function handleShare(channel: 'EMAIL' | 'WHATSAPP' | 'LINK') {
+    if (!shareGuest) return;
+    setSharingChannel(channel);
+    try {
+      const res = await api<{
+        publicUrl: string;
+        waUrl?: string;
+        emailQueueMissing?: true;
+      }>(`/api/guests/${shareGuest.id}/invite/send`, {
+        method: 'POST',
+        body: { channel, origin: window.location.origin },
+      });
+      const absoluteUrl = res.publicUrl.startsWith('http')
+        ? res.publicUrl
+        : `${window.location.origin}${res.publicUrl}`;
+
+      if (channel === 'LINK') {
+        try {
+          await navigator.clipboard.writeText(absoluteUrl);
+          showToast(`Lien copié : ${absoluteUrl}`);
+        } catch {
+          showToast(`Lien : ${absoluteUrl}`);
+        }
+      } else if (channel === 'WHATSAPP') {
+        if (res.waUrl) {
+          window.open(res.waUrl, '_blank', 'noopener,noreferrer');
+          showToast('WhatsApp ouvert — envoyez le message pour terminer.');
+        } else {
+          showToast('Numéro invalide : WhatsApp non ouvert.');
+        }
+      } else if (channel === 'EMAIL') {
+        if (res.emailQueueMissing) {
+          showToast('Email: file non configurée (RESEND_API_KEY manquant).');
+        } else {
+          showToast(`Email envoyé à ${shareGuest.email}.`);
+        }
+      }
+
+      setShareGuest(null);
+      await refetch();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.code === 'GUEST_EMAIL_MISSING') showToast('Cet invité n’a pas d’email.');
+        else if (err.code === 'GUEST_PHONE_MISSING')
+          showToast('Cet invité n’a pas de numéro WhatsApp.');
+        else showToast('Erreur : envoi impossible.');
+      } else {
+        showToast('Erreur réseau.');
+      }
+    } finally {
+      setSharingChannel(null);
     }
   }
 
@@ -347,7 +399,7 @@ export default function GuestsPage() {
               table="—"
               index={i}
               onDelete={() => handleDelete(g.id)}
-              onSend={() => handleInvite(g.id)}
+              onSend={() => handleInviteOpen(g.id)}
               deleting={deletingId === g.id || invitingId === g.id}
             />
           ))
@@ -356,17 +408,94 @@ export default function GuestsPage() {
 
       <div className="bg-card border border-border rounded-xl p-5 md:p-6">
         <h3 className="font-headings font-bold text-lg text-foreground mb-1">
-          Générer et partager les invitations
+          Partager les invitations
         </h3>
         <p className="text-sm text-muted-foreground">
           Cliquez sur l’icône{' '}
           <span className="inline-block align-middle">
             <Icon name="send" size={14} className="inline" />
           </span>{' '}
-          à côté d’un invité pour générer son lien personnel et le copier dans le presse-papiers.
-          L’envoi WhatsApp / email automatique viendra ensuite.
+          à côté d’un invité : choisissez WhatsApp, email ou copie du lien dans la fenêtre qui
+          s’ouvre.
         </p>
       </div>
+
+      {/* Share dialog */}
+      {shareGuest && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4"
+          onClick={() => !sharingChannel && setShareGuest(null)}
+        >
+          <div
+            className="bg-card border border-border rounded-xl p-5 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-headings font-bold text-base text-foreground mb-1">
+              Envoyer à {shareGuest.name}
+            </h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Choisissez un canal pour partager l’invitation.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => handleShare('WHATSAPP')}
+                disabled={!shareGuest.phone || sharingChannel !== null}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border hover:border-primary text-left disabled:opacity-40 disabled:cursor-not-allowed"
+                title={!shareGuest.phone ? 'Numéro manquant' : undefined}
+              >
+                <span className="text-xl">💬</span>
+                <div className="flex-1">
+                  <div className="text-sm font-body font-bold text-foreground">WhatsApp</div>
+                  <div className="text-xs text-muted-foreground">
+                    {shareGuest.phone ?? 'Numéro manquant'}
+                  </div>
+                </div>
+                {sharingChannel === 'WHATSAPP' && <span className="text-xs">…</span>}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleShare('EMAIL')}
+                disabled={!shareGuest.email || sharingChannel !== null}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border hover:border-primary text-left disabled:opacity-40 disabled:cursor-not-allowed"
+                title={!shareGuest.email ? 'Email manquant' : undefined}
+              >
+                <span className="text-xl">📧</span>
+                <div className="flex-1">
+                  <div className="text-sm font-body font-bold text-foreground">Email</div>
+                  <div className="text-xs text-muted-foreground">
+                    {shareGuest.email ?? 'Email manquant'}
+                  </div>
+                </div>
+                {sharingChannel === 'EMAIL' && <span className="text-xs">…</span>}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleShare('LINK')}
+                disabled={sharingChannel !== null}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border hover:border-primary text-left disabled:opacity-40"
+              >
+                <span className="text-xl">🔗</span>
+                <div className="flex-1">
+                  <div className="text-sm font-body font-bold text-foreground">Copier le lien</div>
+                  <div className="text-xs text-muted-foreground">À coller où vous voulez</div>
+                </div>
+                {sharingChannel === 'LINK' && <span className="text-xs">…</span>}
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShareGuest(null)}
+              disabled={sharingChannel !== null}
+              className="mt-4 w-full py-2 text-sm text-muted-foreground"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm max-w-md break-words">
