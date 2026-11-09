@@ -4,6 +4,7 @@ import { UserAvatar } from './UserAvatar';
 type RsvpStatus = 'confirmed' | 'declined' | 'pending';
 
 interface GuestRowProps {
+  id?: string;
   name: string;
   phone: string;
   email?: string;
@@ -11,6 +12,9 @@ interface GuestRowProps {
   companions: number;
   table: string;
   index?: number;
+  onDelete?: () => void;
+  onSend?: () => void;
+  deleting?: boolean;
 }
 
 const STATUS_STYLE: Record<RsvpStatus, string> = {
@@ -37,6 +41,9 @@ export function GuestRow({
   companions,
   table,
   index = 0,
+  onDelete,
+  onSend,
+  deleting = false,
 }: GuestRowProps) {
   return (
     <>
@@ -66,6 +73,7 @@ export function GuestRow({
         <div className="flex justify-end gap-1">
           <button
             type="button"
+            onClick={onSend}
             className="p-1.5 text-muted-foreground hover:text-primary rounded-md"
             aria-label="Envoyer"
           >
@@ -73,7 +81,9 @@ export function GuestRow({
           </button>
           <button
             type="button"
-            className="p-1.5 text-muted-foreground hover:text-danger rounded-md"
+            onClick={onDelete}
+            disabled={deleting}
+            className="p-1.5 text-muted-foreground hover:text-danger rounded-md disabled:opacity-40"
             aria-label="Supprimer"
           >
             <Icon name="user-x" size={14} />
@@ -101,6 +111,7 @@ export function GuestRow({
             <span className="ml-auto flex items-center gap-2 shrink-0">
               <button
                 type="button"
+                onClick={onSend}
                 className="text-muted-foreground hover:text-primary"
                 aria-label="Envoyer"
               >
@@ -108,7 +119,9 @@ export function GuestRow({
               </button>
               <button
                 type="button"
-                className="text-muted-foreground hover:text-danger"
+                onClick={onDelete}
+                disabled={deleting}
+                className="text-muted-foreground hover:text-danger disabled:opacity-40"
                 aria-label="Supprimer"
               >
                 <Icon name="user-x" size={14} />

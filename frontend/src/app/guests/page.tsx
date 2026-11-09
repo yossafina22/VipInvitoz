@@ -1,121 +1,244 @@
 'use client';
 
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { PageHeader } from '@/components/PageHeader';
-import { AlertBanner } from '@/components/AlertBanner';
 import { RSVPStatusBar } from '@/components/RSVPStatusBar';
 import { GuestRow, GUEST_GRID_COLS } from '@/components/GuestRow';
 import { PreviewBanner } from '@/components/PreviewBanner';
 import { Icon } from '@/components/Icon';
+import { api, ApiError } from '@/lib/api';
 
-const MOCK_GUESTS = [
-  {
-    name: 'Amadou Diallo',
-    phone: '+221 77 123 45 67',
-    email: 'amadou@mail.com',
-    status: 'confirmed' as const,
-    companions: 2,
-    table: 'Table 3',
-    index: 0,
-  },
-  {
-    name: 'Awa Camara',
-    phone: '+221 78 234 56 78',
-    email: 'awa@mail.com',
-    status: 'confirmed' as const,
-    companions: 1,
-    table: 'Table 3',
-    index: 1,
-  },
-  {
-    name: 'Mamadou Sy',
-    phone: '+221 76 345 67 89',
-    email: 'mamadou@mail.com',
-    status: 'declined' as const,
-    companions: 0,
-    table: '—',
-    index: 2,
-  },
-  {
-    name: 'Fatoumata Ba',
-    phone: '+221 79 456 78 90',
-    email: 'fatoumata@mail.com',
-    status: 'pending' as const,
-    companions: 0,
-    table: '—',
-    index: 3,
-  },
-  {
-    name: 'Kofi Mensah',
-    phone: '+233 24 567 89 01',
-    email: 'kofi@mail.com',
-    status: 'confirmed' as const,
-    companions: 3,
-    table: 'Table 1',
-    index: 4,
-  },
-];
+interface Guest {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+interface GuestsResponse {
+  ceremonyId: string | null;
+  guests: Guest[];
+}
+
+type Status = 'loading' | 'preview' | 'live';
 
 export default function GuestsPage() {
+  const [status, setStatus] = useState<Status>('loading');
+  const [ceremonyId, setCeremonyId] = useState<string | null>(null);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [search, setSearch] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const refetch = useCallback(async () => {
+    try {
+      const res = await api<GuestsResponse>('/api/guests');
+      setCeremonyId(res.ceremonyId);
+      setGuests(res.guests);
+      setStatus('live');
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setStatus('preview');
+      } else {
+        setStatus('preview');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    void refetch();
+  }, [refetch]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return guests;
+    return guests.filter(
+      (g) =>
+        g.name.toLowerCase().includes(q) ||
+        (g.phone ?? '').toLowerCase().includes(q) ||
+        (g.email ?? '').toLowerCase().includes(q),
+    );
+  }, [guests, search]);
+
+  const stats = useMemo(() => {
+    // Invitation.rsvpStatus is not wired yet — every guest counts as pending
+    // until invitations are sent and RSVPs come in.
+    const total = guests.length;
+    const pending = total;
+    return { total, confirmed: 0, declined: 0, pending };
+  }, [guests]);
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!ceremonyId || !newName.trim()) return;
+    setAdding(true);
+    setFormError(null);
+    try {
+      await api('/api/guests', {
+        method: 'POST',
+        body: {
+          ceremonyId,
+          name: newName.trim(),
+          ...(newPhone.trim() ? { phone: newPhone.trim() } : {}),
+          ...(newEmail.trim() ? { email: newEmail.trim() } : {}),
+        },
+      });
+      setNewName('');
+      setNewPhone('');
+      setNewEmail('');
+      setFormOpen(false);
+      await refetch();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.code === 'GUEST_PHONE_DUPLICATE') {
+          setFormError('Un invité avec ce numéro est déjà dans la liste.');
+        } else if (err.code === 'VALIDATION_FAILED') {
+          setFormError('Nom ou email invalide.');
+        } else {
+          setFormError('Erreur: impossible d’ajouter cet invité.');
+        }
+      } else {
+        setFormError('Erreur réseau.');
+      }
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Supprimer cet invité ?')) return;
+    setDeletingId(id);
+    try {
+      await api(`/api/guests/${id}`, { method: 'DELETE' });
+      await refetch();
+    } catch {
+      alert('Impossible de supprimer. Réessayez.');
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const isPreview = status === 'preview' || (status === 'live' && !ceremonyId);
+
   return (
     <AppLayout pageTitle="Invités & RSVP" tier="premium">
-      <PreviewBanner />
-
-      <AlertBanner
-        type="upgrade"
-        message="Vous avez 187 invités. Votre plan Freemium accepte 20 max. Passez en Premium pour continuer."
-        cta="Upgrader"
-        href="/#pricing"
-      />
+      {isPreview && <PreviewBanner />}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-6 mb-6">
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="text-xs text-muted-foreground mb-1">Total invités</div>
-          <div className="font-headings font-bold text-3xl text-foreground mb-3">200</div>
-          <RSVPStatusBar confirmed={87} declined={12} pending={41} total={140} />
+          <div className="font-headings font-bold text-3xl text-foreground mb-3">
+            {status === 'loading' ? '…' : stats.total}
+          </div>
+          <RSVPStatusBar
+            confirmed={stats.confirmed}
+            declined={stats.declined}
+            pending={stats.pending}
+            total={Math.max(stats.total, 1)}
+          />
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
-          <div className="text-xs text-muted-foreground mb-1">Accompagnants</div>
-          <div className="font-headings font-bold text-3xl text-primary mb-3">+34</div>
+          <div className="text-xs text-muted-foreground mb-1">Confirmés</div>
+          <div className="font-headings font-bold text-3xl text-success mb-3">
+            {stats.confirmed}
+          </div>
           <div className="text-xs text-muted-foreground">
-            Nombre total avec accompagnants : 121 personnes
+            RSVP branchés dès que les invitations seront envoyées.
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
-          <div className="text-xs text-muted-foreground mb-1">Taux de réponse</div>
-          <div className="font-headings font-bold text-3xl text-success mb-3">68%</div>
-          <div className="text-xs text-muted-foreground">139 sur 200 ont répondu</div>
+          <div className="text-xs text-muted-foreground mb-1">En attente</div>
+          <div className="font-headings font-bold text-3xl text-warning mb-3">{stats.pending}</div>
+          <div className="text-xs text-muted-foreground">
+            {stats.total === 0
+              ? 'Ajoutez votre premier invité ci-dessous.'
+              : 'Aucune réponse enregistrée pour l’instant.'}
+          </div>
         </div>
       </div>
 
       <PageHeader
         title="Liste des invités"
-        subtitle="200 invités au total — envoyez l'invitation, suivez les réponses en direct"
+        subtitle={
+          status === 'loading'
+            ? 'Chargement…'
+            : `${stats.total} invité${stats.total > 1 ? 's' : ''}`
+        }
       >
         <div className="flex flex-wrap gap-2 md:gap-3">
           <div className="relative flex-1 sm:flex-none">
-            <div className="bg-input border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground flex items-center gap-2 w-full sm:w-48">
-              <Icon name="search" size={14} />
-              <span>Rechercher…</span>
-            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher…"
+              className="bg-input border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground w-full sm:w-48 outline-none focus:border-primary"
+            />
+            <Icon
+              name="search"
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+            />
           </div>
           <button
             type="button"
-            className="bg-secondary text-secondary-foreground font-body font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2"
-          >
-            <Icon name="upload" size={14} />
-            <span className="hidden sm:inline">Importer CSV</span>
-            <span className="sm:hidden">CSV</span>
-          </button>
-          <button
-            type="button"
-            className="bg-primary text-primary-foreground font-body font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+            onClick={() => setFormOpen((v) => !v)}
+            disabled={!ceremonyId}
+            className="bg-primary text-primary-foreground font-body font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50"
           >
             <Icon name="plus" size={14} />
-            Ajouter
+            {formOpen ? 'Fermer' : 'Ajouter'}
           </button>
         </div>
       </PageHeader>
+
+      {formOpen && ceremonyId && (
+        <form
+          onSubmit={handleAdd}
+          className="bg-card border border-border rounded-xl p-5 mb-6 grid grid-cols-1 md:grid-cols-3 gap-3"
+        >
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Nom *"
+            required
+            className="bg-input border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+          <input
+            type="tel"
+            value={newPhone}
+            onChange={(e) => setNewPhone(e.target.value)}
+            placeholder="+221 77 123 45 67"
+            className="bg-input border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+          <input
+            type="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            placeholder="email (optionnel)"
+            className="bg-input border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+          <div className="md:col-span-3 flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={adding || !newName.trim()}
+              className="bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-body font-bold disabled:opacity-50"
+            >
+              {adding ? 'Ajout…' : 'Ajouter l’invité'}
+            </button>
+            {formError && <p className="text-xs text-danger">{formError}</p>}
+          </div>
+        </form>
+      )}
 
       <div className="bg-card border border-border rounded-xl overflow-hidden mb-6">
         <div
@@ -128,60 +251,54 @@ export default function GuestsPage() {
           <div>Table</div>
           <div className="text-right">Actions</div>
         </div>
-        {MOCK_GUESTS.map((g, i) => (
-          <GuestRow key={i} {...g} />
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-        <div className="bg-secondary border border-border rounded-xl p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="font-headings font-bold text-lg text-foreground mb-1">Envoyer à tous</h3>
+        {status === 'loading' ? (
+          <div className="px-5 py-8 text-center text-sm text-muted-foreground">Chargement…</div>
+        ) : !ceremonyId ? (
+          <div className="px-5 py-10 text-center">
+            <div className="text-4xl mb-2 opacity-40">🔒</div>
             <p className="text-sm text-muted-foreground">
-              Relancer les 41 invités en attente de réponse
+              Connectez-vous et créez une cérémonie pour gérer vos invités.
             </p>
           </div>
-          <button
-            type="button"
-            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg font-body font-bold text-sm shrink-0"
-          >
-            Envoyer
-          </button>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-5 md:p-6">
-          <h3 className="font-headings font-bold text-lg text-foreground mb-4">Partage direct</h3>
-          <div className="flex gap-2 mb-3">
-            <div className="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-xs text-muted-foreground truncate">
-              https://vipin.vz/ceremony/abc123
-            </div>
-            <button
-              type="button"
-              className="bg-gold-light text-gold px-3 py-2 rounded-lg font-body font-bold text-sm flex items-center gap-1 shrink-0"
-            >
-              <Icon name="copy" size={12} /> Copier
-            </button>
+        ) : filtered.length === 0 ? (
+          <div className="px-5 py-10 text-center">
+            <div className="text-4xl mb-2 opacity-40">👥</div>
+            <p className="text-sm text-muted-foreground">
+              {search
+                ? 'Aucun invité ne correspond à la recherche.'
+                : 'Aucun invité pour l’instant. Cliquez sur « Ajouter » pour commencer.'}
+            </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="flex-1 flex items-center justify-center gap-2 bg-success text-primary-foreground px-3 py-2.5 rounded-lg font-body font-bold text-sm"
-            >
-              <Icon name="message-circle" size={14} /> WhatsApp
-            </button>
-            <button
-              type="button"
-              className="flex-1 flex items-center justify-center gap-2 bg-muted text-foreground px-3 py-2.5 rounded-lg font-body font-bold text-sm"
-            >
-              <Icon name="mail" size={14} /> Email
-            </button>
-            <button
-              type="button"
-              className="flex-1 flex items-center justify-center gap-2 bg-muted text-foreground px-3 py-2.5 rounded-lg font-body font-bold text-sm"
-            >
-              <Icon name="link-2" size={14} /> Lien
-            </button>
-          </div>
-        </div>
+        ) : (
+          filtered.map((g, i) => (
+            <GuestRow
+              key={g.id}
+              id={g.id}
+              name={g.name}
+              phone={g.phone ?? '—'}
+              {...(g.email ? { email: g.email } : {})}
+              status="pending"
+              companions={0}
+              table="—"
+              index={i}
+              onDelete={() => handleDelete(g.id)}
+              deleting={deletingId === g.id}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Partage direct — mock pending invitation routes */}
+      <div className="bg-card border border-dashed border-border rounded-xl p-5 md:p-6 text-center">
+        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Bientôt</div>
+        <h3 className="font-headings font-bold text-lg text-foreground mb-1">
+          Envoi des invitations
+        </h3>
+        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+          L’envoi WhatsApp / email + le partage de lien seront câblés dès que la génération des
+          invitations sera branchée.
+        </p>
       </div>
     </AppLayout>
   );
