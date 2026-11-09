@@ -409,6 +409,7 @@ model Ceremony {
   invitations      Invitation[]
   aiGens           AiGeneration[]
   guestbookEntries GuestbookEntry[]
+  seatingTables    SeatingTable[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -458,6 +459,12 @@ model Guest {
   email      String?
   notes      String?
 
+  // Nullable: a guest without a table is "unassigned". onDelete SetNull so
+  // dropping a table doesn't cascade-delete its guests — they just become
+  // unassigned.
+  seatingTableId String?
+  seatingTable   SeatingTable? @relation(fields: [seatingTableId], references: [id], onDelete: SetNull)
+
   invitations Invitation[]
 
   createdAt DateTime @default(now())
@@ -465,6 +472,7 @@ model Guest {
 
   @@unique([ceremonyId, phone])
   @@index([ceremonyId])
+  @@index([seatingTableId])
 }
 
 // ─── Invitation ────────────────────────────────────────────────────────
@@ -560,4 +568,26 @@ model GuestbookEntry {
   @@index([ceremonyId, createdAt])
   @@index([ceremonyId, pinnedAt])
   @@index([invitationId])
+}
+
+// ─── SeatingTable ──────────────────────────────────────────────────────
+// Tables of the seating plan for a ceremony. `capacity` is the max count
+// (soft cap: UI warns but doesn't block over-seating — the organiser knows
+// their situation better than we do). `order` controls display order on
+// the /seating dashboard. Guests link back via Guest.seatingTableId (nullable).
+model SeatingTable {
+  id         String   @id @default(cuid())
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+
+  label    String
+  capacity Int    @default(8)
+  order    Int    @default(0)
+
+  guests Guest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ceremonyId, order])
 }
