@@ -10,6 +10,7 @@ import { FormField } from '@/components/FormField';
 import { InvitationPreview } from '@/components/InvitationPreview';
 import { Icon } from '@/components/Icon';
 import { api, ApiError } from '@/lib/api';
+import { uploadFile } from '@/lib/upload-client';
 
 const STEPS = ['Détails', 'Description IA', 'Prévisualiser', 'Invités'];
 
@@ -65,6 +66,30 @@ export default function CreateCeremonyPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+
+  async function handleCoverPick(file: File) {
+    setError(null);
+    setUploadingCover(true);
+    try {
+      const uploaded = await uploadFile(file);
+      setCoverImageUrl(uploaded.url);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.code === 'STORAGE_NOT_CONFIGURED')
+          setError('Upload non configuré côté serveur (Cloudinary manquant).');
+        else if (err.code === 'FILE_TOO_LARGE') setError('Fichier trop volumineux (max 10 Mo).');
+        else if (err.code === 'INVALID_MIME' || err.code === 'MAGIC_BYTE_MISMATCH')
+          setError('Format non pris en charge. Utilisez JPG, PNG ou WebP.');
+        else setError('Erreur lors de l’upload de l’image.');
+      } else {
+        setError('Erreur réseau lors de l’upload.');
+      }
+    } finally {
+      setUploadingCover(false);
+    }
+  }
 
   const canSubmit = useMemo(() => {
     return (
@@ -100,6 +125,7 @@ export default function CreateCeremonyPage() {
               locationAddress,
             },
           ],
+          ...(coverImageUrl ? { coverImageUrl } : {}),
         },
       });
       router.push(`/ceremonies/${res.ceremony.id}/editor`);
@@ -145,17 +171,44 @@ export default function CreateCeremonyPage() {
               <label className="text-sm font-body font-medium text-foreground block mb-2">
                 Photo de couverture
               </label>
-              <button
-                type="button"
-                disabled
-                className="w-full bg-input border-2 border-dashed border-border rounded-xl p-6 text-center flex flex-col items-center justify-center min-h-40 opacity-60 cursor-not-allowed"
-              >
-                <Icon name="image-plus" size={32} className="text-muted-foreground mb-2" />
-                <div className="text-sm font-body text-foreground mb-1">Bientôt disponible</div>
-                <div className="text-xs text-muted-foreground">
-                  Vous pourrez l’ajouter après création.
+              {coverImageUrl ? (
+                <div className="relative group">
+                  <img
+                    src={coverImageUrl}
+                    alt="Couverture"
+                    className="w-full h-40 object-cover rounded-xl border border-border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCoverImageUrl(null)}
+                    className="absolute top-2 right-2 bg-background/90 text-foreground text-xs font-bold px-2 py-1 rounded-md border border-border"
+                  >
+                    Retirer
+                  </button>
                 </div>
-              </button>
+              ) : (
+                <label className="w-full bg-input border-2 border-dashed border-border rounded-xl p-6 text-center flex flex-col items-center justify-center min-h-40 hover:bg-secondary hover:border-primary transition-colors cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void handleCoverPick(f);
+                      e.target.value = '';
+                    }}
+                    disabled={uploadingCover || submitting}
+                  />
+                  <Icon name="image-plus" size={32} className="text-muted-foreground mb-2" />
+                  <div className="text-sm font-body text-foreground mb-1">
+                    {uploadingCover ? 'Upload en cours…' : 'Cliquez pour choisir une image'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">JPG, PNG, WebP — Max 10 Mo</div>
+                </label>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                Cette image sera affichée comme fond de l&apos;invitation.
+              </p>
             </div>
 
             <div className="border-t border-border pt-5">

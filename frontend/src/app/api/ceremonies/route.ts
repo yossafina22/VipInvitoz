@@ -45,6 +45,7 @@ const Body = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(10).max(1000),
   occasions: z.array(OccasionBody).min(1).max(10),
+  coverImageUrl: z.string().url().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { type, title, description, occasions } = parsed.data;
+    const { type, title, description, occasions, coverImageUrl } = parsed.data;
 
     const ceremony = await prisma.ceremony.create({
       data: {
@@ -110,6 +111,7 @@ export async function POST(req: NextRequest) {
         title,
         description,
         status: 'DRAFT',
+        ...(coverImageUrl ? { coverImageUrl } : {}),
         occasions: {
           create: occasions.map((o, i) => ({
             label: o.label,

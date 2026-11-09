@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { InvitationPreview } from '@/components/InvitationPreview';
 import { Icon } from '@/components/Icon';
 import { api, ApiError } from '@/lib/api';
+import { uploadFile } from '@/lib/upload-client';
 
 type CeremonyType = 'MARIAGE' | 'BAPTEME' | 'ANNIVERSAIRE' | 'DEUIL' | 'AUTRE';
 type Status = 'DRAFT' | 'ACTIVE' | 'PAST' | 'ARCHIVED';
@@ -109,6 +110,7 @@ export default function InvitationEditorPage() {
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [aiCreditsRemaining, setAiCreditsRemaining] = useState<number | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   // Draft state for top-level editable fields. Sync when ceremony loads.
   const [draftTitle, setDraftTitle] = useState('');
@@ -186,6 +188,54 @@ export default function InvitationEditorPage() {
       showToast('Erreur lors de la sélection musicale.');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleCoverUpload(file: File) {
+    if (!ceremony || uploadingCover) return;
+    setUploadingCover(true);
+    try {
+      const uploaded = await uploadFile(file);
+      const res = await api<{ ceremony: Ceremony }>(`/api/ceremonies/${ceremonyId}`, {
+        method: 'PATCH',
+        body: { coverImageUrl: uploaded.url },
+      });
+      setCeremony(res.ceremony);
+      showToast('Photo de couverture ajoutée.');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.code === 'STORAGE_NOT_CONFIGURED') {
+          showToast('Upload non configuré côté serveur (Cloudinary manquant).');
+        } else if (err.code === 'FILE_TOO_LARGE') {
+          showToast('Fichier trop volumineux (max 10 Mo).');
+        } else if (err.code === 'INVALID_MIME' || err.code === 'MAGIC_BYTE_MISMATCH') {
+          showToast('Format non pris en charge. Utilisez JPG, PNG ou WebP.');
+        } else {
+          showToast('Erreur lors de l’upload.');
+        }
+      } else {
+        showToast('Erreur réseau lors de l’upload.');
+      }
+    } finally {
+      setUploadingCover(false);
+    }
+  }
+
+  async function handleCoverRemove() {
+    if (!ceremony || uploadingCover) return;
+    if (!confirm('Retirer la photo de couverture ?')) return;
+    setUploadingCover(true);
+    try {
+      const res = await api<{ ceremony: Ceremony }>(`/api/ceremonies/${ceremonyId}`, {
+        method: 'PATCH',
+        body: { coverImageUrl: null },
+      });
+      setCeremony(res.ceremony);
+      showToast('Photo retirée.');
+    } catch {
+      showToast('Erreur lors du retrait.');
+    } finally {
+      setUploadingCover(false);
     }
   }
 
@@ -318,7 +368,69 @@ export default function InvitationEditorPage() {
           </div>
 
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
-            <PageHeader title="Détails principaux" subtitle="Titre, type, texte" />
+            <PageHeader title="Détails principaux" subtitle="Image, titre, type, texte" />
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-body font-medium text-muted-foreground">
+                Photo de couverture
+              </label>
+              {ceremony.coverImageUrl ? (
+                <div className="relative group">
+                  <img
+                    src={ceremony.coverImageUrl}
+                    alt="Couverture"
+                    className="w-full h-40 object-cover rounded-lg border border-border"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                    <label className="bg-background text-foreground text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer">
+                      Remplacer
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) void handleCoverUpload(f);
+                          e.target.value = '';
+                        }}
+                        disabled={uploadingCover || busy}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleCoverRemove}
+                      disabled={uploadingCover || busy}
+                      className="bg-danger text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-md disabled:opacity-50"
+                    >
+                      Retirer
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="block w-full bg-input border-2 border-dashed border-border rounded-lg p-5 text-center cursor-pointer hover:bg-secondary hover:border-primary transition-colors">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void handleCoverUpload(f);
+                      e.target.value = '';
+                    }}
+                    disabled={uploadingCover || busy}
+                  />
+                  <Icon
+                    name="image-plus"
+                    size={24}
+                    className="text-muted-foreground mx-auto mb-1"
+                  />
+                  <div className="text-xs text-foreground font-bold">
+                    {uploadingCover ? 'Upload en cours…' : 'Cliquez pour ajouter'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">JPG, PNG ou WebP — max 10 Mo</div>
+                </label>
+              )}
+            </div>
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-body font-medium text-muted-foreground">Titre</label>
@@ -425,6 +537,7 @@ export default function InvitationEditorPage() {
                 dateLabel={firstHuman.date}
                 timeLabel={firstHuman.time}
                 location={firstOcc?.locationName ?? '—'}
+                coverImageUrl={ceremony.coverImageUrl}
               />
             ) : (
               <InvitationPreview
@@ -616,63 +729,69 @@ function GeneratedInvitation(props: {
   dateLabel: string;
   timeLabel: string;
   location: string;
+  coverImageUrl?: string | null;
 }) {
-  const { invitation, dateLabel, timeLabel, location } = props;
+  const { invitation, dateLabel, timeLabel, location, coverImageUrl } = props;
   const s = PALETTE_STYLES[invitation.palette] ?? PALETTE_STYLES.ivory;
   return (
-    <div className={`rounded-2xl ${s.bg} border border-border p-6 flex flex-col gap-3 shadow-sm`}>
-      {invitation.blocks.map((b) => {
-        if (b.type === 'title') {
-          return (
-            <h2
-              key={b.id}
-              className={`font-headings font-bold text-xl md:text-2xl ${s.accent} text-center`}
-            >
-              {b.text}
-            </h2>
-          );
-        }
-        if (b.type === 'subtitle') {
-          return (
-            <h3
-              key={b.id}
-              className={`font-headings text-sm md:text-base ${s.accent} text-center uppercase tracking-wide`}
-            >
-              {b.text}
-            </h3>
-          );
-        }
-        if (b.type === 'quote') {
-          return (
-            <blockquote
-              key={b.id}
-              className={`border-l-2 border-current pl-3 italic text-sm ${s.body}`}
-            >
-              {b.text}
-            </blockquote>
-          );
-        }
-        if (b.type === 'cta') {
-          return (
-            <div key={b.id} className="pt-2 text-center">
-              <span
-                className={`inline-block border border-current ${s.accent} px-4 py-2 rounded-full text-sm font-bold`}
+    <div
+      className={`rounded-2xl ${s.bg} border border-border overflow-hidden flex flex-col shadow-sm`}
+    >
+      {coverImageUrl && <img src={coverImageUrl} alt="" className="w-full h-40 object-cover" />}
+      <div className="flex flex-col gap-3 p-6">
+        {invitation.blocks.map((b) => {
+          if (b.type === 'title') {
+            return (
+              <h2
+                key={b.id}
+                className={`font-headings font-bold text-xl md:text-2xl ${s.accent} text-center`}
               >
                 {b.text}
-              </span>
-            </div>
+              </h2>
+            );
+          }
+          if (b.type === 'subtitle') {
+            return (
+              <h3
+                key={b.id}
+                className={`font-headings text-sm md:text-base ${s.accent} text-center uppercase tracking-wide`}
+              >
+                {b.text}
+              </h3>
+            );
+          }
+          if (b.type === 'quote') {
+            return (
+              <blockquote
+                key={b.id}
+                className={`border-l-2 border-current pl-3 italic text-sm ${s.body}`}
+              >
+                {b.text}
+              </blockquote>
+            );
+          }
+          if (b.type === 'cta') {
+            return (
+              <div key={b.id} className="pt-2 text-center">
+                <span
+                  className={`inline-block border border-current ${s.accent} px-4 py-2 rounded-full text-sm font-bold`}
+                >
+                  {b.text}
+                </span>
+              </div>
+            );
+          }
+          return (
+            <p key={b.id} className={`text-sm leading-relaxed ${s.body}`}>
+              {b.text}
+            </p>
           );
-        }
-        return (
-          <p key={b.id} className={`text-sm leading-relaxed ${s.body}`}>
-            {b.text}
-          </p>
-        );
-      })}
-      <div className={`mt-2 pt-3 border-t border-current/20 text-center text-xs ${s.body}`}>
-        <div className="font-bold">{dateLabel}</div>
-        <div>
-          {timeLabel} — {location}
+        })}
+        <div className={`mt-2 pt-3 border-t border-current/20 text-center text-xs ${s.body}`}>
+          <div className="font-bold">{dateLabel}</div>
+          <div>
+            {timeLabel} — {location}
+          </div>
         </div>
       </div>
     </div>

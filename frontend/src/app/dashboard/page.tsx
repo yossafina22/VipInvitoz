@@ -26,6 +26,7 @@ interface Ceremony {
   type: string;
   title: string;
   status: string;
+  coverImageUrl: string | null;
   occasions: Occasion[];
   _count?: { guests: number; invitations: number };
 }
@@ -267,6 +268,7 @@ export default function DashboardPage() {
                   guestsConfirmed={0}
                   guestsTotal={c._count?.guests ?? 0}
                   daysLeft={daysLeft}
+                  coverImageUrl={c.coverImageUrl}
                 />
               );
             })

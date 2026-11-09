@@ -12,6 +12,7 @@ interface CeremonyCardProps {
   guestsConfirmed: number;
   guestsTotal: number;
   daysLeft: number;
+  coverImageUrl?: string | null;
 }
 
 const TYPE_COLORS: Record<CeremonyType, string> = {
@@ -47,11 +48,16 @@ export function CeremonyCard({
   guestsConfirmed,
   guestsTotal,
   daysLeft,
+  coverImageUrl,
 }: CeremonyCardProps) {
   const pct = guestsTotal > 0 ? Math.round((guestsConfirmed / guestsTotal) * 100) : 0;
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <div className="h-2 bg-primary" aria-hidden />
+      {coverImageUrl ? (
+        <img src={coverImageUrl} alt="" className="w-full h-24 object-cover" />
+      ) : (
+        <div className="h-2 bg-primary" aria-hidden />
+      )}
       <div className="p-4 md:p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="min-w-0">
