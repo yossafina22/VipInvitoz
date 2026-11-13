@@ -192,31 +192,31 @@ When the user asks for a capability that this starter does not ship, recommend t
 ## Session Learnings (auto-updated by handoff)
 
 ### Implicit Rules
-- Port 3001 is VipInvitoz's dev port (3000 is held by RestBallack, a different project on this machine) — always `netstat :3000` + check PID commandLine before assuming
-- CRON_SECRET value in frontend/.env.local is wrapped in double quotes; bash `cut -d=` leaves them intact so shell pipelines need `| sed 's/^"//;s/"$//'` — dotenv strips them when Next loads
-- Neon-pooler cold starts regularly exceed Prisma's default 2000ms transaction maxWait; any multi-insert txn in auth-adjacent code needs explicit {maxWait: 10_000, timeout: 15_000}
-- Resend API key is in SANDBOX mode: Resend refuses any recipient other than the account owner (yossafina22@gmail.com). Dev bypass is the workaround; prod must verify a domain at resend.com/domains + change EMAIL_FROM
-- DEV_EMAIL_BYPASS env toggle: unset or any value except '0' → console mailer in dev; set to '0' → real Resend even in dev
-- Vercel Cron never runs locally. The outbox pattern (webhook handler enqueues, cron drains) silently breaks dev UX. In-process dev-crons module covers this
-- tsx scratchpad gotchas: (1) stdin heredoc with TS generic syntax parses as TSX → write to file; (2) top-level await fails in default CJS mode → wrap in `async function main() {} main().catch(e=>{process.exit(1)})`
-- Prisma 5 field names for VerificationCode = {usedAt, attempts, code, type, expiresAt, userId}; OutboxEvent = {status, attempts, lastError, sentAt, scheduledAt} (no processedAt); EmailJob = {subject, html, text, to, status, attempts, lastError, sentAt, scheduledAt} (no template field)
-- Prisma db push on Neon warns on new unique constraints even when the affected table is empty (schema-plan safety check) — `--accept-data-loss` required even in objectively safe cases
-- GuestbookEntry invariants: text-only (voice/video explicitly dropped from V1), invitationId nullable with SetNull delete behaviour, pinnedAt null = unpinned, ordering is [pinnedAt desc nulls:last, createdAt desc]
-- Public invitation endpoints (POST /api/invitations/[slug]/guestbook) carry no cookies → skip verifyCsrf; rate-limit by IP via createEmailLimiter({redis}, {...}) called with email=null (IP bucket fallback)
-- Image component: local /banani/* sources route through next/image with DEFAULT_SIZES per aspect ratio (16:4 → 100vw, 1:1 → 160px desktop/33vw mobile, 4:3 → 50vw/100vw, 3:4 → 50vw/100vw, 16:9 → 100vw); above-the-fold images should pass priority
-- /guestbook page: client component, fetches /api/guestbook, falls back to MOCK on 401 or empty entries, shows PreviewBanner only in fallback mode (visible distinction live vs preview)
+- Port 3000 is now VipInvitoz dev port (RestBallack no longer there); stale process from prior session killed (was PID 9108)
+- Resend is in sandbox mode: only sends to yossafina22@gmail.com. Dev defaults to console mailer via DEV_EMAIL_BYPASS (unset = bypass ON); set to '0' to use real Resend
+- Vercel Cron routes do not fire locally — in-process dev-crons module from instrumentation.ts polls outbox-drain + email-queue-drain every 30s
+- Neon-pooler cold starts regularly exceed Prisma's 2s default; use { maxWait: 10_000, timeout: 15_000 } on auth + AI + any multi-insert txn
+- Git identity set per commit via env vars (never config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'
+- GitHub remote: https://github.com/yossafina22/VipInvitoz (branch main)
+- Cloudinary env vars required for /api/upload: CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET — missing → 503 STORAGE_NOT_CONFIGURED, app still boots
+- ANTHROPIC_API_KEY required for AI generation — missing → 503 AI_NOT_CONFIGURED, credit NOT consumed; upstream failure → 502 AI_CALL_FAILED, credit IS consumed
+- /api/upload uses multipart/form-data — the shared api() helper (JSON only) is incompatible; use lib/upload-client.ts which mirrors CSRF double-submit
+- Protected files per CLAUDE.md (do NOT modify): auth.ts, crypto.ts, logger.ts, redis.ts, webhook/handler.ts, oauth/google.ts, outbox/dispatcher.ts, admin/audit.ts, middleware/index.ts, instrumentation.ts (5-line dev-crons exception stands), api.ts, payments/circuit-breaker.ts
+- pre-commit hook: format + lint + typecheck + 555 tests (1-3 min typical)
+- @next/next/no-img-element rule NOT configured in flat config — use plain <img> without eslint-disable comment
+- CRLF warnings on Windows are benign
+- Pnpm workspace: root package.json delegates scripts via `pnpm --filter frontend run X`; use `pnpm -w run format` at repo root, `pnpm typecheck` from frontend/
 
 ### Key Decisions
-- Decision: Image.tsx uses next/image only for local /banani/* sources, keeps raw <img> for loremflickr — Reason: avoid adding remotePatterns config for external hosts; local assets get full WebP/AVIF/srcset benefit which was the actual pain point
-- Decision: Default `sizes` per aspect ratio in Image component (16:4→100vw, 1:1→~160px) — Reason: avoid overfetching huge assets for small cards without forcing every caller to think about srcset
-- Decision: Guestbook text-only — voice/video dropped from V1 — Reason: user explicitly asked to simplify; reduces Prisma schema, UI complexity, and file-storage concerns to zero
-- Decision: /guestbook page falls back to MOCK when API returns 401 — Reason: preserves demo-ability without auth seeded; PreviewBanner only shows in fallback mode so the distinction is visible
-- Decision: GuestbookEntry.invitationId is nullable with onDelete: SetNull — Reason: org can delete invitation but message history must persist; also allows manual entries without a known invited guest
-- Decision: Pinned entries float via @@index([ceremonyId, pinnedAt]) + orderBy [pinnedAt desc nulls:last, createdAt desc] — Reason: single query serves both dashboard and public views with correct ordering
-- Decision: Public invitation endpoints skip CSRF — Reason: pre-session routes carry no cookies, so CSRF is impossible; rate limit by IP is the real guard
-- Decision: 404 on unknown invitation slug, not 403 — Reason: enumeration resistance; same posture as require-org-role in the starter
-- Decision: Dev bypass defaults ON when NODE_ENV=development, opt-out via DEV_EMAIL_BYPASS=0 — Reason: Resend sandbox blocks all non-owner addresses; defaulting bypass on makes new-dev onboarding frictionless
-- Decision: Dev cron runs from instrumentation.ts (protected file) via 5-line import gate — Reason: no new process to run, no second terminal; alternative scripts/dev-crons approach adds operational tax a beginner will forget
-- Decision: Prisma transaction maxWait 10s / timeout 15s on auth routes — Reason: Neon-pooler cold start regularly exceeds Prisma's 2s default, surfaces as 'Unable to start transaction' Sentry errors in real dev flow
+- Decision: Cover upload via dedicated lib/upload-client.ts (multipart) — Reason: shared api() uses JSON.stringify unconditionally; separate helper keeps CSRF double-submit aligned without complicating the wrapper
+- Decision: Debit AI credit BEFORE calling Claude — Reason: PRD rule 'pay for the attempt'; prevents concurrent clicks double-spending
+- Decision: ANTHROPIC_API_KEY missing → 503 AI_NOT_CONFIGURED without consuming credit — Reason: user never got a result; distinct from upstream Claude failure
+- Decision: Organizer preview via /ceremonies/[id]/preview using authenticated GET /api/ceremonies/[id] — Reason: avoids creating fake guests or mutating data; no new API route
+- Decision: QR code client-side via qrcode lib (already installed) with EC level H — Reason: real scannable QR, 30% damage tolerance, mobile-camera friendly
+- Decision: Occasion CRUD = 3 separate routes (POST + PATCH + DELETE on individual IDs) — Reason: PATCH ceremony body stays small, each occasion has stable ID for in-place edit
+- Decision: DELETE occasion refuses OCCASION_LAST_REMAINING — Reason: ceremony must keep one row to carry date/location; UI needs anchor
+- Decision: Dashboard 'RSVP en attente' = PENDING invitations + guests without any invitation — Reason: reflects real work left for organizer, not just non-responders
+- Decision: Preview page disables RSVP (opacity + pointer-events-none) rather than removing — Reason: organizer sees identical layout to judge rendering
+- Decision: Cover aspect-[4/3] lg:aspect-[16/10] on /i/[slug] — Reason: proportional across viewports; closer to Banani 15 spec than fixed heights
 
 <!-- handoff:learnings:end -->
