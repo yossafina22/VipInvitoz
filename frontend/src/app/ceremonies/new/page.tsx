@@ -138,7 +138,7 @@ export default function CreateCeremonyPage() {
               : 'Votre palier actuel ne permet pas de créer une nouvelle cérémonie. Passez en VIP.',
           );
         } else if (err.status === 401) {
-          router.push('/login?next=/ceremonies/new');
+          router.push('/auth/login?next=/ceremonies/new');
           return;
         } else {
           setError(

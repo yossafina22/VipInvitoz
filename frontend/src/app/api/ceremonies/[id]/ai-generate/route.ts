@@ -95,8 +95,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     }
 
     // Debit the credit BEFORE calling Claude so two concurrent clicks don't
-    // both spend. If Claude errors we won't refund — matches the "pay for
-    // the attempt" PRD rule and keeps the code free of compensating txs.
+    // both spend. On an upstream-attributable error (auth, quota, network
+    // from our side) we refund — these are NOT user attempts. User-facing
+    // Claude failures (malformed JSON, content policy) still consume the
+    // credit per the "pay for the attempt" PRD rule.
     const sub = await consumeAiCredit(prisma, userId);
     if (!sub) {
       return NextResponse.json(
@@ -107,6 +109,19 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         },
         { status: 403 },
       );
+    }
+
+    async function refundCredit(): Promise<number> {
+      try {
+        const refunded = await prisma.subscription.update({
+          where: { userId },
+          data: { aiCreditsRemaining: { increment: 1 } },
+          select: { aiCreditsRemaining: true },
+        });
+        return refunded.aiCreditsRemaining;
+      } catch {
+        return sub!.aiCreditsRemaining;
+      }
     }
 
     let result;
@@ -125,19 +140,43 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       });
     } catch (err) {
       if (err instanceof ClaudeUnconfiguredError) {
-        log.warn('ai-generate: Claude not configured');
+        const remaining = await refundCredit();
+        log.warn('ai-generate: Claude not configured (credit refunded)');
         return NextResponse.json(
           {
             error: 'AI_NOT_CONFIGURED',
             message:
               'La génération IA n’est pas configurée côté serveur (ANTHROPIC_API_KEY manquant).',
+            aiCreditsRemaining: remaining,
           },
           { status: 503 },
         );
       }
-      log.error('ai-generate: Claude call failed', {
-        err: err instanceof Error ? err.message : String(err),
-      });
+      const errMsg = err instanceof Error ? err.message : String(err);
+      // Anthropic auth / rate-limit / server errors are NOT user-attributable
+      // — refund the credit so the user isn't drained by misconfiguration.
+      const isUpstreamAuth = /\b401\b|invalid x-api-key|authentication_error/i.test(errMsg);
+      const isUpstreamRate = /\b429\b|rate_?limit/i.test(errMsg);
+      const isUpstreamServer = /\b5\d\d\b|overloaded|server_error/i.test(errMsg);
+      if (isUpstreamAuth || isUpstreamRate || isUpstreamServer) {
+        const remaining = await refundCredit();
+        log.error('ai-generate: upstream failure (credit refunded)', { err: errMsg });
+        const code = isUpstreamAuth
+          ? 'AI_PROVIDER_AUTH'
+          : isUpstreamRate
+            ? 'AI_PROVIDER_RATE_LIMITED'
+            : 'AI_PROVIDER_UNAVAILABLE';
+        const message = isUpstreamAuth
+          ? 'La clé API Anthropic est invalide. Contactez l’administrateur.'
+          : isUpstreamRate
+            ? 'Trop de requêtes IA — réessayez dans quelques instants.'
+            : 'Le service IA est momentanément indisponible. Réessayez plus tard.';
+        return NextResponse.json(
+          { error: code, message, aiCreditsRemaining: remaining },
+          { status: 502 },
+        );
+      }
+      log.error('ai-generate: Claude call failed (credit consumed)', { err: errMsg });
       return NextResponse.json(
         {
           error: 'AI_CALL_FAILED',

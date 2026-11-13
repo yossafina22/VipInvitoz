@@ -264,7 +264,13 @@ export default function InvitationEditorPage() {
         if (err.code === 'AI_QUOTA_EXCEEDED') {
           showToast('Crédits IA épuisés. Passez en VIP pour la génération illimitée.');
         } else if (err.code === 'AI_NOT_CONFIGURED') {
-          showToast('Génération IA non configurée côté serveur (ANTHROPIC_API_KEY manquant).');
+          showToast('IA non configurée côté serveur (crédit non débité).');
+        } else if (err.code === 'AI_PROVIDER_AUTH') {
+          showToast('Clé API Anthropic invalide (crédit remboursé).');
+        } else if (err.code === 'AI_PROVIDER_RATE_LIMITED') {
+          showToast('Trop de requêtes — réessayez (crédit remboursé).');
+        } else if (err.code === 'AI_PROVIDER_UNAVAILABLE') {
+          showToast('Service IA indisponible — réessayez plus tard (crédit remboursé).');
         } else if (err.code === 'AI_CALL_FAILED') {
           showToast('La génération a échoué. Réessayez.');
         } else if (err.code === 'CEREMONY_NO_OCCASIONS') {
