@@ -60,6 +60,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
         description: invitation.ceremony.description,
         coverImageUrl: invitation.ceremony.coverImageUrl,
         musicLabel: invitation.ceremony.musicLabel,
+        invitationJson: invitation.ceremony.invitationJson,
       },
       occasions: invitation.ceremony.occasions.map((o) => ({
         id: o.id,

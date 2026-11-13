@@ -9,8 +9,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
-import { Image } from '@/components/Image';
 import { QRCode } from '@/components/QRCode';
+import { WaxPattern } from '@/components/WaxPattern';
 import { api, ApiError } from '@/lib/api';
 
 interface Occasion {
@@ -22,6 +22,16 @@ interface Occasion {
   instructions: string | null;
 }
 
+interface InvitationBlock {
+  id: string;
+  type: 'title' | 'subtitle' | 'paragraph' | 'quote' | 'cta';
+  text: string;
+}
+interface InvitationJson {
+  palette: 'wax' | 'gold' | 'ivory' | 'indigo';
+  blocks: InvitationBlock[];
+}
+
 interface Ceremony {
   id: string;
   type: string;
@@ -29,6 +39,7 @@ interface Ceremony {
   description: string;
   coverImageUrl: string | null;
   musicLabel: string | null;
+  invitationJson: InvitationJson | null;
   occasions: Occasion[];
 }
 
@@ -130,67 +141,104 @@ export default function CeremonyPreviewPage() {
       <div className="max-w-md mx-auto lg:max-w-5xl">
         <div className="px-4 py-6 lg:grid lg:grid-cols-5 lg:gap-6">
           {/* Main invitation card */}
-          <div className="bg-card border border-border rounded-2xl overflow-hidden lg:col-span-3">
-            <div className="relative bg-input overflow-hidden aspect-[4/3] lg:aspect-[16/10]">
-              <Image
-                ar="4:3"
+          <div className="relative bg-card border border-border rounded-2xl overflow-hidden lg:col-span-3 shadow-lg">
+            <WaxPattern opacity={0.035} />
+
+            <div
+              className="relative bg-input overflow-hidden aspect-[4/3] lg:aspect-[16/10]"
+              style={
+                ceremony.coverImageUrl
+                  ? {
+                      backgroundImage: `url(${ceremony.coverImageUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }
+                  : undefined
+              }
+            >
+              {ceremony.coverImageUrl && (
+                <div className="absolute inset-0 backdrop-blur-2xl bg-background/30" aria-hidden />
+              )}
+              { }
+              <img
                 src={ceremony.coverImageUrl ?? '/banani/invitation-cover.jpg'}
-                prompt={ceremony.title}
-                className="w-full h-full"
-                objectPosition="center 20%"
-                priority
-              />
-              <div
-                className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50"
-                aria-hidden
+                alt={ceremony.title}
+                loading="eager"
+                className="relative w-full h-full object-contain"
               />
             </div>
 
-            <div className="px-6 py-8 text-center">
-              <div className="text-5xl mb-3">{emoji}</div>
-              <div className="text-xs font-body uppercase tracking-widest text-muted-foreground mb-3">
+            <div className="relative px-6 py-10 text-center">
+              <div className="mx-auto mb-5 w-20 h-20 rounded-full bg-gold-light border-2 border-gold flex items-center justify-center text-4xl shadow-sm">
+                {emoji}
+              </div>
+
+              <div className="text-[11px] font-body uppercase tracking-[0.25em] text-gold mb-3">
                 Cher·e invité·e
               </div>
-              <h2 className="font-headings font-bold text-2xl lg:text-3xl text-foreground mb-3 leading-tight">
-                {ceremony.title}
-              </h2>
-              <p className="text-sm text-foreground opacity-80 mb-6 leading-relaxed">
-                {ceremony.description}
-              </p>
+
+              {ceremony.invitationJson ? (
+                <AiInvitationBody
+                  invitation={ceremony.invitationJson}
+                  fallbackTitle={ceremony.title}
+                />
+              ) : (
+                <>
+                  <h2 className="font-headings font-bold text-2xl lg:text-4xl text-foreground mb-3 leading-tight">
+                    {ceremony.title}
+                  </h2>
+                  <div className="flex items-center justify-center gap-3 mb-5" aria-hidden>
+                    <span className="h-px w-10 bg-gold/60" />
+                    <span className="text-gold text-xs">◆</span>
+                    <span className="h-px w-10 bg-gold/60" />
+                  </div>
+                  <p className="text-sm lg:text-base text-foreground/80 max-w-prose mx-auto mb-7 leading-relaxed italic">
+                    {ceremony.description}
+                  </p>
+                </>
+              )}
 
               {firstOcc && (
-                <div className="flex justify-center items-stretch gap-3 lg:gap-4 mb-6 text-center">
+                <div className="grid grid-cols-3 gap-2 mb-8 max-w-md mx-auto">
                   {[
-                    { label: 'Date', value: DATE_FMT.format(new Date(firstOcc.startsAt)) },
-                    { label: 'Heure', value: TIME_FMT.format(new Date(firstOcc.startsAt)) },
+                    {
+                      label: 'Date',
+                      value: DATE_FMT.format(new Date(firstOcc.startsAt)),
+                    },
+                    {
+                      label: 'Heure',
+                      value: TIME_FMT.format(new Date(firstOcc.startsAt)),
+                    },
                     { label: 'Lieu', value: firstOcc.locationName },
-                  ].map((item, i, arr) => (
-                    <div key={item.label} className="flex items-stretch gap-3 lg:gap-4">
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
-                        <div className="font-body font-bold text-sm text-foreground">
-                          {item.value}
-                        </div>
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="bg-gold-light/40 border border-gold/30 rounded-lg px-2 py-3"
+                    >
+                      <div className="text-[10px] uppercase tracking-wider text-gold font-bold mb-1">
+                        {item.label}
                       </div>
-                      {i < arr.length - 1 && <div className="w-px bg-border" aria-hidden />}
+                      <div className="font-body font-bold text-sm text-foreground leading-tight">
+                        {item.value}
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
 
               {/* RSVP buttons — disabled in preview */}
-              <div className="mt-6 flex flex-col gap-2 opacity-60 pointer-events-none">
+              <div className="mt-6 flex flex-col gap-2 opacity-60 pointer-events-none max-w-sm mx-auto">
                 <button
                   type="button"
                   disabled
-                  className="text-sm font-body font-bold px-6 py-3 rounded-lg w-full bg-success text-primary-foreground"
+                  className="text-sm font-body font-bold px-6 py-3.5 rounded-full w-full bg-success text-primary-foreground"
                 >
                   ✓ Je confirme ma présence
                 </button>
                 <button
                   type="button"
                   disabled
-                  className="text-sm font-body font-bold px-4 py-3 rounded-lg bg-muted text-muted-foreground"
+                  className="text-sm font-body px-4 py-2.5 rounded-full text-muted-foreground"
                 >
                   Je ne peux pas venir
                 </button>
@@ -200,8 +248,8 @@ export default function CeremonyPreviewPage() {
               </p>
 
               {ceremony.musicLabel && (
-                <div className="mt-6 pt-6 border-t border-border flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <Icon name="music" size={12} />
+                <div className="mt-8 pt-6 border-t border-gold/20 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Icon name="music" size={12} className="text-gold" />
                   <span>Musique : {ceremony.musicLabel}</span>
                 </div>
               )}
@@ -284,5 +332,53 @@ export default function CeremonyPreviewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function AiInvitationBody({
+  invitation,
+  fallbackTitle,
+}: {
+  invitation: InvitationJson;
+  fallbackTitle: string;
+}) {
+  const titleBlock = invitation.blocks.find((b) => b.type === 'title');
+  const subtitleBlock = invitation.blocks.find((b) => b.type === 'subtitle');
+  const bodyBlocks = invitation.blocks.filter((b) => b.type === 'paragraph' || b.type === 'quote');
+  const ctaBlock = invitation.blocks.find((b) => b.type === 'cta');
+
+  return (
+    <>
+      <h2 className="font-headings font-bold text-2xl lg:text-4xl text-foreground mb-2 leading-tight">
+        {titleBlock?.text ?? fallbackTitle}
+      </h2>
+      {subtitleBlock && (
+        <div className="text-xs lg:text-sm uppercase tracking-[0.2em] text-gold font-bold mb-4">
+          {subtitleBlock.text}
+        </div>
+      )}
+      <div className="flex items-center justify-center gap-3 mb-6" aria-hidden>
+        <span className="h-px w-10 bg-gold/60" />
+        <span className="text-gold text-xs">◆</span>
+        <span className="h-px w-10 bg-gold/60" />
+      </div>
+      <div className="max-w-prose mx-auto text-left lg:text-center flex flex-col gap-4 mb-6">
+        {bodyBlocks.map((b) =>
+          b.type === 'quote' ? (
+            <blockquote
+              key={b.id}
+              className="border-l-2 border-gold/60 pl-3 italic text-sm lg:text-base text-foreground/75 text-left"
+            >
+              {b.text}
+            </blockquote>
+          ) : (
+            <p key={b.id} className="text-sm lg:text-base text-foreground/85 leading-relaxed">
+              {b.text}
+            </p>
+          ),
+        )}
+      </div>
+      {ctaBlock && <p className="text-sm text-gold font-bold italic mb-6">{ctaBlock.text}</p>}
+    </>
   );
 }

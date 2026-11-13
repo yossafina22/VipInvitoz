@@ -382,11 +382,24 @@ export default function InvitationEditorPage() {
               </label>
               {ceremony.coverImageUrl ? (
                 <div className="relative group">
-                  <img
-                    src={ceremony.coverImageUrl}
-                    alt="Couverture"
-                    className="w-full h-40 object-cover rounded-lg border border-border"
-                  />
+                  <div
+                    className="relative w-full h-52 rounded-lg overflow-hidden border border-border bg-muted"
+                    style={{
+                      backgroundImage: `url(${ceremony.coverImageUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
+                  >
+                    <div
+                      className="absolute inset-0 backdrop-blur-2xl bg-background/30"
+                      aria-hidden
+                    />
+                    <img
+                      src={ceremony.coverImageUrl}
+                      alt="Couverture"
+                      className="relative w-full h-full object-contain"
+                    />
+                  </div>
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
                     <label className="bg-background text-foreground text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer">
                       Remplacer
