@@ -10,7 +10,8 @@ import { PalettePicker } from '@/components/PalettePicker';
 import { Icon } from '@/components/Icon';
 import { api, ApiError } from '@/lib/api';
 import { uploadFile } from '@/lib/upload-client';
-import type { PaletteId } from '@/lib/invitation-palettes';
+import type { InvitationPalette, PaletteId } from '@/lib/invitation-palettes';
+import { paletteStyle, resolvePalette } from '@/lib/invitation-palettes';
 
 type CeremonyType = 'MARIAGE' | 'BAPTEME' | 'ANNIVERSAIRE' | 'DEUIL' | 'AUTRE';
 type Status = 'DRAFT' | 'ACTIVE' | 'PAST' | 'ARCHIVED';
@@ -573,7 +574,7 @@ export default function InvitationEditorPage() {
             title={ceremony.invitationJson ? 'Invitation générée' : 'Aperçu en direct'}
             subtitle={
               ceremony.invitationJson
-                ? `Palette ${ceremony.invitationJson.palette}`
+                ? `Palette ${resolvePalette(ceremony.invitationPalette).name}`
                 : 'Rendu mobile'
             }
           />
@@ -581,6 +582,7 @@ export default function InvitationEditorPage() {
             {ceremony.invitationJson ? (
               <GeneratedInvitation
                 invitation={ceremony.invitationJson}
+                userPalette={resolvePalette(ceremony.invitationPalette)}
                 dateLabel={firstHuman.date}
                 timeLabel={firstHuman.time}
                 location={firstOcc?.locationName ?? '—'}
@@ -770,28 +772,23 @@ export default function InvitationEditorPage() {
   );
 }
 
-const PALETTE_STYLES: Record<
-  InvitationJson['palette'],
-  { bg: string; accent: string; body: string }
-> = {
-  wax: { bg: 'bg-amber-50', accent: 'text-amber-800', body: 'text-amber-900' },
-  gold: { bg: 'bg-yellow-50', accent: 'text-yellow-800', body: 'text-yellow-900' },
-  ivory: { bg: 'bg-stone-50', accent: 'text-stone-700', body: 'text-stone-900' },
-  indigo: { bg: 'bg-indigo-50', accent: 'text-indigo-800', body: 'text-indigo-900' },
-};
-
 function GeneratedInvitation(props: {
   invitation: InvitationJson;
+  userPalette: InvitationPalette;
   dateLabel: string;
   timeLabel: string;
   location: string;
   coverImageUrl?: string | null;
 }) {
-  const { invitation, dateLabel, timeLabel, location, coverImageUrl } = props;
-  const s = PALETTE_STYLES[invitation.palette] ?? PALETTE_STYLES.ivory;
+  const { invitation, userPalette, dateLabel, timeLabel, location, coverImageUrl } = props;
   return (
     <div
-      className={`rounded-2xl ${s.bg} border border-border overflow-hidden flex flex-col shadow-sm`}
+      className="rounded-2xl border border-border overflow-hidden flex flex-col shadow-sm"
+      style={{
+        ...paletteStyle(userPalette),
+        backgroundColor: 'var(--inv-surface)',
+        color: 'var(--inv-text)',
+      }}
     >
       {coverImageUrl && <img src={coverImageUrl} alt="" className="w-full h-40 object-cover" />}
       <div className="flex flex-col gap-3 p-6">
@@ -800,7 +797,8 @@ function GeneratedInvitation(props: {
             return (
               <h2
                 key={b.id}
-                className={`font-headings font-bold text-xl md:text-2xl ${s.accent} text-center`}
+                className="font-headings font-bold text-xl md:text-2xl text-center"
+                style={{ color: 'var(--inv-primary)' }}
               >
                 {b.text}
               </h2>
@@ -810,7 +808,8 @@ function GeneratedInvitation(props: {
             return (
               <h3
                 key={b.id}
-                className={`font-headings text-sm md:text-base ${s.accent} text-center uppercase tracking-wide`}
+                className="font-headings text-sm md:text-base text-center uppercase tracking-wide"
+                style={{ color: 'var(--inv-gold)' }}
               >
                 {b.text}
               </h3>
@@ -820,7 +819,8 @@ function GeneratedInvitation(props: {
             return (
               <blockquote
                 key={b.id}
-                className={`border-l-2 border-current pl-3 italic text-sm ${s.body}`}
+                className="border-l-2 pl-3 italic text-sm"
+                style={{ borderColor: 'var(--inv-gold)', color: 'var(--inv-text-muted)' }}
               >
                 {b.text}
               </blockquote>
@@ -830,7 +830,8 @@ function GeneratedInvitation(props: {
             return (
               <div key={b.id} className="pt-2 text-center">
                 <span
-                  className={`inline-block border border-current ${s.accent} px-4 py-2 rounded-full text-sm font-bold`}
+                  className="inline-block border px-4 py-2 rounded-full text-sm font-bold"
+                  style={{ borderColor: 'var(--inv-primary)', color: 'var(--inv-primary)' }}
                 >
                   {b.text}
                 </span>
@@ -838,12 +839,15 @@ function GeneratedInvitation(props: {
             );
           }
           return (
-            <p key={b.id} className={`text-sm leading-relaxed ${s.body}`}>
+            <p key={b.id} className="text-sm leading-relaxed" style={{ color: 'var(--inv-text)' }}>
               {b.text}
             </p>
           );
         })}
-        <div className={`mt-2 pt-3 border-t border-current/20 text-center text-xs ${s.body}`}>
+        <div
+          className="mt-2 pt-3 border-t text-center text-xs"
+          style={{ borderColor: 'var(--inv-gold)', color: 'var(--inv-text-muted)' }}
+        >
           <div className="font-bold">{dateLabel}</div>
           <div>
             {timeLabel} — {location}

@@ -1,70 +1,103 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-13T23:48:30.916Z",
+  "generatedAt": "2026-11-14T21:34:28.257Z",
   "project": "VipInvitoz",
-  "session": "b52493e7",
-  "headline": "Ship VipInvitoz (Next.js 16 SaaS for African ceremonies: mariage/baptême/anniversaire/deuil) to production on Vercel. Co",
-  "summary": "Session took VipInvitoz from local-only to deployed-on-Vercel-Pro. 14 commits total on main (a90c1f4 → 1619ccf). Latest 2 commits this session: 62e325e (daily crons for Hobby compat, later reverted) + 1619ccf (restored sub-minute crons after user upgraded to Pro). App is live at https://vip-invitoz.vercel.app. All env vars populated in Vercel (DATABASE_URL, DIRECT_URL, JWT_SECRET, COOKIE_PREFIX, APP_URL, ANTHROPIC_API_KEY, CLOUDINARY_*, RESEND_API_KEY, EMAIL_FROM, UPSTASH_*, CRON_SECRET). Ignored all \"Optional Integrations\" (Prisma Postgres, Resend, Sentry, Upstash) because user already has own accounts. Hit Hobby cron-frequency limit mid-deploy → downgraded all crons to daily, got deploy through, user then upgraded to Pro ($20/mo) so restored originals. Smoke test NOT yet done — user paused session to continue tomorrow.",
-  "taskDescription": "Ship VipInvitoz (Next.js 16 SaaS for African ceremonies: mariage/baptême/anniversaire/deuil) to production on Vercel. Core intent: user wants a live URL friends can visit, with signup → verify → create ceremony → upload cover → AI generation → invite guests → RSVP working end-to-end in prod.",
-  "currentStatus": "DONE: (1) App deployed at https://vip-invitoz.vercel.app, (2) APP_URL env var set to prod URL, (3) Vercel Pro active so 60s function timeout + sub-minute crons, (4) vercel.json restored to */1 schedules, (5) All 14 commits pushed to github.com/yossafina22/VipInvitoz main. REMAINING: (1) Smoke test end-to-end in prod — signup, verify code email, create ceremony, upload cover, AI generation, invite a guest, RSVP flow, (2) Resend sandbox limitation means only yossafina22@gmail.com receives real emails — need custom domain verified in Resend before inviting external users, (3) Remaining features from plan: QR check-in day-of, AI chatbot modification, Account + Subscription pages, unit tests for ~25 new routes.",
+  "session": "60b268af",
+  "headline": "Goal: ship VipInvitoz production-ready on Vercel Pro. Core Intent: remove mobile/UX blockers (hamburger nav, per-ceremon",
+  "summary": null,
+  "taskDescription": "Goal: ship VipInvitoz production-ready on Vercel Pro. Core Intent: remove mobile/UX blockers (hamburger nav, per-ceremony palette, resilient mobile image upload incl. HEIC), unblock VIP test account, keep infra on sub-minute crons after Pro upgrade — so smoke test tomorrow can exercise full signup → ceremony → invite → RSVP flow.",
+  "currentStatus": "Done: 5 commits pushed to main (daily-cron revert, */1 cron restore post-Pro, mobile hamburger drawer, per-ceremony invitation palette with 5 presets + DEUIL lock, client-side downscale + HEIC/HEIF accept). Prisma Ceremony.invitationPalette column pushed directly to shared Neon DB (dev=prod). VIP upgrade applied to foadjoraoul@yahoo.de via scratchpad script (FREEMIUM 2 credits → VIP unlimited, expires 2027-11-14). Vercel auto-deploys live at vip-invitoz.vercel.app. Pending: user must set UPLOAD_ALLOWED_MIME env var in Vercel to include image/heic,image/heif + optional UPLOAD_MAX_BYTES=26214400, then redeploy without cache — reason: env-var defaults to 3 MIMEs only, HEIC uploads 415 otherwise. i18n P0 not started (next-intl installed, not configured).",
   "keyDecisions": [
-    "Decision: Vercel Pro upgrade ($20/mo) — Reason: Hobby 10s function timeout would kill Anthropic AI calls that take 15-30s; Hobby TOS forbids commercial use; daily-only crons would delay verification emails up to 24h",
-    "Decision: Ignored Vercel's Optional Integrations suggestions (Prisma Postgres, Resend, Sentry, Upstash) — Reason: user already has own Neon + Resend + Upstash accounts, clicking Add would create unlinked duplicate accounts",
-    "Decision: Reuse same Neon DB for prod (not new branch) — Reason: user chose option A for speed; same data visible in dev + prod which is fine for solo-dev MVP",
-    "Decision: APP_URL set to https://vip-invitoz.vercel.app (no trailing slash) in all 3 Vercel envs (Production, Preview, Development) — Reason: controls link generation for invitation emails, cookie scoping; trailing slash can break URL concatenation"
+    "Decision: Vercel Pro $20/mo — Reason: Hobby forbids commercial SaaS + 10s timeout kills Anthropic AI calls (15-30s) + Hobby cron floor is daily (delays verification emails up to 24h)",
+    "Decision: Ship palette feature all-in-one (Prisma column + 5 presets + picker + preview + public page) — Reason: user chose 'Option simple' over decomposed ceremonyTone-first path",
+    "Decision: Palette lives in editor with smart auto-default per ceremony type + free override + server-side DEUIL lock via coercePaletteForType — Reason: each ceremony has its own tone, settings page would force global choice",
+    "Decision: 5 palette IDs stored as Prisma String (not enum) — Reason: adding new presets requires no DB migration",
+    "Decision: Client-side downscale in lib/upload-client.ts before FormData append (canvas 2000px max, JPEG q=0.85, skip HEIC/HEIF→server handles via heic-convert) — Reason: phone photos routinely 5-15 MB, exceeded default 10 MB server cap",
+    "Decision: Shared Neon DB between dev and prod (Option A) — Reason: solo-dev MVP speed; additive schema changes (new column with @default) safe, renames/drops risky",
+    "Decision: Narrow i18n from FR/EN/DE (original PRD) to FR/EN only — Reason: user call to cut scope",
+    "Decision: Close mobile drawer via per-Link onClick rather than useEffect(pathname) — Reason: react-hooks/exhaustive-deps rule not configured in flat ESLint, disable-comment itself errored"
   ],
-  "userContribution": "User created Vercel account, imported repo, pasted all env vars manually in Vercel dashboard, chose Root Directory = frontend, clicked Create Project, upgraded personal account to Pro plan with real payment, updated APP_URL env var, triggered redeploys. User also corrected me when I said RESEND_FROM — they pointed out their .env.local uses EMAIL_FROM.",
+  "userContribution": "User paid for Vercel Pro upgrade ($20/mo, team fluxiateam) after seeing Hobby limits. Reviewed and approved palette picker location decision ('Option simple' + 'parametrage dans editor' pushback). Narrowed i18n scope from PRD FR/EN/DE to FR/EN only. Identified mobile upload failure on real iPhone and asked for VIP upgrade of test account + larger upload cap — three asks in one message. Picked A/B options when offered. Scheduled the 9am Berlin smoke-test reminder routine.",
   "userDecisions": [
     {
-      "decision": "Reuse same Neon DB for prod (option A)",
-      "reason": "Speed — same data visible across dev/prod acceptable for solo MVP",
-      "alternativesRejected": "Option B: create new Neon branch dedicated to prod"
+      "decision": "Add mobile hamburger menu immediately rather than wait for screenshot",
+      "reason": "Picked option A when offered A vs B",
+      "alternativesRejected": "Wait for user to send screenshot of broken mobile nav first"
     },
     {
-      "decision": "Upgrade to Vercel Pro ($20/mo)",
-      "reason": "User explicitly asked 'c est pas mieux de payer l abonnement sur vercel?' then said 'c est paye'",
-      "alternativesRejected": "Option A (cron-job.org free workaround staying on Hobby) + Option C (daily crons, broken emails)"
+      "decision": "Ship palette feature end-to-end in one wave (Option simple)",
+      "reason": "Faster to ship complete feature than iterate ceremonyTone first",
+      "alternativesRejected": "Decomposed path: ceremonyTone-only first, palette picker as follow-up"
     },
     {
-      "decision": "Continue smoke tests tomorrow instead of now",
-      "reason": "User fatigue — 'on peut continue les tests demain sauvegarde et rapell moi demain'",
-      "alternativesRejected": "Running the 10-step smoke test checklist in the current session"
+      "decision": "Palette picker lives in editor with auto-default + free override",
+      "reason": "User pushed back 'ou vas tu permettre le parametrage?' — approved after I explained smart defaults + DEUIL lock",
+      "alternativesRejected": "Global Settings page palette; fully-automatic by ceremony type with no override"
+    },
+    {
+      "decision": "Narrow i18n to FR/EN only",
+      "reason": "'on fera juste la version anglaise en plus' — scope cut from original PRD FR/EN/DE",
+      "alternativesRejected": "Original PRD trilingual FR/EN/DE"
+    },
+    {
+      "decision": "Pay Vercel Pro $20/mo",
+      "reason": "'c est paye' — accepted Pro necessity for cron frequency + function timeout + commercial use",
+      "alternativesRejected": "Stay on Hobby with daily crons + 10s timeout"
+    },
+    {
+      "decision": "Upgrade foadjoraoul@yahoo.de to VIP + raise upload limits",
+      "reason": "'le upload sur le mobil echoue toujours ... doit passer en abonnement vip ... 10 MO est insuffisant' — one message, three parallel requests",
+      "alternativesRejected": "Debug mobile upload server-side only; keep test account on FREEMIUM"
     }
   ],
   "failedApproaches": [
-    "Approach: Deploy to Vercel Hobby with original */1 cron schedules → Result: Vercel rejected deploy with 'hobby account is limited to daily cron jobs' → Lesson: Hobby tier cron frequency floor is daily (0 X * * *); sub-daily needs Pro or external cron service",
-    "Approach: Suggested cron-job.org as free workaround to keep Hobby → Result: user opted to pay Pro instead → Lesson: for commercial SaaS, Pro is justified by TOS + 60s timeout alone, not just cron"
+    "Approach: useEffect(pathname) to close mobile drawer with react-hooks/exhaustive-deps eslint-disable comment → Result: pre-commit lint rejected — rule not configured in flat ESLint so disable-comment itself was the error → Lesson: never emit disable-comments for rules not registered in eslint.config.mjs",
+    "Approach: First Vercel deploy with original */1 cron schedules → Result: rejected 'hobby account limited to daily cron jobs' → Lesson: Hobby cron floor = daily (0 X * * *); any sub-daily frequency requires Pro",
+    "Approach: Daily crons committed as workaround (62e325e) → Result: user upgraded to Pro so reverted in 1619ccf → Lesson: temporary infra hacks pay interest fast — always leave revert commit ready"
   ],
-  "blockers": null,
+  "blockers": "User action pending in Vercel UI: UPLOAD_ALLOWED_MIME=image/jpeg,image/png,image/webp,image/heic,image/heif + optional UPLOAD_MAX_BYTES=26214400, then redeploy uncheck build cache. No response yet. Resend still sandbox-locked to yossafina22@gmail.com — blocks inviting external guests until custom domain verified.",
   "modifiedFiles": [
-    "frontend/vercel.json: twice-modified — first set all crons to daily staggered (commit 62e325e), then restored to */1 */1 0h */5 0h 0h (commit 1619ccf) after Pro upgrade"
+    "frontend/vercel.json: daily cron schedules committed then reverted to */1 after Vercel Pro upgrade",
+    "frontend/src/components/SideBar.tsx: added mobileOpen/onMobileClose props, overlay drawer w/ body-scroll lock, close-on-nav via per-Link onClick (no useEffect)",
+    "frontend/src/components/AppLayout.tsx: hamburger button + mobileNavOpen state wired to SideBar props",
+    "frontend/prisma/schema.prisma: Ceremony.invitationPalette String @default(\"sahel-or\") added; pushed to Neon via pnpm db:push (shared dev+prod DB)",
+    "frontend/src/lib/invitation-palettes.ts: new — PaletteId union, INVITATION_PALETTES map (5 presets), resolvePalette, defaultPaletteForType, coercePaletteForType (DEUIL→noir-minimal lock), paletteStyle returning CSS vars",
+    "frontend/src/components/PalettePicker.tsx: new — 5 swatch tiles, 2-col mobile/3-col sm+, locked state for DEUIL",
+    "frontend/src/app/api/ceremonies/route.ts: POST sets invitationPalette via defaultPaletteForType(type)",
+    "frontend/src/app/api/ceremonies/[id]/route.ts: PATCH accepts invitationPalette through coercePaletteForType; assertOwned now selects type",
+    "frontend/src/lib/server/vipinvitoz/invitations.ts: select includes invitationPalette",
+    "frontend/src/app/api/invitations/[slug]/route.ts: ceremony response includes invitationPalette",
+    "frontend/src/app/ceremonies/[id]/editor/page.tsx: PalettePicker import + handlePaletteChange (optimistic PATCH w/ rollback) + render after AI block; accept attr now includes HEIC/HEIF (2 locations)",
+    "frontend/src/app/ceremonies/[id]/preview/page.tsx: palette resolved from ceremony.invitationPalette, inline CSS vars wrap invitation card, emoji circle + Cher·e label + WaxPattern read palette, mourning tone swaps emoji with ◆ glyph",
+    "frontend/src/app/i/[slug]/page.tsx: same palette treatment as preview page",
+    "frontend/src/app/ceremonies/new/page.tsx: accept attr now includes HEIC/HEIF",
+    "frontend/src/lib/upload-client.ts: new downscaleIfLarge() helper — canvas-based resize to 2000px long-side + JPEG q=0.85 if >1.5MB, skips HEIC/HEIF (server converts)"
   ],
   "implicitRules": [
-    "Prod URL: https://vip-invitoz.vercel.app — Vercel team 'fluxiateam', project 'vip-invitoz'",
-    "Vercel settings page: https://vercel.com/fluxiateam/vip-invitoz/settings/environment-variables",
-    "Vercel plan: Pro ($20/mo) — sub-minute crons + 60s function timeout + commercial-use allowed",
-    "Email var name is EMAIL_FROM (NOT RESEND_FROM) — I initially said RESEND_FROM by mistake, corrected after grep showed EMAIL_FROM is what frontend/src/lib/server/email.ts expects",
-    "Resend still in sandbox: only yossafina22@gmail.com receives real emails in prod until a custom domain is verified at resend.com/domains",
-    "DEV_EMAIL_BYPASS must NOT be set in Vercel (its presence routes emails to console instead of Resend) — absence = real emails sent",
-    "Cron routes are all POST (not GET) with Authorization: Bearer <CRON_SECRET> header — Vercel's native cron sends this header automatically, external cron needs to add it manually",
-    "Vercel 'Optional Integrations' step after project creation = marketplace upsells; always skip for projects with own provider accounts",
-    "Git identity per-commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'"
+    "Vercel Pro ($20/mo) required for this project: Hobby forbids commercial SaaS + 10s function timeout kills 15-30s Anthropic calls + Hobby cron floor is daily",
+    "Neon DB shared dev=prod via single DATABASE_URL in .env.local + Vercel env vars — pnpm db:push immediately affects prod; safe for additive changes, risky for renames/drops",
+    "Palette IDs are Prisma String not enum — adding presets needs no migration, just new INVITATION_PALETTES entry",
+    "Phone camera photos 5-15 MB routinely exceed server 10 MB default — client-side downscale is required, not optional",
+    "ESLint flat config has NO react-hooks/exhaustive-deps rule — never use disable-comments naming it",
+    "UPLOAD_ALLOWED_MIME read at handler-call time in /api/upload/route.ts → Vercel env changes take effect on next invocation without redeploy; but .env.example tripwires in env-shape.test.ts assert stock 3-MIME default → override in Vercel env vars, NOT in .env.example",
+    "Scratchpad DB scripts pattern: mirror refund-credits.ts shape, live under C:\\Users\\PC\\AppData\\Local\\Temp\\claude\\<session>\\scratchpad\\",
+    "DEUIL ceremonies locked to noir-minimal palette server-side via coercePaletteForType — never trust client-only enforcement"
   ],
   "nextSteps": [
-    "Open https://vip-invitoz.vercel.app and do full smoke test: (1) signup with yossafina22@gmail.com (sandbox limit), (2) verify email code arrives within 1 min, (3) enter code → logged in, (4) create ceremony (any type), (5) upload cover photo, (6) click 'Générer avec IA', (7) preview invitation, (8) add self as guest, (9) send invitation, (10) open received link in incognito + confirm RSVP",
-    "If any smoke-test step fails: check Vercel function logs at https://vercel.com/fluxiateam/vip-invitoz/logs (filter by error status 5xx or by route path)",
-    "Once smoke test passes: verify custom domain for Resend at resend.com/domains so non-yossafina22 emails work — currently sandbox limits to 1 recipient",
-    "Decide on remaining feature priority: (A) QR check-in day-of flow, (B) AI chatbot ceremony modification, (C) Account + Subscription pages wiring, (D) unit tests backfill for ~25 new routes/helpers",
-    "Optional: set up Vercel Analytics (click 'Enable Speed Insights' from deploy success page) to see real traffic"
+    "User updates Vercel env vars: UPLOAD_ALLOWED_MIME=image/jpeg,image/png,image/webp,image/heic,image/heif + optional UPLOAD_MAX_BYTES=26214400 → redeploy uncheck build cache. Waiting on 'Vercel ok' reply.",
+    "Smoke test tomorrow 9am Berlin (reminder routine trig_01AvzDhL4ta9VFgvMsF3kDyy already scheduled). Covers: signup → verify code → create ceremony → iPhone cover upload → AI generate → palette switch → preview → invite guest → public /i/[slug] → RSVP",
+    "i18n Day 1 FR/EN only: restructure app/* → app/[locale]/*, add User.locale field + migration, configure next-intl@4.14.9 middleware. Planned ~4h.",
+    "Verify custom Resend domain before inviting external users — currently sandbox-locked to yossafina22@gmail.com",
+    "Backlog (PRD): QR check-in day-of, AI chatbot modification, Account + Subscription page UIs, unit tests for the ~25 new routes/helpers added this wave"
   ],
   "keywords": [
-    "vercel",
-    "deploy",
-    "smoke-test",
-    "vipinvitoz",
-    "cron",
-    "pro-plan",
-    "env-vars",
-    "resend-sandbox"
+    "vercel-pro",
+    "palette",
+    "mobile-upload",
+    "hamburger-menu",
+    "vip-upgrade",
+    "heic-support",
+    "prisma-pushed",
+    "smoke-test"
   ]
 }
