@@ -40,6 +40,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { verifyCsrf } from '@/lib/server/auth';
 import { requireAuth } from '@/lib/server/middleware';
+import { log } from '@/lib/server/observability/log';
 import { makeRequestContext, withRequestContext } from '@/lib/server/observability/request-context';
 import { prisma } from '@/lib/server/prisma';
 import { StorageNotConfiguredError, uploadBuffer } from '@/lib/server/upload/cloudinary-client';
@@ -154,8 +155,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           { status: 503, headers: { 'x-request-id': ctx.requestId } },
         );
       }
+      // Cloudinary error — log the full detail (Vercel function logs) and echo
+      // a short reason to the client so the user can see WHY it failed instead
+      // of a bare "Storage write failed".
+      const errMsg = e instanceof Error ? e.message : String(e);
+      const errCode =
+        e && typeof e === 'object' && 'http_code' in e
+          ? (e as { http_code?: number }).http_code
+          : undefined;
+      log.error('upload: cloudinary rejected', {
+        error: errMsg,
+        http_code: errCode,
+        publicId,
+        mime: storedMime,
+        bytes: buf.length,
+      });
       return NextResponse.json(
-        { code: 'UPLOAD_FAILED', message: 'Storage write failed' },
+        {
+          code: 'UPLOAD_FAILED',
+          message: `Cloudinary refused the upload: ${errMsg}`,
+          http_code: errCode,
+        },
         { status: 502, headers: { 'x-request-id': ctx.requestId } },
       );
     }
