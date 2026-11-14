@@ -403,6 +403,10 @@ model Ceremony {
   invitationJson Json?
   // Compteur de modifications IA consommées sur cette cérémonie.
   aiModCount     Int      @default(0)
+  // Palette de couleurs appliquée à l'invitation (carte /i/[slug] + preview).
+  // Les ids valides vivent dans lib/invitation-palettes.ts. Pour DEUIL on force
+  // 'noir-minimal' côté API, pas de contrainte DB (string libre volontairement).
+  invitationPalette String @default("sahel-or")
 
   occasions        CeremonyOccasion[]
   guests           Guest[]

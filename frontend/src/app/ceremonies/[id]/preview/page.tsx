@@ -12,6 +12,7 @@ import { Icon } from '@/components/Icon';
 import { QRCode } from '@/components/QRCode';
 import { WaxPattern } from '@/components/WaxPattern';
 import { api, ApiError } from '@/lib/api';
+import { paletteStyle, resolvePalette } from '@/lib/invitation-palettes';
 
 interface Occasion {
   id: string;
@@ -40,6 +41,7 @@ interface Ceremony {
   coverImageUrl: string | null;
   musicLabel: string | null;
   invitationJson: InvitationJson | null;
+  invitationPalette: string;
   occasions: Occasion[];
 }
 
@@ -114,6 +116,7 @@ export default function CeremonyPreviewPage() {
 
   const firstOcc = ceremony.occasions[0];
   const emoji = CEREMONY_EMOJI[ceremony.type] ?? '✨';
+  const palette = resolvePalette(ceremony.invitationPalette);
   const previewUrl =
     typeof window !== 'undefined' ? window.location.href : `/ceremonies/${ceremony.id}/preview`;
 
@@ -141,8 +144,15 @@ export default function CeremonyPreviewPage() {
       <div className="max-w-md mx-auto lg:max-w-5xl">
         <div className="px-4 py-6 lg:grid lg:grid-cols-5 lg:gap-6">
           {/* Main invitation card */}
-          <div className="relative bg-card border border-border rounded-2xl overflow-hidden lg:col-span-3 shadow-lg">
-            <WaxPattern opacity={0.035} />
+          <div
+            className="relative border border-border rounded-2xl overflow-hidden lg:col-span-3 shadow-lg"
+            style={{
+              ...paletteStyle(palette),
+              backgroundColor: 'var(--inv-surface)',
+              color: 'var(--inv-text)',
+            }}
+          >
+            <WaxPattern opacity={palette.vars.patternOpacity} />
 
             <div
               className="relative bg-input overflow-hidden aspect-[4/3] lg:aspect-[16/10]"
@@ -159,7 +169,7 @@ export default function CeremonyPreviewPage() {
               {ceremony.coverImageUrl && (
                 <div className="absolute inset-0 backdrop-blur-2xl bg-background/30" aria-hidden />
               )}
-              { }
+              {}
               <img
                 src={ceremony.coverImageUrl ?? '/banani/invitation-cover.jpg'}
                 alt={ceremony.title}
@@ -169,11 +179,20 @@ export default function CeremonyPreviewPage() {
             </div>
 
             <div className="relative px-6 py-10 text-center">
-              <div className="mx-auto mb-5 w-20 h-20 rounded-full bg-gold-light border-2 border-gold flex items-center justify-center text-4xl shadow-sm">
-                {emoji}
+              <div
+                className="mx-auto mb-5 w-20 h-20 rounded-full border-2 flex items-center justify-center text-4xl shadow-sm"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--inv-gold) 18%, transparent)',
+                  borderColor: 'var(--inv-gold)',
+                }}
+              >
+                {palette.tone === 'mourning' ? '◆' : emoji}
               </div>
 
-              <div className="text-[11px] font-body uppercase tracking-[0.25em] text-gold mb-3">
+              <div
+                className="text-[11px] font-body uppercase tracking-[0.25em] mb-3"
+                style={{ color: 'var(--inv-gold)' }}
+              >
                 Cher·e invité·e
               </div>
 

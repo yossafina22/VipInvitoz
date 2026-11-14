@@ -61,6 +61,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
         coverImageUrl: invitation.ceremony.coverImageUrl,
         musicLabel: invitation.ceremony.musicLabel,
         invitationJson: invitation.ceremony.invitationJson,
+        invitationPalette: invitation.ceremony.invitationPalette,
       },
       occasions: invitation.ceremony.occasions.map((o) => ({
         id: o.id,

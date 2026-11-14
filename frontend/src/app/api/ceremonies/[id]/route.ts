@@ -17,6 +17,7 @@ import { requireAuth } from '@/lib/server/middleware';
 import { log } from '@/lib/server/observability/log';
 import { makeRequestContext, withRequestContext } from '@/lib/server/observability/request-context';
 import { prisma } from '@/lib/server/prisma';
+import { PALETTE_IDS, coercePaletteForType } from '@/lib/invitation-palettes';
 
 const CEREMONY_TYPES = ['MARIAGE', 'BAPTEME', 'ANNIVERSAIRE', 'DEUIL', 'AUTRE'] as const;
 const CEREMONY_STATUSES = ['DRAFT', 'ACTIVE', 'PAST', 'ARCHIVED'] as const;
@@ -30,6 +31,7 @@ const PatchBody = z
     musicLabel: z.string().max(80).nullable().optional(),
     musicUrl: z.string().url().nullable().optional(),
     coverImageUrl: z.string().url().nullable().optional(),
+    invitationPalette: z.enum(PALETTE_IDS as [string, ...string[]]).optional(),
   })
   .refine((v) => Object.keys(v).length > 0, {
     message: 'At least one field must be provided.',
@@ -38,7 +40,7 @@ const PatchBody = z
 async function assertOwned(ceremonyId: string, userId: string) {
   return prisma.ceremony.findFirst({
     where: { id: ceremonyId, userId },
-    select: { id: true },
+    select: { id: true, type: true },
   });
 }
 
@@ -112,6 +114,17 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     const data: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(parsed.data)) {
       if (v !== undefined) data[k] = v;
+    }
+
+    // Enforce the DEUIL palette lock — whether the type is already DEUIL or is
+    // being set to DEUIL in this very PATCH, the palette is forced to
+    // 'noir-minimal' regardless of what the client submitted.
+    const resolvedType = (typeof data.type === 'string' ? data.type : undefined) ?? owned.type;
+    if ('invitationPalette' in data || resolvedType === 'DEUIL') {
+      data.invitationPalette = coercePaletteForType(
+        resolvedType,
+        typeof data.invitationPalette === 'string' ? data.invitationPalette : undefined,
+      );
     }
 
     const updated = await prisma.ceremony.update({

@@ -95,6 +95,7 @@ export async function getInvitationBySlugForPublic(prisma: PrismaClient, slug: s
           coverImageUrl: true,
           musicLabel: true,
           invitationJson: true,
+          invitationPalette: true,
           occasions: {
             orderBy: { order: 'asc' },
           },

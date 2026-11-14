@@ -21,6 +21,7 @@ import { log } from '@/lib/server/observability/log';
 import { makeRequestContext, withRequestContext } from '@/lib/server/observability/request-context';
 import { prisma } from '@/lib/server/prisma';
 import { ensureActiveSubscription } from '@/lib/server/vipinvitoz/subscription';
+import { defaultPaletteForType } from '@/lib/invitation-palettes';
 
 const CEREMONY_TYPES = ['MARIAGE', 'BAPTEME', 'ANNIVERSAIRE', 'DEUIL', 'AUTRE'] as const;
 
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest) {
         title,
         description,
         status: 'DRAFT',
+        invitationPalette: defaultPaletteForType(type),
         ...(coverImageUrl ? { coverImageUrl } : {}),
         occasions: {
           create: occasions.map((o, i) => ({

@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { AppLayout } from '@/components/AppLayout';
 import { PageHeader } from '@/components/PageHeader';
 import { InvitationPreview } from '@/components/InvitationPreview';
+import { PalettePicker } from '@/components/PalettePicker';
 import { Icon } from '@/components/Icon';
 import { api, ApiError } from '@/lib/api';
 import { uploadFile } from '@/lib/upload-client';
+import type { PaletteId } from '@/lib/invitation-palettes';
 
 type CeremonyType = 'MARIAGE' | 'BAPTEME' | 'ANNIVERSAIRE' | 'DEUIL' | 'AUTRE';
 type Status = 'DRAFT' | 'ACTIVE' | 'PAST' | 'ARCHIVED';
@@ -44,6 +46,7 @@ interface Ceremony {
   musicUrl: string | null;
   coverImageUrl: string | null;
   invitationJson: InvitationJson | null;
+  invitationPalette: PaletteId;
   occasions: Occasion[];
   _count?: { guests: number; invitations: number };
 }
@@ -172,6 +175,24 @@ export default function InvitationEditorPage() {
       showToast('Impossible d’enregistrer.');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handlePaletteChange(id: PaletteId) {
+    if (!ceremony || busy) return;
+    if (ceremony.invitationPalette === id) return;
+    // Optimistic — swap immediately so the picker feels snappy; roll back on error.
+    const prev = ceremony.invitationPalette;
+    setCeremony({ ...ceremony, invitationPalette: id });
+    try {
+      const res = await api<{ ceremony: Ceremony }>(`/api/ceremonies/${ceremonyId}`, {
+        method: 'PATCH',
+        body: { invitationPalette: id },
+      });
+      setCeremony(res.ceremony);
+    } catch {
+      setCeremony({ ...ceremony, invitationPalette: prev });
+      showToast('Impossible de changer la palette.');
     }
   }
 
@@ -372,6 +393,13 @@ export default function InvitationEditorPage() {
               )}
             </button>
           </div>
+
+          <PalettePicker
+            value={ceremony.invitationPalette}
+            onChange={handlePaletteChange}
+            locked={ceremony.type === 'DEUIL'}
+            disabled={busy}
+          />
 
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
             <PageHeader title="Détails principaux" subtitle="Image, titre, type, texte" />
