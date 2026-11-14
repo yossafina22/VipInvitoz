@@ -287,15 +287,33 @@ export default function GuestInvitationPage() {
                 />
               ) : (
                 <>
-                  <h2 className="font-headings font-bold text-2xl lg:text-4xl text-foreground mb-3 leading-tight">
+                  <h2
+                    className="font-headings font-bold text-2xl lg:text-4xl mb-3 leading-tight"
+                    style={{ color: 'var(--inv-primary)' }}
+                  >
                     {ceremony.title}
                   </h2>
                   <div className="flex items-center justify-center gap-3 mb-5" aria-hidden>
-                    <span className="h-px w-10 bg-gold/60" />
-                    <span className="text-gold text-xs">◆</span>
-                    <span className="h-px w-10 bg-gold/60" />
+                    <span
+                      className="h-px w-10"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--inv-gold) 60%, transparent)',
+                      }}
+                    />
+                    <span className="text-xs" style={{ color: 'var(--inv-gold)' }}>
+                      ◆
+                    </span>
+                    <span
+                      className="h-px w-10"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--inv-gold) 60%, transparent)',
+                      }}
+                    />
                   </div>
-                  <p className="text-sm lg:text-base text-foreground/80 max-w-prose mx-auto mb-7 leading-relaxed italic">
+                  <p
+                    className="text-sm lg:text-base max-w-prose mx-auto mb-7 leading-relaxed italic"
+                    style={{ color: 'var(--inv-text-muted)' }}
+                  >
                     {ceremony.description}
                   </p>
                 </>
@@ -316,12 +334,22 @@ export default function GuestInvitationPage() {
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="bg-gold-light/40 border border-gold/30 rounded-lg px-2 py-3"
+                      className="rounded-lg px-2 py-3"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--inv-gold) 12%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--inv-gold) 30%, transparent)',
+                      }}
                     >
-                      <div className="text-[10px] uppercase tracking-wider text-gold font-bold mb-1">
+                      <div
+                        className="text-[10px] uppercase tracking-wider font-bold mb-1"
+                        style={{ color: 'var(--inv-gold)' }}
+                      >
                         {item.label}
                       </div>
-                      <div className="font-body font-bold text-sm text-foreground leading-tight">
+                      <div
+                        className="font-body font-bold text-sm leading-tight"
+                        style={{ color: 'var(--inv-text)' }}
+                      >
                         {item.value}
                       </div>
                     </div>
@@ -499,36 +527,62 @@ function AiInvitationBody({
 
   return (
     <>
-      <h2 className="font-headings font-bold text-2xl lg:text-4xl text-foreground mb-2 leading-tight">
+      <h2
+        className="font-headings font-bold text-2xl lg:text-4xl mb-2 leading-tight"
+        style={{ color: 'var(--inv-primary)' }}
+      >
         {titleBlock?.text ?? fallbackTitle}
       </h2>
       {subtitleBlock && (
-        <div className="text-xs lg:text-sm uppercase tracking-[0.2em] text-gold font-bold mb-4">
+        <div
+          className="text-xs lg:text-sm uppercase tracking-[0.2em] font-bold mb-4"
+          style={{ color: 'var(--inv-gold)' }}
+        >
           {subtitleBlock.text}
         </div>
       )}
       <div className="flex items-center justify-center gap-3 mb-6" aria-hidden>
-        <span className="h-px w-10 bg-gold/60" />
-        <span className="text-gold text-xs">◆</span>
-        <span className="h-px w-10 bg-gold/60" />
+        <span
+          className="h-px w-10"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--inv-gold) 60%, transparent)' }}
+        />
+        <span className="text-xs" style={{ color: 'var(--inv-gold)' }}>
+          ◆
+        </span>
+        <span
+          className="h-px w-10"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--inv-gold) 60%, transparent)' }}
+        />
       </div>
       <div className="max-w-prose mx-auto text-left lg:text-center flex flex-col gap-4 mb-6">
         {bodyBlocks.map((b) =>
           b.type === 'quote' ? (
             <blockquote
               key={b.id}
-              className="border-l-2 border-gold/60 pl-3 italic text-sm lg:text-base text-foreground/75 text-left"
+              className="border-l-2 pl-3 italic text-sm lg:text-base text-left"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--inv-gold) 60%, transparent)',
+                color: 'var(--inv-text-muted)',
+              }}
             >
               {b.text}
             </blockquote>
           ) : (
-            <p key={b.id} className="text-sm lg:text-base text-foreground/85 leading-relaxed">
+            <p
+              key={b.id}
+              className="text-sm lg:text-base leading-relaxed"
+              style={{ color: 'var(--inv-text)' }}
+            >
               {b.text}
             </p>
           ),
         )}
       </div>
-      {ctaBlock && <p className="text-sm text-gold font-bold italic mb-6">{ctaBlock.text}</p>}
+      {ctaBlock && (
+        <p className="text-sm font-bold italic mb-6" style={{ color: 'var(--inv-gold)' }}>
+          {ctaBlock.text}
+        </p>
+      )}
     </>
   );
 }
