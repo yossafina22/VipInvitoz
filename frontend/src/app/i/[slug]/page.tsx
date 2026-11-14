@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { QRCode } from '@/components/QRCode';
-import { WaxPattern } from '@/components/WaxPattern';
+import { InvitationFrame } from '@/components/InvitationFrame';
 import { paletteStyle, resolvePalette } from '@/lib/invitation-palettes';
 
 type RSVPStatus = 'idle' | 'confirmed' | 'declined';
@@ -233,7 +233,7 @@ export default function GuestInvitationPage() {
             }}
           >
             {/* Decorative wax pattern across the whole card (very subtle) */}
-            <WaxPattern opacity={palette.vars.patternOpacity} />
+            <InvitationFrame tone={palette.tone} />
 
             {/* Cover — full image shown (object-contain) with a blurred
                 backdrop of itself to fill the aspect-ratio box elegantly. */}

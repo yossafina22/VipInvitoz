@@ -10,7 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { QRCode } from '@/components/QRCode';
-import { WaxPattern } from '@/components/WaxPattern';
+import { InvitationFrame } from '@/components/InvitationFrame';
 import { api, ApiError } from '@/lib/api';
 import { paletteStyle, resolvePalette } from '@/lib/invitation-palettes';
 
@@ -152,7 +152,7 @@ export default function CeremonyPreviewPage() {
               color: 'var(--inv-text)',
             }}
           >
-            <WaxPattern opacity={palette.vars.patternOpacity} />
+            <InvitationFrame tone={palette.tone} />
 
             <div
               className="relative bg-input overflow-hidden aspect-[4/3] lg:aspect-[16/10]"
