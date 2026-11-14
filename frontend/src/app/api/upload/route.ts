@@ -157,14 +157,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
       // Cloudinary error — log the full detail (Vercel function logs) and echo
       // a short reason to the client so the user can see WHY it failed instead
-      // of a bare "Storage write failed".
-      const errMsg = e instanceof Error ? e.message : String(e);
-      const errCode =
-        e && typeof e === 'object' && 'http_code' in e
-          ? (e as { http_code?: number }).http_code
-          : undefined;
+      // of a bare "Storage write failed". Cloudinary's rejection object nests
+      // the human message under `.error.message`; the SDK also surfaces
+      // `.http_code`. Extract both so operators can read the log line.
+      const asObj = e as {
+        message?: string;
+        http_code?: number;
+        error?: { message?: string; http_code?: number };
+      };
+      const errMsg =
+        asObj?.error?.message ?? asObj?.message ?? (e instanceof Error ? e.message : String(e));
+      const errCode = asObj?.http_code ?? asObj?.error?.http_code;
       log.error('upload: cloudinary rejected', {
-        error: errMsg,
+        errorMessage: errMsg,
         http_code: errCode,
         publicId,
         mime: storedMime,
