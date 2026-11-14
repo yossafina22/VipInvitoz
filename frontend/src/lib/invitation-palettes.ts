@@ -16,7 +16,11 @@ export type PaletteId =
   | 'bordeaux-royal'
   | 'jade-imperial'
   | 'pastel-celeste'
-  | 'noir-minimal';
+  | 'indigo-nuit'
+  | 'ocre-terracotta'
+  | 'lavande-royale'
+  | 'noir-minimal'
+  | 'faire-part-classique';
 
 export type PaletteTone = 'celebration' | 'mourning';
 
@@ -119,6 +123,63 @@ export const INVITATION_PALETTES: Record<PaletteId, InvitationPalette> = {
       patternOpacity: 0.08,
     },
   },
+  'indigo-nuit': {
+    id: 'indigo-nuit',
+    name: 'Indigo Nuit',
+    tagline: 'Moderne et formel',
+    tone: 'celebration',
+    swatches: ['#4338CA', '#D4A017', '#F5F3FF'],
+    vars: {
+      primary: '#4338CA',
+      primaryForeground: '#F5F3FF',
+      accent: '#D4A017',
+      accentForeground: '#1F2937',
+      bg: '#F5F3FF',
+      surface: '#FFFFFF',
+      text: '#1F2937',
+      textMuted: '#584B70',
+      goldAccent: '#D4A017',
+      patternOpacity: 0.08,
+    },
+  },
+  'ocre-terracotta': {
+    id: 'ocre-terracotta',
+    name: 'Ocre Terracotta',
+    tagline: 'Artisanal et terreux',
+    tone: 'celebration',
+    swatches: ['#B45309', '#D97706', '#FEF3E8'],
+    vars: {
+      primary: '#B45309',
+      primaryForeground: '#FEF3E8',
+      accent: '#D97706',
+      accentForeground: '#1F2937',
+      bg: '#FEF3E8',
+      surface: '#FFFBF5',
+      text: '#1F2937',
+      textMuted: '#7C4A00',
+      goldAccent: '#B8860B',
+      patternOpacity: 0.12,
+    },
+  },
+  'lavande-royale': {
+    id: 'lavande-royale',
+    name: 'Lavande Royale',
+    tagline: 'Élégant et doux',
+    tone: 'celebration',
+    swatches: ['#7C3AED', '#D4A017', '#FAF5FF'],
+    vars: {
+      primary: '#7C3AED',
+      primaryForeground: '#FAF5FF',
+      accent: '#D4A017',
+      accentForeground: '#1F2937',
+      bg: '#FAF5FF',
+      surface: '#FFFFFF',
+      text: '#1F2937',
+      textMuted: '#6B5B7A',
+      goldAccent: '#D4A017',
+      patternOpacity: 0.08,
+    },
+  },
   'noir-minimal': {
     id: 'noir-minimal',
     name: 'Noir Minimal',
@@ -136,6 +197,26 @@ export const INVITATION_PALETTES: Record<PaletteId, InvitationPalette> = {
       text: '#F2F2F2',
       textMuted: '#A0A0A0',
       goldAccent: '#C9A227',
+      patternOpacity: 0,
+    },
+  },
+  'faire-part-classique': {
+    id: 'faire-part-classique',
+    name: 'Faire-part Classique',
+    tagline: 'Blanc, noir et or',
+    tone: 'mourning',
+    swatches: ['#FDFCFA', '#1A1A1A', '#B8860B'],
+    vars: {
+      // Traditional Western faire-part: ivory paper, black text, a sober gold.
+      primary: '#1A1A1A',
+      primaryForeground: '#FDFCFA',
+      accent: '#B8860B',
+      accentForeground: '#FDFCFA',
+      bg: '#FDFCFA',
+      surface: '#FFFFFF',
+      text: '#1A1A1A',
+      textMuted: '#4A4A4A',
+      goldAccent: '#B8860B',
       patternOpacity: 0,
     },
   },
@@ -184,7 +265,12 @@ export function coercePaletteForType(
   type: string,
   requested: string | null | undefined,
 ): PaletteId {
-  if (type === 'DEUIL') return 'noir-minimal';
+  if (type === 'DEUIL') {
+    if (requested && isPaletteId(requested) && INVITATION_PALETTES[requested].tone === 'mourning') {
+      return requested;
+    }
+    return 'noir-minimal';
+  }
   if (requested && isPaletteId(requested)) return requested;
   return defaultPaletteForType(type);
 }
