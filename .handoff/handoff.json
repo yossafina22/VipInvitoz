@@ -1,103 +1,70 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-10T00:08:24.010Z",
+  "generatedAt": "2026-11-13T23:48:30.916Z",
   "project": "VipInvitoz",
-  "session": "507568d5",
-  "headline": "Build VipInvitoz, Next.js 16 SaaS for African ceremonies (mariage/baptême/anniversaire/deuil). Core intent: ship visuall",
-  "summary": "10 commits pushed (e788f96 → d387dbc). Wired end-to-end: seating plan with click-to-assign modal, /ceremonies/new wizard with native date/time + Cloudinary upload, dashboard stats aggregator (3 remaining StatCards + RSVPStatusBar + accompagnants), invitation sharing with 3-channel modal (WhatsApp wa.me / Resend email / clipboard link), ceremony editor with occasion CRUD, initial AI generation via Claude Sonnet 5.5 with credit debit before call, Cloudinary cover image upload via new multipart lib/upload-client.ts, Banani 15 fix adding real scannable QR card + lg:grid-cols-5 desktop 2-column layout + aspect-ratio cover, organizer preview /ceremonies/[id]/preview with disabled RSVP. Human blocked on login; deferred testing to next session.",
-  "taskDescription": "Build VipInvitoz, Next.js 16 SaaS for African ceremonies (mariage/baptême/anniversaire/deuil). Core intent: ship visually complete MVP preview, then progressively wire each mock page to real backend. This session: shipped 10 commits covering Seating, Wizard, Dashboard stats, WhatsApp/email invites, Editor, AI generation, Cover upload, Banani 15 fix, Organizer preview.",
-  "currentStatus": "Done: 10 feature commits pushed to github.com/yossafina22/VipInvitoz main; each typecheck clean; pre-commit hook (format+lint+typecheck+555 tests) green on every commit. Working tree clean. Dev server was running on port 3000 at end of session. Remaining: human hasn't logged in to smoke-test the 9 features live; no Vercel deploy yet; 0 unit tests added for the ~25 new routes/helpers (555 original still pass); check-in QR day-of flow not built; chatbot modifyInvitation exists server-side but not wired to UI; account/subscription pages still placeholder.",
+  "session": "b52493e7",
+  "headline": "Ship VipInvitoz (Next.js 16 SaaS for African ceremonies: mariage/baptême/anniversaire/deuil) to production on Vercel. Co",
+  "summary": "Session took VipInvitoz from local-only to deployed-on-Vercel-Pro. 14 commits total on main (a90c1f4 → 1619ccf). Latest 2 commits this session: 62e325e (daily crons for Hobby compat, later reverted) + 1619ccf (restored sub-minute crons after user upgraded to Pro). App is live at https://vip-invitoz.vercel.app. All env vars populated in Vercel (DATABASE_URL, DIRECT_URL, JWT_SECRET, COOKIE_PREFIX, APP_URL, ANTHROPIC_API_KEY, CLOUDINARY_*, RESEND_API_KEY, EMAIL_FROM, UPSTASH_*, CRON_SECRET). Ignored all \"Optional Integrations\" (Prisma Postgres, Resend, Sentry, Upstash) because user already has own accounts. Hit Hobby cron-frequency limit mid-deploy → downgraded all crons to daily, got deploy through, user then upgraded to Pro ($20/mo) so restored originals. Smoke test NOT yet done — user paused session to continue tomorrow.",
+  "taskDescription": "Ship VipInvitoz (Next.js 16 SaaS for African ceremonies: mariage/baptême/anniversaire/deuil) to production on Vercel. Core intent: user wants a live URL friends can visit, with signup → verify → create ceremony → upload cover → AI generation → invite guests → RSVP working end-to-end in prod.",
+  "currentStatus": "DONE: (1) App deployed at https://vip-invitoz.vercel.app, (2) APP_URL env var set to prod URL, (3) Vercel Pro active so 60s function timeout + sub-minute crons, (4) vercel.json restored to */1 schedules, (5) All 14 commits pushed to github.com/yossafina22/VipInvitoz main. REMAINING: (1) Smoke test end-to-end in prod — signup, verify code email, create ceremony, upload cover, AI generation, invite a guest, RSVP flow, (2) Resend sandbox limitation means only yossafina22@gmail.com receives real emails — need custom domain verified in Resend before inviting external users, (3) Remaining features from plan: QR check-in day-of, AI chatbot modification, Account + Subscription pages, unit tests for ~25 new routes.",
   "keyDecisions": [
-    "Decision: Cover upload via dedicated lib/upload-client.ts (multipart) — Reason: shared api() uses JSON.stringify unconditionally; separate helper keeps CSRF double-submit aligned without complicating the wrapper",
-    "Decision: Debit AI credit BEFORE calling Claude — Reason: PRD rule 'pay for the attempt'; prevents concurrent clicks double-spending",
-    "Decision: ANTHROPIC_API_KEY missing → 503 AI_NOT_CONFIGURED without consuming credit — Reason: user never got a result; distinct from upstream Claude failure",
-    "Decision: Organizer preview via /ceremonies/[id]/preview using authenticated GET /api/ceremonies/[id] — Reason: avoids creating fake guests or mutating data; no new API route",
-    "Decision: QR code client-side via qrcode lib (already installed) with EC level H — Reason: real scannable QR, 30% damage tolerance, mobile-camera friendly",
-    "Decision: Occasion CRUD = 3 separate routes (POST + PATCH + DELETE on individual IDs) — Reason: PATCH ceremony body stays small, each occasion has stable ID for in-place edit",
-    "Decision: DELETE occasion refuses OCCASION_LAST_REMAINING — Reason: ceremony must keep one row to carry date/location; UI needs anchor",
-    "Decision: Dashboard 'RSVP en attente' = PENDING invitations + guests without any invitation — Reason: reflects real work left for organizer, not just non-responders",
-    "Decision: Preview page disables RSVP (opacity + pointer-events-none) rather than removing — Reason: organizer sees identical layout to judge rendering",
-    "Decision: Cover aspect-[4/3] lg:aspect-[16/10] on /i/[slug] — Reason: proportional across viewports; closer to Banani 15 spec than fixed heights"
+    "Decision: Vercel Pro upgrade ($20/mo) — Reason: Hobby 10s function timeout would kill Anthropic AI calls that take 15-30s; Hobby TOS forbids commercial use; daily-only crons would delay verification emails up to 24h",
+    "Decision: Ignored Vercel's Optional Integrations suggestions (Prisma Postgres, Resend, Sentry, Upstash) — Reason: user already has own Neon + Resend + Upstash accounts, clicking Add would create unlinked duplicate accounts",
+    "Decision: Reuse same Neon DB for prod (not new branch) — Reason: user chose option A for speed; same data visible in dev + prod which is fine for solo-dev MVP",
+    "Decision: APP_URL set to https://vip-invitoz.vercel.app (no trailing slash) in all 3 Vercel envs (Production, Preview, Development) — Reason: controls link generation for invitation emails, cookie scoping; trailing slash can break URL concatenation"
   ],
-  "userContribution": "Human directed the entire feature sequence starting from the explicit directive 'fait le 1 ensuite le 2 apres le 3, le 4 et le 5' at session start, then confirmed each subsequent step ('ok le 6', 'OK 7', 'Ok pour le 8'). Human manually spotted the Banani 15 regression ('la page 15 invitation vue invite dans banani n a pas ete importe en version desktop et mobile') which revealed the missing QR card + incomplete desktop responsive. Human chose Option B (preview via dedicated /ceremonies/[id]/preview route) over Option A (reuse first real guest slug). Human deferred login/smoke-test explicitly to preserve session continuity ('on va le faire plus tard sauvegarde tout le projet'). Human also interrupted an AskUserQuestion about login status, indicating they wanted a save over an interactive flow.",
+  "userContribution": "User created Vercel account, imported repo, pasted all env vars manually in Vercel dashboard, chose Root Directory = frontend, clicked Create Project, upgraded personal account to Pro plan with real payment, updated APP_URL env var, triggered redeploys. User also corrected me when I said RESEND_FROM — they pointed out their .env.local uses EMAIL_FROM.",
   "userDecisions": [
     {
-      "decision": "Preview mode via dedicated /ceremonies/[id]/preview route (option B)",
-      "reason": "Avoids mutating real guest data; works for ceremonies with zero guests",
-      "alternativesRejected": "Option A (reuse first real guest's slug — risks accidental slug generation / wrong attribution)"
+      "decision": "Reuse same Neon DB for prod (option A)",
+      "reason": "Speed — same data visible across dev/prod acceptable for solo MVP",
+      "alternativesRejected": "Option B: create new Neon branch dedicated to prod"
     },
     {
-      "decision": "Defer login + smoke-test until next session",
-      "reason": "Human prioritized saving project state over walking through signup flow with assistant reading verification code from dev log",
-      "alternativesRejected": "AskUserQuestion with 4 login-status options (human interrupted the tool use)"
+      "decision": "Upgrade to Vercel Pro ($20/mo)",
+      "reason": "User explicitly asked 'c est pas mieux de payer l abonnement sur vercel?' then said 'c est paye'",
+      "alternativesRejected": "Option A (cron-job.org free workaround staying on Hobby) + Option C (daily crons, broken emails)"
+    },
+    {
+      "decision": "Continue smoke tests tomorrow instead of now",
+      "reason": "User fatigue — 'on peut continue les tests demain sauvegarde et rapell moi demain'",
+      "alternativesRejected": "Running the 10-step smoke test checklist in the current session"
     }
   ],
   "failedApproaches": [
-    "Approach: pnpm format from frontend/ → Result: 'Erforderlicher Parameter fehlt' PowerShell error → Lesson: root package.json has the script, use pnpm -w run format at repo root",
-    "Approach: eslint-disable-next-line @next/next/no-img-element comments on <img> tags → Result: lint failed 'Definition for rule not found' blocking pre-commit → Lesson: project flat config doesn't include the Next plugin — remove the comment, keep plain <img>",
-    "Approach: cd .. from frontend/ when session already at repo root → Result: 'not a git repository' because cd walked outside project → Lesson: check pwd first or prefer absolute paths for git in follow-up Bash calls"
+    "Approach: Deploy to Vercel Hobby with original */1 cron schedules → Result: Vercel rejected deploy with 'hobby account is limited to daily cron jobs' → Lesson: Hobby tier cron frequency floor is daily (0 X * * *); sub-daily needs Pro or external cron service",
+    "Approach: Suggested cron-job.org as free workaround to keep Hobby → Result: user opted to pay Pro instead → Lesson: for commercial SaaS, Pro is justified by TOS + 60s timeout alone, not just cron"
   ],
-  "blockers": "Human hasn't logged in to smoke-test the 9 features. Stated 'il y a beaucoup de soucis a resoudre quand je pourrai me einloggen' but then deferred testing with 'on va le faire plus tard sauvegarde tout le projet'. Dev email bypass is ON (DEV_EMAIL_BYPASS unset → defaults to console mailer in dev), so verification code prints to dev-server log — ready to read when they start signup. No code-level blocker; purely sequencing.",
+  "blockers": null,
   "modifiedFiles": [
-    "frontend/prisma/schema.prisma: SeatingTable model + Guest.seatingTableId FK (onDelete SetNull)",
-    "frontend/src/app/api/seating/route.ts: NEW — GET aggregated seating plan with unassigned list",
-    "frontend/src/app/api/seating/tables/route.ts: NEW — POST create table with next-order",
-    "frontend/src/app/api/seating/tables/[id]/route.ts: NEW — PATCH rename/resize + DELETE",
-    "frontend/src/app/api/guests/[id]/seating/route.ts: NEW — PATCH assign/unassign guest with cross-ceremony guard",
-    "frontend/src/app/seating/page.tsx: rewritten — fetch + click-to-assign modal + add/delete tables",
-    "frontend/src/lib/server/vipinvitoz/seating.ts: NEW — list/create/update/delete/assign helpers",
-    "frontend/src/app/ceremonies/new/page.tsx: wizard wired to POST /api/ceremonies + Cloudinary upload; native date/time; redirect to editor",
-    "frontend/src/app/api/ceremonies/route.ts: extended POST body with optional coverImageUrl",
-    "frontend/src/app/dashboard/page.tsx: Promise.allSettled fetch of /api/ceremonies + /api/dashboard/stats; wires 3 StatCards + RSVPStatusBar + accompagnants; passes coverImageUrl",
-    "frontend/src/app/api/dashboard/stats/route.ts: NEW — organizer-only aggregate across DRAFT+ACTIVE ceremonies",
-    "frontend/src/app/api/guests/[id]/invite/send/route.ts: NEW — POST with channel EMAIL/WHATSAPP/LINK; marks sent; enqueues Resend for EMAIL",
-    "frontend/src/lib/server/vipinvitoz/invite-share.ts: NEW — wa.me number normalizer, email template, sendInvitationOnChannel",
-    "frontend/src/app/guests/page.tsx: share dialog with 3 channels replaces single-send button",
-    "frontend/src/app/ceremonies/[id]/editor/page.tsx: NEW implementation — inline-edit top-level, occasion CRUD modal, AI panel, cover upload zone, generated-invitation preview with palette styling + cover",
-    "frontend/src/app/api/ceremonies/[id]/route.ts: NEW — GET + PATCH ceremony",
-    "frontend/src/app/api/ceremonies/[id]/occasions/route.ts: NEW — POST occasion",
-    "frontend/src/app/api/ceremonies/[id]/occasions/[occId]/route.ts: NEW — PATCH + DELETE (refuses last remaining)",
-    "frontend/src/app/api/ceremonies/[id]/ai-generate/route.ts: NEW — initial AI generation via Claude Sonnet 5.5; debit credit before call; persist invitationJson + AiGeneration audit row in $transaction",
-    "frontend/src/lib/upload-client.ts: NEW — multipart upload helper with CSRF alignment, error-code normalization",
-    "frontend/src/components/CeremonyCard.tsx: added coverImageUrl prop + 24px cover strip; left button becomes 'Aperçu' opens preview in new tab",
-    "frontend/src/components/QRCode.tsx: NEW — client component rendering real QR via qrcode lib (EC H)",
-    "frontend/src/app/i/[slug]/page.tsx: Banani 15 fix — QR card added, lg:grid-cols-5 2-column desktop, aspect-ratio cover, navigator.share wired",
-    "frontend/src/app/ceremonies/[id]/preview/page.tsx: NEW — organizer preview of /i/[slug] with disabled RSVP + top banner"
+    "frontend/vercel.json: twice-modified — first set all crons to daily staggered (commit 62e325e), then restored to */1 */1 0h */5 0h 0h (commit 1619ccf) after Pro upgrade"
   ],
   "implicitRules": [
-    "Port 3000 is now VipInvitoz dev port (RestBallack no longer there); stale process from prior session killed (was PID 9108)",
-    "Resend is in sandbox mode: only sends to yossafina22@gmail.com. Dev defaults to console mailer via DEV_EMAIL_BYPASS (unset = bypass ON); set to '0' to use real Resend",
-    "Vercel Cron routes do not fire locally — in-process dev-crons module from instrumentation.ts polls outbox-drain + email-queue-drain every 30s",
-    "Neon-pooler cold starts regularly exceed Prisma's 2s default; use { maxWait: 10_000, timeout: 15_000 } on auth + AI + any multi-insert txn",
-    "Git identity set per commit via env vars (never config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'",
-    "GitHub remote: https://github.com/yossafina22/VipInvitoz (branch main)",
-    "Cloudinary env vars required for /api/upload: CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET — missing → 503 STORAGE_NOT_CONFIGURED, app still boots",
-    "ANTHROPIC_API_KEY required for AI generation — missing → 503 AI_NOT_CONFIGURED, credit NOT consumed; upstream failure → 502 AI_CALL_FAILED, credit IS consumed",
-    "/api/upload uses multipart/form-data — the shared api() helper (JSON only) is incompatible; use lib/upload-client.ts which mirrors CSRF double-submit",
-    "Protected files per CLAUDE.md (do NOT modify): auth.ts, crypto.ts, logger.ts, redis.ts, webhook/handler.ts, oauth/google.ts, outbox/dispatcher.ts, admin/audit.ts, middleware/index.ts, instrumentation.ts (5-line dev-crons exception stands), api.ts, payments/circuit-breaker.ts",
-    "pre-commit hook: format + lint + typecheck + 555 tests (1-3 min typical)",
-    "@next/next/no-img-element rule NOT configured in flat config — use plain <img> without eslint-disable comment",
-    "CRLF warnings on Windows are benign",
-    "Pnpm workspace: root package.json delegates scripts via `pnpm --filter frontend run X`; use `pnpm -w run format` at repo root, `pnpm typecheck` from frontend/"
+    "Prod URL: https://vip-invitoz.vercel.app — Vercel team 'fluxiateam', project 'vip-invitoz'",
+    "Vercel settings page: https://vercel.com/fluxiateam/vip-invitoz/settings/environment-variables",
+    "Vercel plan: Pro ($20/mo) — sub-minute crons + 60s function timeout + commercial-use allowed",
+    "Email var name is EMAIL_FROM (NOT RESEND_FROM) — I initially said RESEND_FROM by mistake, corrected after grep showed EMAIL_FROM is what frontend/src/lib/server/email.ts expects",
+    "Resend still in sandbox: only yossafina22@gmail.com receives real emails in prod until a custom domain is verified at resend.com/domains",
+    "DEV_EMAIL_BYPASS must NOT be set in Vercel (its presence routes emails to console instead of Resend) — absence = real emails sent",
+    "Cron routes are all POST (not GET) with Authorization: Bearer <CRON_SECRET> header — Vercel's native cron sends this header automatically, external cron needs to add it manually",
+    "Vercel 'Optional Integrations' step after project creation = marketplace upsells; always skip for projects with own provider accounts",
+    "Git identity per-commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'"
   ],
   "nextSteps": [
-    "Restart dev server from frontend/ (pnpm dev) — port 3000; Turbopack cold start ~40s on first request",
-    "Walk human through signup at http://localhost:3000/auth/signup; read verification code from dev-server log (scratchpad vipinvitoz-dev.log) once they submit",
-    "Once logged in: smoke-test the 9 shipped features in sequence (dashboard stats → wizard with image → editor with AI generate → share dialog 3 channels → seating click-to-assign → preview page); note UX bugs for immediate fix",
-    "#5 Vercel deploy: guide human through import at vercel.com/new with Root Directory=frontend, minimum env vars DATABASE_URL + DIRECT_URL + JWT_SECRET + ENCRYPTION_KEY + CRON_SECRET + APP_URL + COOKIE_PREFIX + NEXT_PUBLIC_COOKIE_PREFIX",
-    "#10 Add unit tests for the ~25 new routes/helpers (invite-share, seating helpers, dashboard-stats aggregator, ai-generate flow, upload-client) — zero coverage added this session",
-    "#9 Check-in QR day-of flow: scan Invitation.qrToken → POST /api/invitations/[slug]/checkin → set checkedInAt + checkedInByUserId (table columns already exist)",
-    "Chatbot IA modification: wire existing lib/server/ai/claude.ts modifyInvitation helper to POST /api/ceremonies/[id]/ai-modify + chat panel in editor",
-    "Account + subscription pages (/account, /subscription) still placeholder — wire to real User + Subscription data"
+    "Open https://vip-invitoz.vercel.app and do full smoke test: (1) signup with yossafina22@gmail.com (sandbox limit), (2) verify email code arrives within 1 min, (3) enter code → logged in, (4) create ceremony (any type), (5) upload cover photo, (6) click 'Générer avec IA', (7) preview invitation, (8) add self as guest, (9) send invitation, (10) open received link in incognito + confirm RSVP",
+    "If any smoke-test step fails: check Vercel function logs at https://vercel.com/fluxiateam/vip-invitoz/logs (filter by error status 5xx or by route path)",
+    "Once smoke test passes: verify custom domain for Resend at resend.com/domains so non-yossafina22 emails work — currently sandbox limits to 1 recipient",
+    "Decide on remaining feature priority: (A) QR check-in day-of flow, (B) AI chatbot ceremony modification, (C) Account + Subscription pages wiring, (D) unit tests backfill for ~25 new routes/helpers",
+    "Optional: set up Vercel Analytics (click 'Enable Speed Insights' from deploy success page) to see real traffic"
   ],
   "keywords": [
+    "vercel",
+    "deploy",
+    "smoke-test",
     "vipinvitoz",
-    "ceremonies",
-    "editor",
-    "ai-generation",
-    "cover-upload",
-    "invitation-share",
-    "organizer-preview",
-    "vercel-deploy"
+    "cron",
+    "pro-plan",
+    "env-vars",
+    "resend-sandbox"
   ]
 }

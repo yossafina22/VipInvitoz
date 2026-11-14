@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Icon } from './Icon';
 import { SideBar } from './SideBar';
 import { UserAvatar } from './UserAvatar';
@@ -17,14 +17,30 @@ interface AppLayoutProps {
 export function AppLayout({ children, pageTitle, tier = 'premium' }: AppLayoutProps) {
   const { user } = useAuth();
   const displayName = user?.email.split('@')[0] ?? '';
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   return (
     <div className="flex bg-background min-h-screen">
-      <SideBar tier={tier} />
+      <SideBar
+        tier={tier}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+      />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-card border-b border-border px-4 md:px-8 h-14 flex items-center justify-between gap-3">
-          <h1 className="font-headings font-bold text-base md:text-lg text-foreground truncate">
-            {pageTitle}
-          </h1>
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Ouvrir le menu"
+              className="md:hidden p-2 -ml-2 text-foreground"
+            >
+              <Icon name="menu" size={22} />
+            </button>
+            <h1 className="font-headings font-bold text-base md:text-lg text-foreground truncate">
+              {pageTitle}
+            </h1>
+          </div>
           <div className="flex items-center gap-3 md:gap-4 shrink-0">
             <button
               type="button"
