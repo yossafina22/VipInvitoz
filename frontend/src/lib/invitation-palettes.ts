@@ -19,6 +19,7 @@ export type PaletteId =
   | 'indigo-nuit'
   | 'ocre-terracotta'
   | 'lavande-royale'
+  | 'turquoise-caraibes'
   | 'noir-minimal'
   | 'faire-part-classique';
 
@@ -176,6 +177,25 @@ export const INVITATION_PALETTES: Record<PaletteId, InvitationPalette> = {
       surface: '#FFFFFF',
       text: '#1F2937',
       textMuted: '#6B5B7A',
+      goldAccent: '#D4A017',
+      patternOpacity: 0.08,
+    },
+  },
+  'turquoise-caraibes': {
+    id: 'turquoise-caraibes',
+    name: 'Turquoise Caraïbes',
+    tagline: 'Tropical et vibrant',
+    tone: 'celebration',
+    swatches: ['#0891B2', '#F59E0B', '#ECFEFF'],
+    vars: {
+      primary: '#0891B2',
+      primaryForeground: '#ECFEFF',
+      accent: '#F59E0B',
+      accentForeground: '#0F172A',
+      bg: '#ECFEFF',
+      surface: '#FFFFFF',
+      text: '#0F172A',
+      textMuted: '#0E5260',
       goldAccent: '#D4A017',
       patternOpacity: 0.08,
     },
