@@ -190,7 +190,7 @@ export default function CreateCeremonyPage() {
                 <label className="w-full bg-input border-2 border-dashed border-border rounded-xl p-6 text-center flex flex-col items-center justify-center min-h-40 hover:bg-secondary hover:border-primary transition-colors cursor-pointer">
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                     className="hidden"
                     onChange={(e) => {
                       const f = e.target.files?.[0];

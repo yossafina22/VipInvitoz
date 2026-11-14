@@ -433,7 +433,7 @@ export default function InvitationEditorPage() {
                       Remplacer
                       <input
                         type="file"
-                        accept="image/jpeg,image/png,image/webp"
+                        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                         className="hidden"
                         onChange={(e) => {
                           const f = e.target.files?.[0];
@@ -457,7 +457,7 @@ export default function InvitationEditorPage() {
                 <label className="block w-full bg-input border-2 border-dashed border-border rounded-lg p-5 text-center cursor-pointer hover:bg-secondary hover:border-primary transition-colors">
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                     className="hidden"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
