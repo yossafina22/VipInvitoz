@@ -1,5 +1,12 @@
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+// next-intl request-config wrapper. Points the build at src/i18n/request.ts
+// so the server-side locale resolver + message loader get compiled into the
+// bundle. The wrapper is a no-op at runtime for API routes under /api/* —
+// it only kicks in for app/[locale]/* pages.
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 // Static security headers applied to every response.
 // Set via next.config.ts (not middleware.ts) so Vercel's edge can serve them
@@ -49,7 +56,7 @@ const config: NextConfig = {
 // SENTRY_ORG + SENTRY_PROJECT are present (typically only in CI). Without
 // those env vars the wrapper still works — it just skips the upload step.
 // silent:true keeps the build log clean when nothing is configured.
-export default withSentryConfig(config, {
+export default withSentryConfig(withNextIntl(config), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
