@@ -4,22 +4,22 @@
 ## Session Learnings (auto-updated by handoff)
 
 ### Implicit Rules
-- Pre-commit hook hangs/fails on git paths containing [ characters (Next.js dynamic routes) when prettier runs on them; prettier 3 interprets [...] as glob char class. Workaround: --no-error-on-unmatched-pattern in lint-staged commands.
-- Claude Code auto-mode classifier blocks: --no-verify on git commit ([Undermining Oversight]), taskkill /F /IM node.exe ([Destructive]), env var exports containing email addresses (strips the value). Use git -c user.name -c user.email inline per commit.
-- Concurrent edits during active git/pnpm background processes can cause lint-staged stash to revert working tree writes + EBUSY on eslint typescript plugin. Serialize file writes with background commits.
-- Branch feat/i18n-day-1 cut from main at 84dda14. User's parallel work on main (vercel.json nudge) got picked up as commit 0ba6676 on the feature branch — benign but duplicated if merged.
-- pnpm workspace: single frontend/ package. Root scripts delegate via pnpm --filter frontend run X.
-- Prettier processes files individually in lint-staged (6-7s per file on large components). Full pre-commit hook takes 1-3min, build ~2min, test suite ~6.5min (67 files / 594 tests).
-- Shared dev=prod Neon: additive-only migrations with IF NOT EXISTS are safe. Never rename/drop columns without a separate migration plan.
-- Commit identity: git -c user.name='Yossafina' -c user.email='yossafina22@gmail.com' inline on every commit (never git config, never env vars).
+- Vercel Cron Jobs sends HTTP GET to configured paths (NOT POST). Route handlers MUST export GET or alias POST as GET, else every tick returns 405 silently and nothing drains
+- Vercel env var Secret type hides the saved value in the Edit popup (shows empty Value field). Users mistake this for 'unset'. For non-sensitive config use Config type, OR delete the var entirely and let code defaults win
+- Pre-commit hook (husky + lint-staged) runs prettier + eslint + typecheck repo-wide, not just on staged files. With 20+ WIP files on feat branch, typecheck takes 3-5 min — do not TaskStop early, wait it out
+- EMAIL_FROM is the canonical env var name for the email queue sender. NOT RESEND_FROM_EMAIL, NOT RESEND_EMAIL_FROM. Required by email-queue-singleton.ts along with UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN + RESEND_API_KEY
+- Windows + OneDrive-backed repo: find, ls -R, git worktree remove, ln -s are all slow or hang past 60s. Prefer Glob/Grep over find; skip worktree gymnastics; use stash+switch for branch moves
+- Git identity per commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'. MUST prefix the git commit command directly — chained after && in a compound does not carry env to the second command
+- All 6 cron handlers go through verifyCronSecret (crypto.timingSafeEqual against CRON_SECRET env). Vercel cron automatically attaches Authorization: Bearer ${CRON_SECRET}. Local curl testing needs the same bearer header
+- Resend sandbox: only the account owner's verified email receives in prod. x-resend-monthly-quota + x-resend-daily-quota response headers tell you remaining sends; verify custom domain at resend.com/domains to escape sandbox
+- Auto Mode classifier blocks any log/echo of API-credential prefixes or lengths — even safe truncations are denied as Credential Materialization. Debug via user-side env var Edit + delete+recreate, not via server logs
 
 ### Key Decisions
-- Decision: localePrefix 'as-needed' → bare /dashboard serves FR, /en/dashboard serves EN — Reason: preserve existing SEO on French URLs, no /fr/* redirects.
-- Decision: app/[locale]/i/[slug] included in move (WhatsApp invitation URLs become /en/i/xxx) — Reason: Day 1 scope simplicity; ceremony-level locale negotiation is Day 2+.
-- Decision: Skip string extraction Day 1 — Reason: 4h budget; infrastructure first, progressive page-by-page translation later.
-- Decision: User.locale kept with 'fr | en | de' doc hint (de used by AI generation route, not UI) — Reason: don't narrow schema when AI prompt-language is independent concern.
-- Decision: No DB call in edge middleware — Reason: User.locale ↔ NEXT_LOCALE cookie sync must live in nodejs route at login; edge has no Prisma.
-- Decision: Formal migration file with IF NOT EXISTS over db:push — Reason: shared dev=prod Neon, columns already exist from earlier push, migration file aligns _prisma_migrations ledger for fresh clones without re-running DDL.
-- Decision: Self-review (no subagent reviewer dispatched) — Reason: user wanted fast finish; build + 594/594 tests + 5/5 tripwire = objective validation.
+- Decision: Alias POST as GET in all 6 cron routes rather than rename POST→GET or duplicate handlers — Reason: preserves existing POST tests + manual curl workflow, zero regression risk, one line per file
+- Decision: Display cover photo at natural ratio (block w-full h-auto) in both guest pages and editor preview — Reason: user wanted full photo visible without any crop or blur, Instagram/Pinterest-style card that adapts to the photo not the other way around
+- Decision: Include image/heic + image/heif in the default UPLOAD_ALLOWED_MIME so iPhone uploads work without env var override — Reason: iPhone is dominant user cohort; defaults should Just Work out of the box
+- Decision: Infer MIME from file extension server-side when browser sends empty or application/octet-stream, then use inferred MIME for allowlist + sniff + storage — Reason: Windows Edge/Chrome without HEIF extension ships HEIC files with wrong MIME; magic-byte sniff remains the trust boundary so attacker renaming evil.exe→cute.heic is still blocked
+- Decision: Delete UPLOAD_ALLOWED_MIME env var on Vercel entirely instead of editing it — Reason: lets code default win forever, avoids maintaining the mime list in two places
+- Decision: Fix cron issue this session (option A) rather than defer and keep draining manually (option B) — Reason: manual drain script was unsustainable for daily operations + December launch deadline
 
 <!-- handoff:learnings:end -->
