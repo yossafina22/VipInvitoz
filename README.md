@@ -244,6 +244,7 @@ Le CI gate est `pnpm audit --prod --audit-level=high` (fail-on-high/critical). L
 | GHSA | Paquet | Sévérité | Raison de l'exception | Dernier scan |
 |---|---|---|---|---|
 | [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf) | `picomatch@4.0.4` | high (ReDoS) | Build-time only (Rollup pattern-matching dans le bundler Sentry), ne reçoit aucun input utilisateur. Pas de patch upstream. | 2026-11-18 |
+| [GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm) | `launch-editor` (via `vite` dev-server, via `@sentry/cloudflare`) | high (path bypass sur Windows) | Dead code en prod : on n'utilise pas l'adapter Cloudflare de Sentry ; `launch-editor` ne tourne que dans le dev-server vite + uniquement sur Windows. Pas de patch upstream. | 2026-11-18 |
 
 **Re-scan trimestriel** : relancer `pnpm audit --prod --audit-level=high` tous les 3 mois (mars / juin / septembre / décembre) et supprimer de `ignoreGhsas` tout GHSA qui aurait un fix upstream.
 
