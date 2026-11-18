@@ -22,9 +22,9 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^1.6.0",
+    "@anthropic-ai/sdk": "^1.10.0",
     "@prisma/client": "^5.22.0",
-    "@sentry/nextjs": "^10.52.0",
+    "@sentry/nextjs": "^11.14.0",
     "@upstash/redis": "^1.34.3",
     "@vercel/otel": "^2.1.2",
     "arctic": "^3.7.0",
@@ -35,15 +35,15 @@
     "heic-convert": "^2.1.0",
     "jose": "^6.2.3",
     "lucide-react": "^1.70.0",
-    "next": "^16.2.6",
-    "next-intl": "^4.14.9",
+    "next": "^16.4.6",
+    "next-intl": "^4.15.1",
     "qrcode": "^1.5.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "resend": "^6.12.2",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.6.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",

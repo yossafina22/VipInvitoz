@@ -4,22 +4,16 @@
 ## Session Learnings (auto-updated by handoff)
 
 ### Implicit Rules
-- Vercel Cron Jobs sends HTTP GET to configured paths (NOT POST). Route handlers MUST export GET or alias POST as GET, else every tick returns 405 silently and nothing drains
-- Vercel env var Secret type hides the saved value in the Edit popup (shows empty Value field). Users mistake this for 'unset'. For non-sensitive config use Config type, OR delete the var entirely and let code defaults win
-- Pre-commit hook (husky + lint-staged) runs prettier + eslint + typecheck repo-wide, not just on staged files. With 20+ WIP files on feat branch, typecheck takes 3-5 min — do not TaskStop early, wait it out
-- EMAIL_FROM is the canonical env var name for the email queue sender. NOT RESEND_FROM_EMAIL, NOT RESEND_EMAIL_FROM. Required by email-queue-singleton.ts along with UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN + RESEND_API_KEY
-- Windows + OneDrive-backed repo: find, ls -R, git worktree remove, ln -s are all slow or hang past 60s. Prefer Glob/Grep over find; skip worktree gymnastics; use stash+switch for branch moves
-- Git identity per commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'. MUST prefix the git commit command directly — chained after && in a compound does not carry env to the second command
-- All 6 cron handlers go through verifyCronSecret (crypto.timingSafeEqual against CRON_SECRET env). Vercel cron automatically attaches Authorization: Bearer ${CRON_SECRET}. Local curl testing needs the same bearer header
-- Resend sandbox: only the account owner's verified email receives in prod. x-resend-monthly-quota + x-resend-daily-quota response headers tell you remaining sends; verify custom domain at resend.com/domains to escape sandbox
-- Auto Mode classifier blocks any log/echo of API-credential prefixes or lengths — even safe truncations are denied as Credential Materialization. Debug via user-side env var Edit + delete+recreate, not via server logs
+- Windows + OneDrive with core.autocrlf=true + prettier endOfLine:lf config creates false-positive format:check failures locally — the repo blobs are LF so CI (Linux) is unaffected; verify with 'git show HEAD:<path> | od -c | head' before touching 54 files
+- CI gate is pnpm audit --prod --audit-level=high (added commit cf9d357, May 2026); dev-only advisories tolerated by design
+- Auto Mode classifier blocks edits that suppress security checks without explicit user authorization — propose with AskUserQuestion or wait for explicit 'yes' in chat before retry
+- picomatch@4.0.4 GHSA-fc5q-39xc-vjpf is a ReDoS with no upstream fix; it is a build-time dep (Rollup pattern-matching inside Sentry bundler), never receives user input in this project — accepting it as documented exception is defensible for an audit
+- pnpm.overrides selector syntax 'name@<version': '>=version' only patches vulnerable versions, leaves compatible transitives alone — preferred over blanket override
+- Pre-commit hook (husky + lint-staged) runs prettier + eslint + typecheck repo-wide; on Windows OneDrive takes 3-5 min — do not TaskStop early
 
 ### Key Decisions
-- Decision: Alias POST as GET in all 6 cron routes rather than rename POST→GET or duplicate handlers — Reason: preserves existing POST tests + manual curl workflow, zero regression risk, one line per file
-- Decision: Display cover photo at natural ratio (block w-full h-auto) in both guest pages and editor preview — Reason: user wanted full photo visible without any crop or blur, Instagram/Pinterest-style card that adapts to the photo not the other way around
-- Decision: Include image/heic + image/heif in the default UPLOAD_ALLOWED_MIME so iPhone uploads work without env var override — Reason: iPhone is dominant user cohort; defaults should Just Work out of the box
-- Decision: Infer MIME from file extension server-side when browser sends empty or application/octet-stream, then use inferred MIME for allowlist + sniff + storage — Reason: Windows Edge/Chrome without HEIF extension ships HEIC files with wrong MIME; magic-byte sniff remains the trust boundary so attacker renaming evil.exe→cute.heic is still blocked
-- Decision: Delete UPLOAD_ALLOWED_MIME env var on Vercel entirely instead of editing it — Reason: lets code default win forever, avoids maintaining the mime list in two places
-- Decision: Fix cron issue this session (option A) rather than defer and keep draining manually (option B) — Reason: manual drain script was unsustainable for daily operations + December launch deadline
+- Decision: Chose Option 2 (surgical ignoreGhsas for picomatch) over Option 1 (relax audit-level=critical) and Option 3 (revert all bumps) — Reason: 5000-user app launching December cannot afford hidden CVE debt; documented single exception > blanket threshold relaxation that hides future high CVEs
+- Decision: Kept @sentry/nextjs major bump 10→11 instead of pinning to 10.x — Reason: API surface used (Sentry.init + standard opts: dsn, environment, release, tracesSampleRate, sendDefaultPii, ignoreErrors, replaysSessionSampleRate) is stable across 7→8→9→10→11; build step will catch any bundler incompatibility
+- Decision: pnpm.overrides with version-constrained keys (e.g. 'nanoid@<3.3.18': '>=3.3.18') instead of blanket overrides — Reason: only patches vulnerable versions, leaves compatible transitives alone
 
 <!-- handoff:learnings:end -->

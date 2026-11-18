@@ -1,92 +1,68 @@
 ---
-date: 2026-11-18T13:28:29.586Z
+date: 2026-11-18T15:57:06.661Z
 project: VipInvitoz
 session: ea584485
 schema_version: 1
-next_steps_count: 6
+next_steps_count: 7
 has_blockers: true
-keywords: cron-get-alias, vercel-cron, heic-mime-fallback, cover-natural-ratio, resend-quota, ci-failing, i18n-day-1, smoke-test
-headline: Goal: Ship VipInvitoz to production on Vercel Pro and unblock organizer flow end-to-end. Core Intent: African ceremonies
+keywords: ci-red-audit, picomatch-ghsa, sentry-11-bump, next-16-4-bump, pnpm-overrides, audit-exit-0, december-launch, 5000-users
+headline: Fix CI red (GitHub Actions audit step) + ship clean security posture before December launch. 5000-user target → high/cri
 ---
 
 # Session Handoff Snapshot
-> **Generated:** 18.11.2026, 14:28:29
+> **Generated:** 18.11.2026, 16:57:06
 
 ## 🎯 High-Level Objective
-* **Goal:** Goal: Ship VipInvitoz to production on Vercel Pro and unblock organizer flow end-to-end. Core Intent: African ceremonies SaaS (mariage/bapteme/anniversaire/deuil) for pre-December launch — organizer must be able to signup → create ceremony → upload cover → generate AI invitation → cycle palettes → invite guests → guests RSVP without manual intervention.
+* **Goal:** Fix CI red (GitHub Actions audit step) + ship clean security posture before December launch. 5000-user target → high/critical CVEs cannot ship. Core intent: reach audit exit 0 WITHOUT relaxing the gate for future CVEs.
 
 ## 📌 Current State & Next Steps
-* **Status:** DONE: 6 commits shipped on main this session — 8fcd9a5 (editor preview cover), a700bfc (contain + blur fallback), 7b8d4c5 (natural ratio h-auto in 4 files), fda5454 (HEIC default allowlist), 84dda14 (extension-based MIME inference), 64f5df4 (cron GET alias on all 6 routes). Vercel prod builds Ready for each. End-to-end invitation + RSVP flow works automatically via Vercel cron. 589/589 unit tests green locally. PENDING: (1) GitHub Actions CI red on every push since this session started, independent of Vercel — needs sign-in + reading the actual failing step; no impact on prod but pollutes user inbox. (2) Resend sandbox quota down to 3 emails/month, only yossafina22@gmail.com receives — verify custom domain at resend.com/domains OR upgrade plan before December launch. (3) i18n branch feat/i18n-day-1 was advancing in parallel session during this one; latest commit observed ea2571a (next/link + navigation helpers swap + tripwire). Not merged to main yet. (4) 4 stashes left in stack from debug session (stash@{0}/1/2/3) — safe to git stash clear once i18n WIP is committed.
-* **Blocker:** ["GitHub Actions CI red on every push since this session started (run #31 and later for commits 84dda14, 64f5df4 etc). Independent of Vercel — prod deploys stay healthy — but each push emails a CI failure notification. Diagnostic needs sign-in to GitHub in the browser + reading the actual failing step (user's browser session wasn't authenticated during this session). Not blocking app functionality.", "Resend hard sandbox: only yossafina22@gmail.com receives real emails in prod, and x-resend-monthly-quota header shows 3 sends remaining this month. Blocks inviting real external guests until custom domain is verified at resend.com/domains or plan is upgraded."]
-* **Next Action:** Diagnose GitHub Actions CI failures: sign into github.com in browser, open the failed run at github.com/yossafina22/VipInvitoz/actions, click the red 'build' job, read the actual failing step name + error. Local lint+typecheck+589 tests + audit all pass, so it is something specific to the CI environment (Node version, timeout, cache, or missing CI-only env var).
+* **Status:** DONE: deps bumped in frontend/package.json + overrides + ignoreGhsas in root package.json; pnpm-lock.yaml regenerated; audit exits 0; format:check + lint green locally. PENDING: pnpm typecheck + test + build locally (critical to validate Sentry 10→11 major bump at compile time); README picomatch doc note; commit; push; verify CI green on GitHub. Nothing committed yet — working tree has 3 modified files.
+* **Blocker:** "Soft blocker: Sentry major bump 10→11 not validated locally yet — typecheck + test + build must all pass before commit. If build fails, may need to review Sentry 11 migration notes or pin back to latest 10.x."
+* **Next Action:** Resume: run 'pnpm typecheck' locally (~3 min on Windows OneDrive)
 
 ### Remaining Queue
-- [ ] Verify custom domain on Resend at resend.com/domains OR upgrade Resend plan before Nov 30 — current sandbox quota is 3 sends remaining this month and only yossafina22@gmail.com receives. Blocks any real guest invitation before December launch.
-- [ ] Merge feat/i18n-day-1 → main once the i18n parallel session finishes its WIP and tests pass. At last check the branch was at ea2571a (next/link + navigation helpers swap + tripwire test).
-- [ ] Clean up the 4 debug stashes: git stash list to review, git stash clear once you confirm the i18n WIP is committed on feat/i18n-day-1 and no stash contains unique work.
-- [ ] Delete the zombie worktree at C:/Users/PC/AppData/Local/Temp/vip-cron-fix (Windows file permission blocked git worktree remove — needs manual rmdir /S /Q via cmd or File Explorer)
-- [ ] Backlog from PRD: QR check-in day-of, AI chatbot ceremony modification, Account + Subscription page UIs wired, unit tests for the ~30 new routes/helpers added this week + previous sessions
+- [ ] Run 'pnpm test' locally (~2.5 min) — all 594 tests should still pass after dep bumps
+- [ ] Run 'pnpm build' locally (~2 min) — CRITICAL: this is what validates Sentry 10→11 major bump at bundler level; if it fails check Sentry 11 migration guide at docs.sentry.io/platforms/javascript/guides/nextjs/migration/
+- [ ] Add picomatch exception note to README.md security section: 'GHSA-fc5q-39xc-vjpf: build-time only, no user input, no upstream fix — ignored in pnpm.auditConfig as of 2026-11-18, re-scan quarterly'
+- [ ] Commit with conventional message: 'fix(security): bump deps + pin transitives, ignore picomatch build-time CVE (37 → 0 blocking)'
+- [ ] Push to origin/main and verify GitHub Actions CI green at github.com/yossafina22/VipInvitoz/actions
+- [ ] After CI green, continue with pending launch items: Resend custom domain verification (quota 3 sends left before Nov 30), merge feat/i18n-day-1, clean up 4 debug stashes
 
 ## 🛠️ Modified Files Delta
-* frontend/src/components/InvitationPreview.tsx: dropped Image import + object-cover + fixed h-56/h-64, now plain <img> w-full h-auto driven by coverSrc prop (uploaded URL or fallback to /banani/invitation-cover.jpg)
-* frontend/src/app/ceremonies/[id]/editor/page.tsx: pass coverSrc={ceremony.coverImageUrl} to InvitationPreview via spread for exactOptionalPropertyTypes; GeneratedInvitation cover: h-40 object-cover → block w-full h-auto for natural ratio
-* frontend/src/app/i/[slug]/page.tsx: removed aspect-ratio container + backdrop-blur-2xl, cover now block w-full h-auto for natural ratio
-* frontend/src/app/ceremonies/[id]/preview/page.tsx: same treatment as /i/[slug]/page.tsx
-* frontend/src/app/api/upload/route.ts: default UPLOAD_ALLOWED_MIME now includes image/heic,image/heif; added extGuess fallback mapping filename extension → MIME when file.type is empty or application/octet-stream; propagated declaredMime through sniff + storage; INVALID_MIME response echoes declaredMime + filename for operator debug
-* frontend/src/app/api/cron/email-job-purge/route.ts: appended `export { POST as GET }` so Vercel cron GET requests no longer 405
-* frontend/src/app/api/cron/email-queue-drain/route.ts: same GET alias append
-* frontend/src/app/api/cron/order-expiration/route.ts: same GET alias append
-* frontend/src/app/api/cron/outbox-drain/route.ts: same GET alias append
-* frontend/src/app/api/cron/verification-cleanup/route.ts: same GET alias append
-* frontend/src/app/api/cron/webhook-log-purge/route.ts: same GET alias append
-* SCRATCHPAD scripts (NOT committed): /tmp/send-pending.ts (manual Resend drain used before cron fix), /tmp/cancel-dupes.ts (marked 3 duplicate PENDING EmailJobs as DEAD to prevent spam), /tmp/check-email.ts (queried EmailJob table)
+* package.json (root): added pnpm.overrides {nanoid, postcss, browserslist, source-map-js, vite} forcing patched versions + pnpm.auditConfig.ignoreGhsas [GHSA-fc5q-39xc-vjpf] for picomatch
+* frontend/package.json: next ^16.2.6→^16.4.6, @sentry/nextjs ^10.52.0→^11.14.0, zod ^4.4.3→^4.6.7, next-intl ^4.14.9→^4.15.1, @anthropic-ai/sdk ^1.6.0→^1.10.0
+* pnpm-lock.yaml: regenerated to reflect bumps + overrides
 
 ## 🚫 Failed Approaches (DO NOT RETRY)
-* Approach: Edit UPLOAD_ALLOWED_MIME on Vercel keeping Secret type → Result: Edit popup shows empty Value field (Secret vars hide saved value), user couldn't tell what current value was → Lesson: for non-sensitive config vars use Config type OR delete + let code default win
-* Approach: Debug Cloudinary 401 via server-side log of key prefix or length → Result: Auto Mode classifier blocked every credential-prefix echo as Credential Materialization → Lesson: debug via user-side Edit + delete+recreate from scratch, never via server logs
-* Approach: Commit vercel.json nudge on wrong branch (feat/i18n-day-1 instead of main) → Result: commit 0ba6676 landed on feat branch, Vercel ignored because it only auto-deploys main → Lesson: always run git branch --show-current before committing when session has had branch switches or commits across multiple branches
-* Approach: git worktree + symlinked node_modules on Windows OneDrive → Result: ln -s hung past 60s timeout, git worktree remove failed with Permission denied, workflow stalled 10 minutes → Lesson: on Windows OneDrive-backed repos, skip worktree gymnastics entirely; stash+checkout is faster even when another session is concurrently editing
-* Approach: Trust the vercel.json comment saying 'POST /api/cron/...' from the original starter template → Result: 100% of cron ticks returned HTTP 405 silently for 9+ days, EmailJob rows piled up PENDING with attempts=0 → Lesson: when Vercel cron emails never arrive AND EmailJob.attempts stays 0, test the endpoint method with curl GET before blaming env vars, plan limits, or Vercel UI config
-* Approach: Stash the WIP i18n while concurrent parallel session was actively modifying the same files → Result: Saved working directory message appeared but files were immediately re-modified by other session → Lesson: coordinate with parallel sessions explicitly before any git stash or branch switch; stashing against a live writer loses nothing but changes nothing either, creating phantom stash entries
+* Approach: Run pnpm format repo-wide to fix 54 files flagged by format:check → Result: git status showed working tree clean after format (autocrlf=true converted LF back to CRLF for comparison with LF blobs) → Lesson: format:check failures on Windows are false positives from autocrlf conflict with prettier endOfLine:lf; always check git blobs with 'git show HEAD:path | od -c' before chasing line-ending diffs; CI runs on Linux so blobs are what matters
+* Approach: Edit package.json to add pnpm.auditConfig.ignoreGhsas on first attempt → Result: Auto Mode classifier blocked as 'Undermining Oversight' → Lesson: edits that suppress security checks (ignoreGhsas, audit-level relaxation, --no-verify) need explicit in-chat user authorization before the classifier lets them through; propose + ask + wait for yes
 
 ## 🔑 Crucial Context & Implicit Rules
-* Vercel Cron Jobs sends HTTP GET to configured paths (NOT POST). Route handlers MUST export GET or alias POST as GET, else every tick returns 405 silently and nothing drains
-* Vercel env var Secret type hides the saved value in the Edit popup (shows empty Value field). Users mistake this for 'unset'. For non-sensitive config use Config type, OR delete the var entirely and let code defaults win
-* Pre-commit hook (husky + lint-staged) runs prettier + eslint + typecheck repo-wide, not just on staged files. With 20+ WIP files on feat branch, typecheck takes 3-5 min — do not TaskStop early, wait it out
-* EMAIL_FROM is the canonical env var name for the email queue sender. NOT RESEND_FROM_EMAIL, NOT RESEND_EMAIL_FROM. Required by email-queue-singleton.ts along with UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN + RESEND_API_KEY
-* Windows + OneDrive-backed repo: find, ls -R, git worktree remove, ln -s are all slow or hang past 60s. Prefer Glob/Grep over find; skip worktree gymnastics; use stash+switch for branch moves
-* Git identity per commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'. MUST prefix the git commit command directly — chained after && in a compound does not carry env to the second command
-* All 6 cron handlers go through verifyCronSecret (crypto.timingSafeEqual against CRON_SECRET env). Vercel cron automatically attaches Authorization: Bearer ${CRON_SECRET}. Local curl testing needs the same bearer header
-* Resend sandbox: only the account owner's verified email receives in prod. x-resend-monthly-quota + x-resend-daily-quota response headers tell you remaining sends; verify custom domain at resend.com/domains to escape sandbox
-* Auto Mode classifier blocks any log/echo of API-credential prefixes or lengths — even safe truncations are denied as Credential Materialization. Debug via user-side env var Edit + delete+recreate, not via server logs
+* Windows + OneDrive with core.autocrlf=true + prettier endOfLine:lf config creates false-positive format:check failures locally — the repo blobs are LF so CI (Linux) is unaffected; verify with 'git show HEAD:<path> | od -c | head' before touching 54 files
+* CI gate is pnpm audit --prod --audit-level=high (added commit cf9d357, May 2026); dev-only advisories tolerated by design
+* Auto Mode classifier blocks edits that suppress security checks without explicit user authorization — propose with AskUserQuestion or wait for explicit 'yes' in chat before retry
+* picomatch@4.0.4 GHSA-fc5q-39xc-vjpf is a ReDoS with no upstream fix; it is a build-time dep (Rollup pattern-matching inside Sentry bundler), never receives user input in this project — accepting it as documented exception is defensible for an audit
+* pnpm.overrides selector syntax 'name@<version': '>=version' only patches vulnerable versions, leaves compatible transitives alone — preferred over blanket override
+* Pre-commit hook (husky + lint-staged) runs prettier + eslint + typecheck repo-wide; on Windows OneDrive takes 3-5 min — do not TaskStop early
 
 ## Key Decisions
-- Decision: Alias POST as GET in all 6 cron routes rather than rename POST→GET or duplicate handlers — Reason: preserves existing POST tests + manual curl workflow, zero regression risk, one line per file
-- Decision: Display cover photo at natural ratio (block w-full h-auto) in both guest pages and editor preview — Reason: user wanted full photo visible without any crop or blur, Instagram/Pinterest-style card that adapts to the photo not the other way around
-- Decision: Include image/heic + image/heif in the default UPLOAD_ALLOWED_MIME so iPhone uploads work without env var override — Reason: iPhone is dominant user cohort; defaults should Just Work out of the box
-- Decision: Infer MIME from file extension server-side when browser sends empty or application/octet-stream, then use inferred MIME for allowlist + sniff + storage — Reason: Windows Edge/Chrome without HEIF extension ships HEIC files with wrong MIME; magic-byte sniff remains the trust boundary so attacker renaming evil.exe→cute.heic is still blocked
-- Decision: Delete UPLOAD_ALLOWED_MIME env var on Vercel entirely instead of editing it — Reason: lets code default win forever, avoids maintaining the mime list in two places
-- Decision: Fix cron issue this session (option A) rather than defer and keep draining manually (option B) — Reason: manual drain script was unsustainable for daily operations + December launch deadline
+- Decision: Chose Option 2 (surgical ignoreGhsas for picomatch) over Option 1 (relax audit-level=critical) and Option 3 (revert all bumps) — Reason: 5000-user app launching December cannot afford hidden CVE debt; documented single exception > blanket threshold relaxation that hides future high CVEs
+- Decision: Kept @sentry/nextjs major bump 10→11 instead of pinning to 10.x — Reason: API surface used (Sentry.init + standard opts: dsn, environment, release, tracesSampleRate, sendDefaultPii, ignoreErrors, replaysSessionSampleRate) is stable across 7→8→9→10→11; build step will catch any bundler incompatibility
+- Decision: pnpm.overrides with version-constrained keys (e.g. 'nanoid@<3.3.18': '>=3.3.18') instead of blanket overrides — Reason: only patches vulnerable versions, leaves compatible transitives alone
 
 ## 🙋 User Contribution (human-authored)
-User manually deleted + recreated CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET on Vercel from scratch (fresh add, not edit) — this single action after 2 sessions of debugging fixed the upload 401 that had blocked all photo uploads. User confirmed plan Pro + Root Directory=frontend + presence of all required env vars (RESEND_API_KEY, EMAIL_FROM, CRON_SECRET, UPSTASH_REDIS_REST_URL+TOKEN) — each confirmation shortened the cron diagnostic by eliminating one hypothesis. User tested smoke test end-to-end in incognito window (RSVP click, status update verification). User chose "cover photo at natural ratio, no blur, no letterbox" from 3 UX options I presented via AskUserQuestion with ASCII previews. User tested iPhone HEIC upload after each of the 3 server-side fixes and reported the exact error message each time, which unblocked the fix. User identified the visual regression "image is cropped" on editor preview that led to 3 cover-rendering commits. User explicitly authorized the cron fix after reading the full audit report, and chose Option A (fix now) over Option B (defer, drain manually). User flagged when the parallel i18n session was still running so I paused git operations instead of risking a stash race.
+"User pushed back hard on complexity mid-session ('c est vraiment necessaire tout ca?') — forced a PM-level simplification discussion where I reduced 4 options to 3 with explicit trade-offs. User then asked for a project-manager recommendation framed for a 5000-user app and chose Option 2 after reading the reasoning. User paused twice ('courte pause' then 'je dois me deconnecter') to control session pacing and avoid uncommitted changes shipping."
 
 ## 🙋 User Decisions (made by the human)
-- **Cover photo at natural ratio (block w-full h-auto) with no blur backdrop and no letterbox bars**
-  - Reason: card should adapt to the photo not the other way around — Instagram/Pinterest-style display preserves full photo fidelity for the invitation preview
-  - Rejected: fixed-height container with solid-color bars (too dated for portrait photos) + hybrid auto-height capped at 40rem (unnecessary complexity for current use case)
-- **Delete UPLOAD_ALLOWED_MIME env var on Vercel to let code default win going forward**
-  - Reason: avoids maintaining the MIME list in two places (code default + env override)
-  - Rejected: Edit the env var to add image/heic,image/heif manually (would couple env and code forever)
-- **Fix cron issue this session (Option A) rather than defer and keep draining manually (Option B)**
-  - Reason: manual drain script was unsustainable for daily operations and the December launch deadline is close
-  - Rejected: Option B: ship the product and drain the queue manually with /tmp/send-pending.ts until a later session
-- **Pause while parallel i18n session finishes its commit before running git stash + checkout dance**
-  - Reason: concurrent git operations on the same working tree risked phantom stashes and data loss on either side
-  - Rejected: force-stash + hope the race does not cause loss
+- **Bump Next 16.2→16.4 + audit (Option A)**
+  - Reason: Minor bump same major = safe path to clear the biggest root cause (next@16.2.6 had 6 high + 5 critical CVEs)
+  - Rejected: pnpm.overrides only (doesn't fix CVEs in next itself); relax audit-level to critical (loses future high protection); remove audit step entirely (no CVE guard at all)
+- **Option 2: surgical ignoreGhsas for picomatch only**
+  - Reason: 5000-user app launching December cannot carry hidden CVE debt; single documented exception > blanket threshold relaxation; picomatch is build-time-only with no user input
+  - Rejected: Option 1 (keep bumps + relax audit to critical — hides future high CVEs); Option 3 (revert all bumps, ships with 37 known CVEs); wait for picomatch upstream fix (blocks launch)
 
 ## Summary
-Session fixed 5 blockers end-to-end. (1) Cloudinary 401 on uploads: user deleted + recreated CLOUDINARY_API_KEY/SECRET env vars from scratch on Vercel (previous values had copy-paste residue). (2) iPhone HEIC uploads: 3 commits — added image/heic + image/heif to default UPLOAD_ALLOWED_MIME (fda5454), infer MIME from file extension when browser sends empty or application/octet-stream (84dda14), unwrap Cloudinary nested .error.message for readable 502 responses (already in place). (3) Editor live preview not showing uploaded cover: pass ceremony.coverImageUrl to InvitationPreview via spread for exactOptionalPropertyTypes (8fcd9a5). (4) Photo cropped/blurred in previews: swap object-contain + blurred-cover-background pattern for plain block w-full h-auto natural ratio in all 4 render paths — editor preview (sans IA + avec IA), /i/[slug] guest page, /ceremonies/[id]/preview (a700bfc then 7b8d4c5). (5) Vercel cron silently dead since 2026-11-09: diagnostic via curl GET on /api/cron/email-queue-drain → HTTP 405 Method Not Allowed. Root cause: all 6 cron routes only exported POST, but Vercel Cron Jobs trigger via GET. Fix: append `export { POST as GET }` to each of the 6 routes (64f5df4). Verified in prod: user clicked Envoyer invitation, email arrived automatically within 90s without manual drain. Smoke test passed bout-en-bout: signup + verify + ceremony + HEIC upload + AI generation + 10 palettes cycled + RSVP in incognito + organizer status update. Resend sandbox: 3 sends remaining this month (per x-resend-monthly-quota header), only yossafina22@gmail.com receives in prod.
+CI red diagnosed: not format (false positive from Windows autocrlf), but pnpm audit --prod --audit-level=high step finding 37 high+critical CVEs. Fixed in 3 waves: (1) bump next 16.2.6→16.4.6 killed 23 CVEs; (2) bump @sentry/nextjs 10.52.0→11.14.0 + zod 4.4.3→4.6.7 + next-intl 4.14.9→4.15.1 + @anthropic-ai/sdk 1.6.0→1.10.0 killed 5 more; (3) pnpm.overrides for 5 transitives (nanoid, postcss, browserslist, source-map-js, vite) killed 7 more. Remaining 1 high = picomatch GHSA-fc5q-39xc-vjpf (no upstream fix, build-time only via Sentry bundler, no user input) → added to pnpm.auditConfig.ignoreGhsas. Local audit --audit-level=high now exits 0 (1 ignored). Format:check + lint green. Typecheck + test + build NOT YET RUN — session paused by user before validation of Sentry major bump at bundler level. Nothing committed.
 
 ---
 *A short hint surfaces on session start; full context loads only if your next prompt matches a keyword above, or via manual `/handoff-resume`. The same record is available as a sibling `.json` file for external tools.*

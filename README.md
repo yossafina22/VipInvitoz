@@ -237,6 +237,16 @@ Décisions de scope du starter — copié ici pour rendre ce README self-contain
 | i18n au-delà des défauts FCFA | Concern per-projet |
 | TOTP / 2FA built-in | Passkeys (v2) les remplacent |
 
+## Sécurité — exceptions CVE documentées
+
+Le CI gate est `pnpm audit --prod --audit-level=high` (fail-on-high/critical). Les exceptions explicites vivent dans `pnpm.auditConfig.ignoreGhsas` (racine `package.json`) :
+
+| GHSA | Paquet | Sévérité | Raison de l'exception | Dernier scan |
+|---|---|---|---|---|
+| [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf) | `picomatch@4.0.4` | high (ReDoS) | Build-time only (Rollup pattern-matching dans le bundler Sentry), ne reçoit aucun input utilisateur. Pas de patch upstream. | 2026-11-18 |
+
+**Re-scan trimestriel** : relancer `pnpm audit --prod --audit-level=high` tous les 3 mois (mars / juin / septembre / décembre) et supprimer de `ignoreGhsas` tout GHSA qui aurait un fix upstream.
+
 ## Invariants critiques
 
 Ce sont les règles que chaque session Claude doit respecter — voir [CLAUDE.md](CLAUDE.md) pour la liste complète. Version courte :
