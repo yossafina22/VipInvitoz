@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { Image } from './Image';
 import { UserAvatar } from './UserAvatar';
 import { WaxPattern } from './WaxPattern';

@@ -14,7 +14,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 
 const ERROR_MESSAGES: Record<string, string> = {

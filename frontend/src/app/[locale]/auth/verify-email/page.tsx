@@ -1,7 +1,8 @@
 'use client';
 
 import { Suspense, useState, type FormEvent } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { NavBar } from '@/components/NavBar';
 import { api, ApiError, storeCsrfToken } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';

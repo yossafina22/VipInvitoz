@@ -17,7 +17,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api';
 import { useAuth, useUser } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';

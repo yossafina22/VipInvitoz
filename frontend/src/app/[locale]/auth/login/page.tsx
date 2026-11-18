@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { AuthShell } from '@/components/AuthShell';
 import { FormField } from '@/components/FormField';
 import { api, ApiError, storeCsrfToken } from '@/lib/api';

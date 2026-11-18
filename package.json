@@ -28,11 +28,11 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
-      "prettier --write",
+      "prettier --write --no-error-on-unmatched-pattern",
       "eslint --fix --max-warnings=0 --no-warn-ignored"
     ],
     "*.{json,md,yml,yaml}": [
-      "prettier --write"
+      "prettier --write --no-error-on-unmatched-pattern"
     ]
   },
   "devDependencies": {
