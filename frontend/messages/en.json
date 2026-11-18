@@ -12,6 +12,34 @@
     "signup": "Sign up",
     "menuLabel": "Menu"
   },
+  "footer": {
+    "tagline": "The all-in-one platform for African families — from invitation to the big day.",
+    "columns": {
+      "product": {
+        "title": "Product",
+        "features": "Features",
+        "pricing": "Pricing",
+        "howto": "How it works",
+        "faq": "FAQ"
+      },
+      "ceremonies": {
+        "title": "Ceremonies",
+        "mariage": "Wedding",
+        "bapteme": "Baptism",
+        "anniversaire": "Birthday",
+        "deuil": "Memorial"
+      },
+      "support": {
+        "title": "Support",
+        "help": "Help Center",
+        "contact": "Contact",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service"
+      }
+    },
+    "copyright": "© 2025 VipInvitoz. All rights reserved.",
+    "madeWith": "Made with ❤️ for African families"
+  },
   "landing": {
     "hero": {
       "tag": "The all-in-one African app",

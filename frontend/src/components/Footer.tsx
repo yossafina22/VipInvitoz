@@ -1,36 +1,39 @@
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { LocaleSwitcher } from './LocaleSwitcher';
 
 const COLUMNS = [
   {
-    title: 'Produit',
+    titleKey: 'product.title',
     links: [
-      { label: 'Fonctionnalités', href: '/#features' },
-      { label: 'Tarifs', href: '/#pricing' },
-      { label: 'Comment ça marche', href: '/#howto' },
-      { label: 'FAQ', href: '/#faq' },
+      { labelKey: 'product.features', href: '/#features' },
+      { labelKey: 'product.pricing', href: '/#pricing' },
+      { labelKey: 'product.howto', href: '/#howto' },
+      { labelKey: 'product.faq', href: '/#faq' },
     ],
   },
   {
-    title: 'Cérémonies',
+    titleKey: 'ceremonies.title',
     links: [
-      { label: 'Mariage', href: '/ceremonies/mariage' },
-      { label: 'Baptême', href: '/ceremonies/bapteme' },
-      { label: 'Anniversaire', href: '/ceremonies/anniversaire' },
-      { label: 'Deuil', href: '/ceremonies/deuil' },
+      { labelKey: 'ceremonies.mariage', href: '/ceremonies/mariage' },
+      { labelKey: 'ceremonies.bapteme', href: '/ceremonies/bapteme' },
+      { labelKey: 'ceremonies.anniversaire', href: '/ceremonies/anniversaire' },
+      { labelKey: 'ceremonies.deuil', href: '/ceremonies/deuil' },
     ],
   },
   {
-    title: 'Support',
+    titleKey: 'support.title',
     links: [
-      { label: "Centre d'aide", href: '/help' },
-      { label: 'Contact', href: '/contact' },
-      { label: 'Politique de confidentialité', href: '/legal/privacy' },
-      { label: 'CGU', href: '/legal/terms' },
+      { labelKey: 'support.help', href: '/help' },
+      { labelKey: 'support.contact', href: '/contact' },
+      { labelKey: 'support.privacy', href: '/legal/privacy' },
+      { labelKey: 'support.terms', href: '/legal/terms' },
     ],
   },
-];
+] as const;
 
-export function Footer({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
+export async function Footer({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
+  const t = await getTranslations('footer');
   const bg = variant === 'light' ? 'bg-dark-surface' : 'bg-dark';
   return (
     <footer className={`${bg} text-primary-foreground pt-12 md:pt-16 pb-8 px-4 md:px-10 lg:px-20`}>
@@ -43,30 +46,17 @@ export function Footer({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
               </div>
               <span className="font-headings font-bold text-xl">VipInvitoz</span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              La plateforme tout-en-un pour les familles africaines — de l&apos;invitation au jour
-              J.
-            </p>
-            <div className="flex gap-2 mt-4">
-              {['FR', 'EN', 'DE'].map((lang) => (
-                <button
-                  key={lang}
-                  type="button"
-                  className={`text-xs px-3 py-1 rounded-md border border-border ${
-                    lang === 'FR'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-primary-foreground'
-                  }`}
-                >
-                  {lang}
-                </button>
-              ))}
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">{t('tagline')}</p>
+            <div className="mt-4">
+              <LocaleSwitcher />
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12">
             {COLUMNS.map((col) => (
-              <div key={col.title}>
-                <h4 className="font-body font-bold text-sm mb-3 text-gold">{col.title}</h4>
+              <div key={col.titleKey}>
+                <h4 className="font-body font-bold text-sm mb-3 text-gold">
+                  {t(`columns.${col.titleKey}`)}
+                </h4>
                 <ul className="flex flex-col gap-2">
                   {col.links.map((l) => (
                     <li key={l.href}>
@@ -74,7 +64,7 @@ export function Footer({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
                         href={l.href}
                         className="text-sm text-muted-foreground hover:text-primary-foreground transition-colors"
                       >
-                        {l.label}
+                        {t(`columns.${l.labelKey}`)}
                       </Link>
                     </li>
                   ))}
@@ -84,8 +74,8 @@ export function Footer({ variant = 'dark' }: { variant?: 'light' | 'dark' }) {
           </div>
         </div>
         <div className="border-t border-border pt-6 flex flex-col md:flex-row gap-2 md:gap-0 justify-between items-start md:items-center">
-          <p className="text-xs text-muted-foreground">© 2025 VipInvitoz. Tous droits réservés.</p>
-          <p className="text-xs text-muted-foreground">Fait avec ❤️ pour les familles africaines</p>
+          <p className="text-xs text-muted-foreground">{t('copyright')}</p>
+          <p className="text-xs text-muted-foreground">{t('madeWith')}</p>
         </div>
       </div>
     </footer>

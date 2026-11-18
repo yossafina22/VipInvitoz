@@ -12,6 +12,34 @@
     "signup": "Créer un compte",
     "menuLabel": "Menu"
   },
+  "footer": {
+    "tagline": "La plateforme tout-en-un pour les familles africaines — de l'invitation au jour J.",
+    "columns": {
+      "product": {
+        "title": "Produit",
+        "features": "Fonctionnalités",
+        "pricing": "Tarifs",
+        "howto": "Comment ça marche",
+        "faq": "FAQ"
+      },
+      "ceremonies": {
+        "title": "Cérémonies",
+        "mariage": "Mariage",
+        "bapteme": "Baptême",
+        "anniversaire": "Anniversaire",
+        "deuil": "Deuil"
+      },
+      "support": {
+        "title": "Support",
+        "help": "Centre d'aide",
+        "contact": "Contact",
+        "privacy": "Politique de confidentialité",
+        "terms": "CGU"
+      }
+    },
+    "copyright": "© 2025 VipInvitoz. Tous droits réservés.",
+    "madeWith": "Fait avec ❤️ pour les familles africaines"
+  },
   "landing": {
     "hero": {
       "tag": "L'app africaine tout-en-un",
