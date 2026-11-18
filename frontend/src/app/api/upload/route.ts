@@ -97,9 +97,39 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    if (!allowedMime.includes(file.type)) {
+    // Some browsers (older Edge on Windows without the HEIF extension, iOS
+    // Safari in some upload contexts) ship HEIC files with file.type empty
+    // or set to application/octet-stream. Fall back to the extension so the
+    // allowlist + HEIC-convert branch still fire — the magic-byte sniff
+    // downstream is still the trust boundary.
+    const extGuess = (() => {
+      const m = file.name.toLowerCase().match(/\.([a-z0-9]+)$/);
+      if (!m) return null;
+      switch (m[1]) {
+        case 'heic':
+          return 'image/heic';
+        case 'heif':
+          return 'image/heif';
+        case 'jpg':
+        case 'jpeg':
+          return 'image/jpeg';
+        case 'png':
+          return 'image/png';
+        case 'webp':
+          return 'image/webp';
+        default:
+          return null;
+      }
+    })();
+    const declaredMime =
+      file.type && file.type !== 'application/octet-stream' ? file.type : (extGuess ?? file.type);
+
+    if (!allowedMime.includes(declaredMime)) {
       return NextResponse.json(
-        { code: 'INVALID_MIME', message: `MIME ${file.type} not allowed` },
+        {
+          code: 'INVALID_MIME',
+          message: `MIME "${declaredMime || '(empty)'}" not allowed (file name: ${file.name})`,
+        },
         { status: 415, headers: { 'x-request-id': ctx.requestId } },
       );
     }
@@ -108,17 +138,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // the cheap rejections fire).
     const ab = await file.arrayBuffer();
     let buf = Buffer.from(ab);
-    const { match, sniffed } = verifyMagicBytes(buf, file.type);
+    const { match, sniffed } = verifyMagicBytes(buf, declaredMime);
     if (sniffed && !match) {
       return NextResponse.json(
-        { code: 'MAGIC_BYTE_MISMATCH', message: 'File bytes do not match declared MIME' },
+        {
+          code: 'MAGIC_BYTE_MISMATCH',
+          message: `File bytes do not match declared MIME ${declaredMime}`,
+        },
         { status: 415, headers: { 'x-request-id': ctx.requestId } },
       );
     }
     // sniffed=false → operator allowed a MIME we don't sniff (e.g. text/csv).
     // sniff.ts logs a warn at boot for those; we accept here per its docs.
 
-    let storedMime = file.type;
+    let storedMime = declaredMime;
     let storedFilename = sanitizeFilename(file.name);
 
     // HEIC/HEIF lacks broad browser support — transcode to JPEG so the
