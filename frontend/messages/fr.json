@@ -12,6 +12,26 @@
     "signup": "Créer un compte",
     "menuLabel": "Menu"
   },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "ceremonies": "Cérémonies",
+    "guests": "Invités",
+    "coOrganizers": "Co-organisateurs",
+    "seating": "Plan de table",
+    "projection": "Projection live",
+    "guestbook": "Livre d'or",
+    "budget": "Budget",
+    "vendors": "Prestataires",
+    "orientation": "Orientation",
+    "subscription": "Abonnement",
+    "account": "Paramètres",
+    "closeMenuLabel": "Fermer le menu"
+  },
+  "header": {
+    "openMenuLabel": "Ouvrir le menu",
+    "notificationsLabel": "Notifications",
+    "logoutLabel": "Déconnexion"
+  },
   "footer": {
     "tagline": "La plateforme tout-en-un pour les familles africaines — de l'invitation au jour J.",
     "columns": {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { usePathname } from '@/i18n/navigation';
 import { Icon } from './Icon';
@@ -14,29 +15,30 @@ interface SideBarProps {
 }
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   icon: string;
   href: string;
   tier?: Tier;
 }
 
 const ITEMS: NavItem[] = [
-  { label: 'Tableau de bord', icon: 'calendar-heart', href: '/dashboard' },
-  { label: 'Cérémonies', icon: 'calendar', href: '/ceremonies' },
-  { label: 'Invités', icon: 'users', href: '/guests' },
-  { label: 'Co-organisateurs', icon: 'user-plus', href: '/co-organizers' },
-  { label: 'Plan de table', icon: 'table-2', href: '/seating', tier: 'premium' },
-  { label: 'Projection live', icon: 'projector', href: '/projection', tier: 'premium' },
-  { label: "Livre d'or", icon: 'book-open', href: '/guestbook', tier: 'premium' },
-  { label: 'Budget', icon: 'wallet', href: '/budget', tier: 'vip' },
-  { label: 'Prestataires', icon: 'users', href: '/vendors', tier: 'vip' },
-  { label: 'Orientation', icon: 'navigation', href: '/orientation', tier: 'vip' },
+  { labelKey: 'dashboard', icon: 'calendar-heart', href: '/dashboard' },
+  { labelKey: 'ceremonies', icon: 'calendar', href: '/ceremonies' },
+  { labelKey: 'guests', icon: 'users', href: '/guests' },
+  { labelKey: 'coOrganizers', icon: 'user-plus', href: '/co-organizers' },
+  { labelKey: 'seating', icon: 'table-2', href: '/seating', tier: 'premium' },
+  { labelKey: 'projection', icon: 'projector', href: '/projection', tier: 'premium' },
+  { labelKey: 'guestbook', icon: 'book-open', href: '/guestbook', tier: 'premium' },
+  { labelKey: 'budget', icon: 'wallet', href: '/budget', tier: 'vip' },
+  { labelKey: 'vendors', icon: 'users', href: '/vendors', tier: 'vip' },
+  { labelKey: 'orientation', icon: 'navigation', href: '/orientation', tier: 'vip' },
 ];
 
 const TIER_RANK: Record<Tier, number> = { freemium: 0, premium: 1, vip: 2 };
 
 export function SideBar({ tier = 'premium', mobileOpen = false, onMobileClose }: SideBarProps) {
   const pathname = usePathname();
+  const t = useTranslations('sidebar');
 
   // Lock body scroll while the drawer is open on mobile.
   useEffect(() => {
@@ -54,7 +56,7 @@ export function SideBar({ tier = 'premium', mobileOpen = false, onMobileClose }:
       {mobileOpen && (
         <button
           type="button"
-          aria-label="Fermer le menu"
+          aria-label={t('closeMenuLabel')}
           onClick={onMobileClose}
           className="md:hidden fixed inset-0 z-40 bg-black/50"
         />
@@ -82,7 +84,7 @@ export function SideBar({ tier = 'premium', mobileOpen = false, onMobileClose }:
           <button
             type="button"
             onClick={onMobileClose}
-            aria-label="Fermer le menu"
+            aria-label={t('closeMenuLabel')}
             className="md:hidden p-1 text-muted-foreground hover:text-foreground shrink-0"
           >
             <Icon name="x" size={20} />
@@ -105,7 +107,7 @@ export function SideBar({ tier = 'premium', mobileOpen = false, onMobileClose }:
                 } ${locked ? 'opacity-60' : ''}`}
               >
                 <Icon name={item.icon} size={16} />
-                <span className="flex-1">{item.label}</span>
+                <span className="flex-1">{t(item.labelKey)}</span>
                 {locked && (
                   <span className="text-[10px] font-bold uppercase tracking-wide text-gold">
                     {item.tier === 'vip' ? 'VIP' : 'PRO'}
@@ -122,7 +124,7 @@ export function SideBar({ tier = 'premium', mobileOpen = false, onMobileClose }:
             className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-body text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Icon name="crown" size={16} />
-            <span>Abonnement</span>
+            <span>{t('subscription')}</span>
           </Link>
           <Link
             href="/account"
@@ -130,7 +132,7 @@ export function SideBar({ tier = 'premium', mobileOpen = false, onMobileClose }:
             className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-body text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Icon name="settings" size={16} />
-            <span>Paramètres</span>
+            <span>{t('account')}</span>
           </Link>
         </div>
       </aside>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon } from './Icon';
 import { SideBar } from './SideBar';
 import { UserAvatar } from './UserAvatar';
@@ -19,6 +20,7 @@ export function AppLayout({ children, pageTitle, tier = 'premium' }: AppLayoutPr
   const { user, logout, loggingOut } = useAuth();
   const displayName = user?.email.split('@')[0] ?? '';
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const t = useTranslations('header');
 
   return (
     <div className="flex bg-background min-h-screen">
@@ -33,7 +35,7 @@ export function AppLayout({ children, pageTitle, tier = 'premium' }: AppLayoutPr
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
-              aria-label="Ouvrir le menu"
+              aria-label={t('openMenuLabel')}
               className="md:hidden p-2 -ml-2 text-foreground"
             >
               <Icon name="menu" size={22} />
@@ -47,7 +49,7 @@ export function AppLayout({ children, pageTitle, tier = 'premium' }: AppLayoutPr
             <button
               type="button"
               className="relative p-2 text-muted-foreground"
-              aria-label="Notifications"
+              aria-label={t('notificationsLabel')}
             >
               <Icon name="bell" size={18} />
               <span
@@ -65,8 +67,8 @@ export function AppLayout({ children, pageTitle, tier = 'premium' }: AppLayoutPr
               type="button"
               onClick={() => void logout()}
               disabled={loggingOut}
-              aria-label="Déconnexion"
-              title="Déconnexion"
+              aria-label={t('logoutLabel')}
+              title={t('logoutLabel')}
               className="p-2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Icon name="log-out" size={18} />

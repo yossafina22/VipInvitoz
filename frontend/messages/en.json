@@ -12,6 +12,26 @@
     "signup": "Sign up",
     "menuLabel": "Menu"
   },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "ceremonies": "Ceremonies",
+    "guests": "Guests",
+    "coOrganizers": "Co-organizers",
+    "seating": "Seating chart",
+    "projection": "Live projection",
+    "guestbook": "Guestbook",
+    "budget": "Budget",
+    "vendors": "Vendors",
+    "orientation": "Wayfinding",
+    "subscription": "Subscription",
+    "account": "Settings",
+    "closeMenuLabel": "Close menu"
+  },
+  "header": {
+    "openMenuLabel": "Open menu",
+    "notificationsLabel": "Notifications",
+    "logoutLabel": "Sign out"
+  },
   "footer": {
     "tagline": "The all-in-one platform for African families — from invitation to the big day.",
     "columns": {
