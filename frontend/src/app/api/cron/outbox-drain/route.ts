@@ -90,3 +90,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   });
 }
+
+// Vercel Cron Jobs trigger via GET; alias POST so both work without duplicating logic.
+export { POST as GET };
