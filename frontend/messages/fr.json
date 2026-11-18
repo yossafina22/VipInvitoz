@@ -1,5 +1,145 @@
 {
   "smoke": {
     "helloInvite": "Bienvenue sur VipInvitoz"
+  },
+  "landing": {
+    "hero": {
+      "tag": "L'app africaine tout-en-un",
+      "titleBefore": "Vos cérémonies,",
+      "titleHighlight": "organisées avec cœur.",
+      "subtitle": "De l'invitation générée par IA au jour J — mariage, baptême, anniversaire ou deuil. VipInvitoz est fait pour les familles africaines, en Afrique et dans la diaspora.",
+      "cta": "Commencer gratuitement",
+      "stats": {
+        "ceremoniesLabel": "Cérémonies organisées",
+        "ratingLabel": "Note utilisateurs",
+        "countriesValue": "8 pays",
+        "countriesLabel": "Afrique & diaspora"
+      },
+      "badgeGenerated": "Invitation générée en 47 s",
+      "badgeRsvpTitle": "RSVP en direct",
+      "heroImagePrompt": "Couple africain élégant en cérémonie de mariage, décor terracotta et doré"
+    },
+    "ceremonies": {
+      "eyebrow": "Pour chaque moment",
+      "title": "Chaque cérémonie mérite le meilleur",
+      "types": {
+        "mariage": "Mariage",
+        "bapteme": "Baptême",
+        "anniversaire": "Anniversaire",
+        "deuil": "Deuil",
+        "coutumier": "Coutumier"
+      },
+      "prompts": {
+        "mariage": "Mariage africain avec décorations dorées et kente",
+        "bapteme": "Baptême africain avec fleurs blanches",
+        "anniversaire": "Anniversaire africain avec décor coloré",
+        "deuil": "Cérémonie commémorative avec bougies blanches et lys",
+        "coutumier": "Cérémonie coutumière africaine avec tissu wax et tambours"
+      },
+      "moreCount": "15 autres",
+      "moreLabel": "Et bien plus"
+    },
+    "features": {
+      "eyebrow": "Tout-en-un",
+      "title": "Tout ce qu'il vous faut pour une cérémonie réussie",
+      "subtitle": "Des outils puissants pensés pour les réalités africaines — mobile money, grandes familles, connexion variable, cérémonies transnationales.",
+      "items": {
+        "ai": { "title": "IA en 1 phrase", "desc": "Décrivez, l'IA génère l'invitation complète" },
+        "rsvp": { "title": "RSVP temps réel", "desc": "Comptez vos invités sans appeler chacun" },
+        "seating": { "title": "Plan de table", "desc": "Drag & drop, zéro confusion le jour J" },
+        "budget": { "title": "Budget intégré", "desc": "FCFA ou €, solde en temps réel" },
+        "projection": { "title": "Projection live", "desc": "Photos des invités sur grand écran" },
+        "guestbook": { "title": "Livre d'or", "desc": "Messages des invités — en souvenir" }
+      },
+      "imagePrompt": "Femme africaine en robe en wax souriant devant son smartphone, organisation d'une cérémonie familiale",
+      "badgeWhatsapp": "WhatsApp → Invité confirmé",
+      "badgeRsvp": "87 RSVP reçus"
+    },
+    "steps": {
+      "eyebrow": "Simple comme bonjour",
+      "title": "Comment ça marche ?",
+      "items": {
+        "describe": {
+          "title": "Décrivez en 1 phrase",
+          "desc": "Dites-nous le type de cérémonie, la date et l'ambiance souhaitée. L'IA fait le reste en moins d'une minute."
+        },
+        "invite": {
+          "title": "Invitez & suivez",
+          "desc": "Ajoutez vos invités, envoyez via WhatsApp, suivez les RSVP en direct depuis votre téléphone."
+        },
+        "live": {
+          "title": "Vivez le jour J",
+          "desc": "QR code check-in à l'entrée, projection live de photos, livre d'or — tout se gère en un clic."
+        }
+      }
+    },
+    "pricing": {
+      "eyebrow": "Tarifs",
+      "title": "Des formules pour chaque besoin",
+      "subtitle": "Wave, Orange Money, carte bancaire — payez comme vous le souhaitez.",
+      "free": {
+        "name": "Freemium",
+        "f1": "1 cérémonie",
+        "f2": "20 invités max",
+        "f3": "Génération IA (6 modifications)",
+        "f4": "RSVP en temps réel",
+        "f5": "QR code check-in",
+        "f6": "Plan de table",
+        "f7": "Projection live photos",
+        "f8": "Suivi budget"
+      },
+      "premium": {
+        "name": "Premium",
+        "f1": "Invités illimités",
+        "f2": "12 modifications IA + chatbot",
+        "f3": "Multi-cérémonie",
+        "f4": "Plan de table drag & drop",
+        "f5": "Projection live photos",
+        "f6": "Livre d'or enrichi",
+        "f7": "Suivi budget",
+        "f8": "Coordination prestataires"
+      },
+      "vip": {
+        "name": "VIP",
+        "f1": "Tout Premium inclus",
+        "f2": "IA modifications illimitées",
+        "f3": "Suivi budget temps réel",
+        "f4": "Coordination prestataires",
+        "f5": "Orientation invités + navigation",
+        "f6": "Priorité support",
+        "f7": "Export souvenir",
+        "f8": "Accès anticipé nouvelles features"
+      }
+    },
+    "testimonials": {
+      "title": "Ils ont organisé avec VipInvitoz",
+      "starsLabel": "5 étoiles sur 5",
+      "items": {
+        "aissatou": {
+          "name": "Aïssatou D.",
+          "city": "Dakar, Sénégal",
+          "quote": "« En 30 minutes j'avais une invitation magnifique et 200 personnes notifiées via WhatsApp. Même ma belle-mère a adoré ! »",
+          "ceremony": "Mariage"
+        },
+        "raoul": {
+          "name": "Raoul M.",
+          "city": "Francfort, Allemagne",
+          "quote": "« Invités sur 2 continents, plan de table parfait, le livre d'or était le souvenir le plus émouvant de tout le baptême. »",
+          "ceremony": "Baptême"
+        },
+        "fatou": {
+          "name": "Fatou K.",
+          "city": "Abidjan, Côte d'Ivoire",
+          "quote": "« Même pour un programme de deuil, l'app était là. Simple, digne, sans complications. Merci. »",
+          "ceremony": "Deuil"
+        }
+      }
+    },
+    "finalCta": {
+      "imagePrompt": "Table de banquet de mariage africain décorée avec fleurs terracotta et bougies dorées",
+      "title": "Prêt(e) à organiser votre prochaine cérémonie ?",
+      "subtitle": "Rejoignez des milliers de familles africaines qui font confiance à VipInvitoz.",
+      "button": "Créer mon compte gratuitement →"
+    }
   }
 }

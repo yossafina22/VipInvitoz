@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { Icon } from './Icon';
 import { SideBar } from './SideBar';
 import { UserAvatar } from './UserAvatar';
+import { LocaleSwitcher } from './LocaleSwitcher';
 import { useAuth } from '@/contexts/AuthContext';
 
 type Tier = 'freemium' | 'premium' | 'vip';
@@ -15,7 +16,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, pageTitle, tier = 'premium' }: AppLayoutProps) {
-  const { user } = useAuth();
+  const { user, logout, loggingOut } = useAuth();
   const displayName = user?.email.split('@')[0] ?? '';
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -42,6 +43,7 @@ export function AppLayout({ children, pageTitle, tier = 'premium' }: AppLayoutPr
             </h1>
           </div>
           <div className="flex items-center gap-3 md:gap-4 shrink-0">
+            <LocaleSwitcher className="hidden sm:inline-flex" />
             <button
               type="button"
               className="relative p-2 text-muted-foreground"
@@ -59,6 +61,16 @@ export function AppLayout({ children, pageTitle, tier = 'premium' }: AppLayoutPr
                 {displayName}
               </span>
             </div>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              disabled={loggingOut}
+              aria-label="Déconnexion"
+              title="Déconnexion"
+              className="p-2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Icon name="log-out" size={18} />
+            </button>
           </div>
         </header>
         <main className="flex-1 px-4 md:px-8 py-4 md:py-6">{children}</main>

@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { NavBar } from '@/components/NavBar';
 import { Footer } from '@/components/Footer';
@@ -9,134 +10,121 @@ import { Icon } from '@/components/Icon';
 
 export const runtime = 'nodejs';
 
-const FREE_FEATURES = [
-  { label: '1 cérémonie', included: true },
-  { label: '20 invités max', included: true },
-  { label: 'Génération IA (6 modifications)', included: true },
-  { label: 'RSVP en temps réel', included: true },
-  { label: 'QR code check-in', included: true },
-  { label: 'Plan de table', included: false },
-  { label: 'Projection live photos', included: false },
-  { label: 'Suivi budget', included: false },
-];
+const CEREMONY_KEYS = ['mariage', 'bapteme', 'anniversaire', 'deuil', 'coutumier'] as const;
+const CEREMONY_EMOJIS: Record<(typeof CEREMONY_KEYS)[number], string> = {
+  mariage: '💍',
+  bapteme: '🕊️',
+  anniversaire: '🎂',
+  deuil: '🕯️',
+  coutumier: '🥁',
+};
+const CEREMONY_SRC: Record<(typeof CEREMONY_KEYS)[number], string> = {
+  mariage: '/banani/ceremony-mariage.jpg',
+  bapteme: '/banani/ceremony-bapteme.jpg',
+  anniversaire: '/banani/ceremony-anniversaire.jpg',
+  deuil: '/banani/ceremony-deuil.jpg',
+  coutumier: '/banani/ceremony-coutumier.jpg',
+};
 
-const PREMIUM_FEATURES = [
-  { label: 'Invités illimités', included: true },
-  { label: '12 modifications IA + chatbot', included: true },
-  { label: 'Multi-cérémonie', included: true },
-  { label: 'Plan de table drag & drop', included: true },
-  { label: 'Projection live photos', included: true },
-  { label: "Livre d'or enrichi", included: true },
-  { label: 'Suivi budget', included: false },
-  { label: 'Coordination prestataires', included: false },
-];
+const FEATURE_KEYS = ['ai', 'rsvp', 'seating', 'budget', 'projection', 'guestbook'] as const;
+const FEATURE_ICONS: Record<(typeof FEATURE_KEYS)[number], string> = {
+  ai: 'sparkles',
+  rsvp: 'users',
+  seating: 'table-2',
+  budget: 'wallet',
+  projection: 'projector',
+  guestbook: 'book-open',
+};
 
-const VIP_FEATURES = [
-  { label: 'Tout Premium inclus', included: true },
-  { label: 'IA modifications illimitées', included: true },
-  { label: 'Suivi budget temps réel', included: true },
-  { label: 'Coordination prestataires', included: true },
-  { label: 'Orientation invités + navigation', included: true },
-  { label: 'Priorité support', included: true },
-  { label: 'Export souvenir', included: true },
-  { label: 'Accès anticipé nouvelles features', included: true },
-];
+const STEP_KEYS = ['describe', 'invite', 'live'] as const;
+const STEP_ICONS: Record<(typeof STEP_KEYS)[number], string> = {
+  describe: 'message-square',
+  invite: 'users',
+  live: 'sparkles',
+};
 
-const CEREMONIES = [
-  {
-    emoji: '💍',
-    label: 'Mariage',
-    prompt: 'Mariage africain avec décorations dorées et kente',
-    src: '/banani/ceremony-mariage.jpg',
-  },
-  {
-    emoji: '🕊️',
-    label: 'Baptême',
-    prompt: 'Baptême africain avec fleurs blanches',
-    src: '/banani/ceremony-bapteme.jpg',
-  },
-  {
-    emoji: '🎂',
-    label: 'Anniversaire',
-    prompt: 'Anniversaire africain avec décor coloré',
-    src: '/banani/ceremony-anniversaire.jpg',
-  },
-  {
-    emoji: '🕯️',
-    label: 'Deuil',
-    prompt: 'Cérémonie commémorative avec bougies blanches et lys',
-    src: '/banani/ceremony-deuil.jpg',
-  },
-  {
-    emoji: '🥁',
-    label: 'Coutumier',
-    prompt: 'Cérémonie coutumière africaine avec tissu wax et tambours',
-    src: '/banani/ceremony-coutumier.jpg',
-  },
-];
+const TESTIMONIAL_KEYS = ['aissatou', 'raoul', 'fatou'] as const;
 
-const FEATURES = [
-  {
-    icon: 'sparkles',
-    title: 'IA en 1 phrase',
-    desc: "Décrivez, l'IA génère l'invitation complète",
-  },
-  { icon: 'users', title: 'RSVP temps réel', desc: 'Comptez vos invités sans appeler chacun' },
-  { icon: 'table-2', title: 'Plan de table', desc: 'Drag & drop, zéro confusion le jour J' },
-  { icon: 'wallet', title: 'Budget intégré', desc: 'FCFA ou €, solde en temps réel' },
-  { icon: 'projector', title: 'Projection live', desc: 'Photos des invités sur grand écran' },
-  { icon: 'book-open', title: "Livre d'or", desc: 'Messages des invités — en souvenir' },
-];
+const FREE_KEYS = ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8'] as const;
+const FREE_INCLUDED: Record<(typeof FREE_KEYS)[number], boolean> = {
+  f1: true,
+  f2: true,
+  f3: true,
+  f4: true,
+  f5: true,
+  f6: false,
+  f7: false,
+  f8: false,
+};
+const PREMIUM_INCLUDED: Record<(typeof FREE_KEYS)[number], boolean> = {
+  f1: true,
+  f2: true,
+  f3: true,
+  f4: true,
+  f5: true,
+  f6: true,
+  f7: false,
+  f8: false,
+};
+const VIP_INCLUDED: Record<(typeof FREE_KEYS)[number], boolean> = {
+  f1: true,
+  f2: true,
+  f3: true,
+  f4: true,
+  f5: true,
+  f6: true,
+  f7: true,
+  f8: true,
+};
 
-const STEPS = [
-  {
-    n: '01',
-    title: 'Décrivez en 1 phrase',
-    desc: "Dites-nous le type de cérémonie, la date et l'ambiance souhaitée. L'IA fait le reste en moins d'une minute.",
-    icon: 'message-square',
-  },
-  {
-    n: '02',
-    title: 'Invitez & suivez',
-    desc: 'Ajoutez vos invités, envoyez via WhatsApp, suivez les RSVP en direct depuis votre téléphone.',
-    icon: 'users',
-  },
-  {
-    n: '03',
-    title: 'Vivez le jour J',
-    desc: "QR code check-in à l'entrée, projection live de photos, livre d'or — tout se gère en un clic.",
-    icon: 'sparkles',
-  },
-];
+export default async function LandingPage() {
+  const t = await getTranslations('landing');
 
-const TESTIMONIALS = [
-  {
-    name: 'Aïssatou D.',
-    city: 'Dakar, Sénégal',
-    quote:
-      "« En 30 minutes j'avais une invitation magnifique et 200 personnes notifiées via WhatsApp. Même ma belle-mère a adoré ! »",
-    ceremony: 'Mariage',
-    index: 0,
-  },
-  {
-    name: 'Raoul M.',
-    city: 'Francfort, Allemagne',
-    quote:
-      "« Invités sur 2 continents, plan de table parfait, le livre d'or était le souvenir le plus émouvant de tout le baptême. »",
-    ceremony: 'Baptême',
-    index: 1,
-  },
-  {
-    name: 'Fatou K.',
-    city: "Abidjan, Côte d'Ivoire",
-    quote:
-      "« Même pour un programme de deuil, l'app était là. Simple, digne, sans complications. Merci. »",
-    ceremony: 'Deuil',
-    index: 2,
-  },
-];
+  const ceremonies = CEREMONY_KEYS.map((k) => ({
+    key: k,
+    emoji: CEREMONY_EMOJIS[k],
+    label: t(`ceremonies.types.${k}`),
+    prompt: t(`ceremonies.prompts.${k}`),
+    src: CEREMONY_SRC[k],
+  }));
 
-export default function LandingPage() {
+  const features = FEATURE_KEYS.map((k) => ({
+    key: k,
+    icon: FEATURE_ICONS[k],
+    title: t(`features.items.${k}.title`),
+    desc: t(`features.items.${k}.desc`),
+  }));
+
+  const steps = STEP_KEYS.map((k, i) => ({
+    key: k,
+    n: String(i + 1).padStart(2, '0'),
+    icon: STEP_ICONS[k],
+    title: t(`steps.items.${k}.title`),
+    desc: t(`steps.items.${k}.desc`),
+  }));
+
+  const testimonials = TESTIMONIAL_KEYS.map((k, i) => ({
+    key: k,
+    name: t(`testimonials.items.${k}.name`),
+    city: t(`testimonials.items.${k}.city`),
+    quote: t(`testimonials.items.${k}.quote`),
+    ceremony: t(`testimonials.items.${k}.ceremony`),
+    index: i,
+  }));
+
+  const freeFeatures = FREE_KEYS.map((k) => ({
+    label: t(`pricing.free.${k}`),
+    included: FREE_INCLUDED[k],
+  }));
+  const premiumFeatures = FREE_KEYS.map((k) => ({
+    label: t(`pricing.premium.${k}`),
+    included: PREMIUM_INCLUDED[k],
+  }));
+  const vipFeatures = FREE_KEYS.map((k) => ({
+    label: t(`pricing.vip.${k}`),
+    included: VIP_INCLUDED[k],
+  }));
+
   return (
     <div className="bg-background font-body">
       <NavBar activePage="accueil" />
@@ -148,45 +136,55 @@ export default function LandingPage() {
             <WaxPattern opacity={0.04} />
             <div className="inline-flex items-center gap-2 bg-gold-light text-gold text-xs font-bold px-3 py-1.5 rounded-full mb-3 lg:mb-4 w-fit">
               <Icon name="sparkles" size={12} />
-              L&apos;app africaine tout-en-un
+              {t('hero.tag')}
             </div>
             <h1 className="font-headings font-bold text-3xl sm:text-4xl lg:text-4xl xl:text-5xl text-foreground leading-tight mb-3 lg:mb-4">
-              Vos cérémonies, <br />
-              <span className="text-primary">organisées avec cœur.</span>
+              {t('hero.titleBefore')} <br />
+              <span className="text-primary">{t('hero.titleHighlight')}</span>
             </h1>
             <p className="text-sm sm:text-base lg:text-base xl:text-lg text-muted-foreground leading-relaxed mb-4 lg:mb-5 max-w-lg">
-              De l&apos;invitation générée par IA au jour J — mariage, baptême, anniversaire ou
-              deuil. VipInvitoz est fait pour les familles africaines, en Afrique et dans la
-              diaspora.
+              {t('hero.subtitle')}
             </p>
             <div className="mb-5 lg:mb-6 flex justify-center">
               <Link
                 href="/auth/signup"
                 className="bg-primary text-primary-foreground font-body font-bold px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg text-center shadow-sm hover:bg-primary/90 transition-colors w-full sm:w-auto"
               >
-                Commencer gratuitement
+                {t('hero.cta')}
               </Link>
             </div>
             <div className="flex flex-wrap gap-5 lg:gap-6">
-              {[
-                { val: '50 000+', label: 'Cérémonies organisées' },
-                { val: '4.8/5', label: 'Note utilisateurs' },
-                { val: '8 pays', label: 'Afrique & diaspora' },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <div className="font-headings font-bold text-lg lg:text-xl xl:text-2xl text-foreground">
-                    {stat.val}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{stat.label}</div>
+              <div>
+                <div className="font-headings font-bold text-lg lg:text-xl xl:text-2xl text-foreground">
+                  50 000+
                 </div>
-              ))}
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {t('hero.stats.ceremoniesLabel')}
+                </div>
+              </div>
+              <div>
+                <div className="font-headings font-bold text-lg lg:text-xl xl:text-2xl text-foreground">
+                  4.8/5
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {t('hero.stats.ratingLabel')}
+                </div>
+              </div>
+              <div>
+                <div className="font-headings font-bold text-lg lg:text-xl xl:text-2xl text-foreground">
+                  {t('hero.stats.countriesValue')}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {t('hero.stats.countriesLabel')}
+                </div>
+              </div>
             </div>
           </div>
           <div className="relative min-h-[260px] sm:min-h-[320px] lg:min-h-[500px] xl:min-h-[560px]">
             <Image
               ar="4:3"
               src="/banani/hero.jpg"
-              prompt="Couple africain élégant en cérémonie de mariage, décor terracotta et doré"
+              prompt={t('hero.heroImagePrompt')}
               objectPosition="center 15%"
               className="w-full h-full lg:absolute lg:inset-0"
               priority
@@ -194,11 +192,11 @@ export default function LandingPage() {
             <div className="hidden sm:block absolute top-6 right-6 bg-card border border-border rounded-xl p-3 shadow-lg hover:shadow-xl transition-shadow">
               <div className="flex items-center gap-1.5 text-success text-xs font-bold">
                 <Icon name="check-circle" size={12} />
-                Invitation générée en 47 s
+                {t('hero.badgeGenerated')}
               </div>
             </div>
             <div className="hidden sm:block absolute bottom-6 right-6 bg-card border border-border rounded-xl px-4 py-3 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="text-xs text-muted-foreground mb-1">RSVP en direct</div>
+              <div className="text-xs text-muted-foreground mb-1">{t('hero.badgeRsvpTitle')}</div>
               <div className="font-headings font-bold text-xl lg:text-2xl text-foreground">
                 87 <span className="text-sm text-muted-foreground font-body">/ 200</span>
               </div>
@@ -216,16 +214,16 @@ export default function LandingPage() {
       <section className="py-8 lg:py-10 px-4 sm:px-8 lg:px-16 xl:px-20 bg-card">
         <div className="text-center mb-5 lg:mb-6">
           <div className="text-xs uppercase tracking-widest text-gold font-bold mb-2">
-            Pour chaque moment
+            {t('ceremonies.eyebrow')}
           </div>
           <h2 className="font-headings font-bold text-xl sm:text-2xl lg:text-3xl text-foreground">
-            Chaque cérémonie mérite le meilleur
+            {t('ceremonies.title')}
           </h2>
         </div>
         <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:flex lg:gap-5 lg:justify-center">
-          {CEREMONIES.map((c) => (
+          {ceremonies.map((c) => (
             <Link
-              key={c.label}
+              key={c.key}
               href="/auth/signup"
               className="group flex flex-col items-center gap-2 lg:w-36 lg:shrink-0 transition-transform duration-200 hover:-translate-y-1"
             >
@@ -252,11 +250,11 @@ export default function LandingPage() {
                 strokeWidth={2.5}
               />
               <span className="text-[10px] sm:text-xs font-body font-bold text-primary text-center px-1">
-                15 autres
+                {t('ceremonies.moreCount')}
               </span>
             </div>
             <div className="font-body font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors text-center">
-              Et bien plus
+              {t('ceremonies.moreLabel')}
             </div>
           </Link>
         </div>
@@ -267,19 +265,18 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center max-w-6xl mx-auto">
           <div>
             <div className="text-xs uppercase tracking-widest text-primary font-bold mb-3">
-              Tout-en-un
+              {t('features.eyebrow')}
             </div>
             <h2 className="font-headings font-bold text-2xl sm:text-3xl lg:text-4xl text-foreground mb-5 lg:mb-6 leading-tight">
-              Tout ce qu&apos;il vous faut pour une cérémonie réussie
+              {t('features.title')}
             </h2>
             <p className="text-base text-muted-foreground mb-6 lg:mb-8 leading-relaxed">
-              Des outils puissants pensés pour les réalités africaines — mobile money, grandes
-              familles, connexion variable, cérémonies transnationales.
+              {t('features.subtitle')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {FEATURES.map((f) => (
+              {features.map((f) => (
                 <div
-                  key={f.title}
+                  key={f.key}
                   className="group flex gap-3 p-4 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default"
                 >
                   <div className="w-9 h-9 bg-secondary group-hover:bg-primary rounded-lg flex items-center justify-center shrink-0 transition-colors">
@@ -304,15 +301,15 @@ export default function LandingPage() {
               <Image
                 ar="3:4"
                 src="/banani/features.jpg"
-                prompt="Femme africaine en robe en wax souriant devant son smartphone, organisation d'une cérémonie familiale"
+                prompt={t('features.imagePrompt')}
                 className="w-full"
               />
             </div>
             <div className="absolute -bottom-4 -left-4 sm:-left-6 bg-primary text-primary-foreground rounded-xl px-4 lg:px-5 py-3 text-sm font-body font-bold shadow-sm">
-              <div className="text-xs opacity-80 mb-0.5">WhatsApp → Invité confirmé</div>
+              <div className="text-xs opacity-80 mb-0.5">{t('features.badgeWhatsapp')}</div>
               <div className="flex items-center gap-1.5">
                 <Icon name="check-circle" size={14} />
-                87 RSVP reçus
+                {t('features.badgeRsvp')}
               </div>
             </div>
           </div>
@@ -327,15 +324,15 @@ export default function LandingPage() {
         <WaxPattern opacity={0.05} />
         <div className="text-center mb-10 lg:mb-14 relative z-10">
           <div className="text-xs uppercase tracking-widest text-gold font-bold mb-3">
-            Simple comme bonjour
+            {t('steps.eyebrow')}
           </div>
           <h2 className="font-headings font-bold text-2xl sm:text-3xl lg:text-4xl text-primary-foreground">
-            Comment ça marche ?
+            {t('steps.title')}
           </h2>
         </div>
         <div className="flex flex-col lg:flex-row items-start gap-10 lg:gap-0 max-w-4xl mx-auto relative z-10">
-          {STEPS.map((step, i) => (
-            <div key={step.n} className="flex items-start flex-1 w-full">
+          {steps.map((step, i) => (
+            <div key={step.key} className="flex items-start flex-1 w-full">
               <div className="flex flex-col items-center text-center px-4 lg:px-8 w-full">
                 <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-primary flex items-center justify-center mb-4">
                   <Icon name={step.icon} size={24} className="text-primary-foreground" />
@@ -346,7 +343,7 @@ export default function LandingPage() {
                 </div>
                 <div className="text-sm text-muted-foreground leading-relaxed">{step.desc}</div>
               </div>
-              {i < STEPS.length - 1 && (
+              {i < steps.length - 1 && (
                 <div className="hidden lg:block mt-8 text-muted-foreground shrink-0">
                   <Icon name="arrow-right" size={20} />
                 </div>
@@ -360,36 +357,34 @@ export default function LandingPage() {
       <section id="pricing" className="py-14 lg:py-20 px-4 sm:px-8 lg:px-20">
         <div className="text-center mb-10 lg:mb-14">
           <div className="text-xs uppercase tracking-widest text-primary font-bold mb-3">
-            Tarifs
+            {t('pricing.eyebrow')}
           </div>
           <h2 className="font-headings font-bold text-2xl sm:text-3xl lg:text-4xl text-foreground mb-4">
-            Des formules pour chaque besoin
+            {t('pricing.title')}
           </h2>
-          <p className="text-muted-foreground">
-            Wave, Orange Money, carte bancaire — payez comme vous le souhaitez.
-          </p>
+          <p className="text-muted-foreground">{t('pricing.subtitle')}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <PricingCard
-            name="Freemium"
+            name={t('pricing.free.name')}
             priceAfrica="0 FCFA"
             priceEurope="0 €"
-            features={FREE_FEATURES}
+            features={freeFeatures}
             tier="freemium"
           />
           <PricingCard
-            name="Premium"
+            name={t('pricing.premium.name')}
             priceAfrica="8 000 FCFA"
             priceEurope="11,99 €"
-            features={PREMIUM_FEATURES}
+            features={premiumFeatures}
             tier="premium"
             highlight
           />
           <PricingCard
-            name="VIP"
+            name={t('pricing.vip.name')}
             priceAfrica="15 000 FCFA"
             priceEurope="21,99 €"
-            features={VIP_FEATURES}
+            features={vipFeatures}
             tier="vip"
           />
         </div>
@@ -399,28 +394,28 @@ export default function LandingPage() {
       <section className="py-14 lg:py-20 px-4 sm:px-8 lg:px-20 bg-card">
         <div className="text-center mb-10 lg:mb-12">
           <h2 className="font-headings font-bold text-2xl sm:text-3xl lg:text-4xl text-foreground">
-            Ils ont organisé avec VipInvitoz
+            {t('testimonials.title')}
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {TESTIMONIALS.map((t) => (
+          {testimonials.map((tst) => (
             <div
-              key={t.name}
+              key={tst.key}
               className="bg-background border border-border rounded-xl p-6 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
             >
               <div className="flex items-center gap-3 mb-4">
-                <UserAvatar name={t.name} index={t.index} className="w-12 h-12" />
+                <UserAvatar name={tst.name} index={tst.index} className="w-12 h-12" />
                 <div className="min-w-0 flex-1">
-                  <div className="font-body font-bold text-sm text-foreground">{t.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">{t.city}</div>
+                  <div className="font-body font-bold text-sm text-foreground">{tst.name}</div>
+                  <div className="text-xs text-muted-foreground truncate">{tst.city}</div>
                 </div>
                 <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-md">
-                  {t.ceremony}
+                  {tst.ceremony}
                 </span>
               </div>
-              <p className="text-sm text-foreground leading-relaxed italic">{t.quote}</p>
-              <div className="flex gap-0.5 mt-3" aria-label="5 étoiles sur 5">
-                {[...Array(5)].map((_, i) => (
+              <p className="text-sm text-foreground leading-relaxed italic">{tst.quote}</p>
+              <div className="flex gap-0.5 mt-3" aria-label={t('testimonials.starsLabel')}>
+                {[0, 1, 2, 3, 4].map((i) => (
                   <span key={i} className="text-gold text-sm" aria-hidden>
                     ★
                   </span>
@@ -436,22 +431,22 @@ export default function LandingPage() {
         <Image
           ar="16:4"
           src="/banani/cta.jpg"
-          prompt="Table de banquet de mariage africain décorée avec fleurs terracotta et bougies dorées"
+          prompt={t('finalCta.imagePrompt')}
           className="w-full"
         />
         <div className="absolute inset-0 bg-dark opacity-60" aria-hidden />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-8 lg:px-20">
           <h2 className="font-headings font-bold text-2xl sm:text-3xl lg:text-5xl text-primary-foreground mb-4 max-w-3xl">
-            Prêt(e) à organiser votre prochaine cérémonie ?
+            {t('finalCta.title')}
           </h2>
           <p className="text-primary-foreground opacity-80 mb-6 lg:mb-8 text-base lg:text-lg max-w-xl">
-            Rejoignez des milliers de familles africaines qui font confiance à VipInvitoz.
+            {t('finalCta.subtitle')}
           </p>
           <Link
             href="/auth/signup"
             className="bg-primary text-primary-foreground font-body font-bold px-6 sm:px-10 py-3 sm:py-4 rounded-xl text-base lg:text-lg"
           >
-            Créer mon compte gratuitement →
+            {t('finalCta.button')}
           </Link>
         </div>
       </section>

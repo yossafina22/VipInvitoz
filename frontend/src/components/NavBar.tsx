@@ -3,6 +3,7 @@
 import { Link } from '@/i18n/navigation';
 import { useState } from 'react';
 import { Icon } from './Icon';
+import { LocaleSwitcher } from './LocaleSwitcher';
 import { useAuth } from '@/contexts/AuthContext';
 
 const LINKS = [
@@ -55,6 +56,7 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
         </div>
 
         <div className="hidden md:flex items-center gap-3">
+          <LocaleSwitcher />
           {loading ? null : user ? (
             <Link
               href="/dashboard"
@@ -106,6 +108,9 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
             </Link>
           ))}
           <div className="h-px bg-border my-2" />
+          <div className="flex justify-center">
+            <LocaleSwitcher />
+          </div>
           {loading ? null : user ? (
             <Link
               href="/dashboard"

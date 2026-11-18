@@ -1,5 +1,157 @@
 {
   "smoke": {
     "helloInvite": "Welcome to VipInvitoz"
+  },
+  "landing": {
+    "hero": {
+      "tag": "The all-in-one African app",
+      "titleBefore": "Your ceremonies,",
+      "titleHighlight": "organized from the heart.",
+      "subtitle": "From AI-generated invitations to the big day — wedding, baptism, birthday or memorial. VipInvitoz is built for African families, in Africa and across the diaspora.",
+      "cta": "Start for free",
+      "stats": {
+        "ceremoniesLabel": "Ceremonies organized",
+        "ratingLabel": "User rating",
+        "countriesValue": "8 countries",
+        "countriesLabel": "Africa & diaspora"
+      },
+      "badgeGenerated": "Invitation generated in 47 s",
+      "badgeRsvpTitle": "Live RSVPs",
+      "heroImagePrompt": "Elegant African couple at a wedding ceremony, terracotta and gold decor"
+    },
+    "ceremonies": {
+      "eyebrow": "For every moment",
+      "title": "Every ceremony deserves the best",
+      "types": {
+        "mariage": "Wedding",
+        "bapteme": "Baptism",
+        "anniversaire": "Birthday",
+        "deuil": "Memorial",
+        "coutumier": "Traditional"
+      },
+      "prompts": {
+        "mariage": "African wedding with gold decor and kente cloth",
+        "bapteme": "African baptism with white flowers",
+        "anniversaire": "African birthday with colorful decor",
+        "deuil": "Memorial ceremony with white candles and lilies",
+        "coutumier": "Traditional African ceremony with wax fabric and drums"
+      },
+      "moreCount": "15 more",
+      "moreLabel": "And many more"
+    },
+    "features": {
+      "eyebrow": "All-in-one",
+      "title": "Everything you need for a successful ceremony",
+      "subtitle": "Powerful tools built for African realities — mobile money, large families, variable connectivity, cross-continent ceremonies.",
+      "items": {
+        "ai": {
+          "title": "AI in one sentence",
+          "desc": "Describe it, the AI writes the full invitation"
+        },
+        "rsvp": { "title": "Live RSVPs", "desc": "Count your guests without calling each one" },
+        "seating": {
+          "title": "Seating chart",
+          "desc": "Drag & drop, zero confusion on the day"
+        },
+        "budget": { "title": "Built-in budget", "desc": "FCFA or €, live balance" },
+        "projection": {
+          "title": "Live photo wall",
+          "desc": "Guest photos on the big screen"
+        },
+        "guestbook": {
+          "title": "Guestbook",
+          "desc": "Messages from your guests — to keep as memories"
+        }
+      },
+      "imagePrompt": "African woman in wax dress smiling at her smartphone, organizing a family ceremony",
+      "badgeWhatsapp": "WhatsApp → Guest confirmed",
+      "badgeRsvp": "87 RSVPs received"
+    },
+    "steps": {
+      "eyebrow": "Simple as can be",
+      "title": "How does it work?",
+      "items": {
+        "describe": {
+          "title": "Describe it in one sentence",
+          "desc": "Tell us the type of ceremony, the date and the vibe. The AI does the rest in under a minute."
+        },
+        "invite": {
+          "title": "Invite & track",
+          "desc": "Add your guests, send via WhatsApp, follow RSVPs live from your phone."
+        },
+        "live": {
+          "title": "Enjoy the day",
+          "desc": "QR code check-in at the door, live photo projection, guestbook — all one tap away."
+        }
+      }
+    },
+    "pricing": {
+      "eyebrow": "Pricing",
+      "title": "A plan for every need",
+      "subtitle": "Wave, Orange Money, credit card — pay however you prefer.",
+      "free": {
+        "name": "Freemium",
+        "f1": "1 ceremony",
+        "f2": "20 guests max",
+        "f3": "AI generation (6 edits)",
+        "f4": "Live RSVPs",
+        "f5": "QR code check-in",
+        "f6": "Seating chart",
+        "f7": "Live photo projection",
+        "f8": "Budget tracking"
+      },
+      "premium": {
+        "name": "Premium",
+        "f1": "Unlimited guests",
+        "f2": "12 AI edits + chatbot",
+        "f3": "Multi-ceremony",
+        "f4": "Drag & drop seating chart",
+        "f5": "Live photo projection",
+        "f6": "Rich guestbook",
+        "f7": "Budget tracking",
+        "f8": "Vendor coordination"
+      },
+      "vip": {
+        "name": "VIP",
+        "f1": "Everything in Premium",
+        "f2": "Unlimited AI edits",
+        "f3": "Real-time budget tracking",
+        "f4": "Vendor coordination",
+        "f5": "Guest wayfinding + navigation",
+        "f6": "Priority support",
+        "f7": "Keepsake export",
+        "f8": "Early access to new features"
+      }
+    },
+    "testimonials": {
+      "title": "They organized with VipInvitoz",
+      "starsLabel": "5 stars out of 5",
+      "items": {
+        "aissatou": {
+          "name": "Aïssatou D.",
+          "city": "Dakar, Senegal",
+          "quote": "“In 30 minutes I had a beautiful invitation and 200 people notified via WhatsApp. Even my mother-in-law loved it!”",
+          "ceremony": "Wedding"
+        },
+        "raoul": {
+          "name": "Raoul M.",
+          "city": "Frankfurt, Germany",
+          "quote": "“Guests on 2 continents, perfect seating chart, the guestbook was the most touching keepsake from the whole baptism.”",
+          "ceremony": "Baptism"
+        },
+        "fatou": {
+          "name": "Fatou K.",
+          "city": "Abidjan, Côte d'Ivoire",
+          "quote": "“Even for a memorial program, the app was there. Simple, dignified, no hassle. Thank you.”",
+          "ceremony": "Memorial"
+        }
+      }
+    },
+    "finalCta": {
+      "imagePrompt": "African wedding banquet table decorated with terracotta flowers and gold candles",
+      "title": "Ready to plan your next ceremony?",
+      "subtitle": "Join thousands of African families who trust VipInvitoz.",
+      "button": "Create my free account →"
+    }
   }
 }
