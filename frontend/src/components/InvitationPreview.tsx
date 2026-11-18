@@ -23,29 +23,15 @@ export function InvitationPreview({
 }: InvitationPreviewProps) {
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-      <div
-        className="relative h-56 md:h-64 bg-input overflow-hidden"
-        style={
-          coverSrc
-            ? {
-                backgroundImage: `url(${coverSrc})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }
-            : undefined
-        }
-      >
-        {coverSrc && (
-          <div className="absolute inset-0 backdrop-blur-2xl bg-background/30" aria-hidden />
-        )}
+      <div className="relative bg-input overflow-hidden">
         <img
           src={coverSrc ?? '/banani/invitation-cover.jpg'}
           alt={coverPrompt}
           loading="eager"
-          className="relative w-full h-full object-contain"
+          className="block w-full h-auto"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-40 pointer-events-none"
+          className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-background opacity-40 pointer-events-none"
           aria-hidden
         />
       </div>

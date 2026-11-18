@@ -791,7 +791,7 @@ function GeneratedInvitation(props: {
         color: 'var(--inv-text)',
       }}
     >
-      {coverImageUrl && <img src={coverImageUrl} alt="" className="w-full h-40 object-cover" />}
+      {coverImageUrl && <img src={coverImageUrl} alt="" className="block w-full h-auto" />}
       <div className="flex flex-col gap-3 p-6">
         {invitation.blocks.map((b) => {
           if (b.type === 'title') {

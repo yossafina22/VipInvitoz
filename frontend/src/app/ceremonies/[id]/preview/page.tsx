@@ -154,27 +154,12 @@ export default function CeremonyPreviewPage() {
           >
             <InvitationFrame tone={palette.tone} />
 
-            <div
-              className="relative bg-input overflow-hidden aspect-[4/3] lg:aspect-[16/10]"
-              style={
-                ceremony.coverImageUrl
-                  ? {
-                      backgroundImage: `url(${ceremony.coverImageUrl})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }
-                  : undefined
-              }
-            >
-              {ceremony.coverImageUrl && (
-                <div className="absolute inset-0 backdrop-blur-2xl bg-background/30" aria-hidden />
-              )}
-              {}
+            <div className="relative bg-input overflow-hidden">
               <img
                 src={ceremony.coverImageUrl ?? '/banani/invitation-cover.jpg'}
                 alt={ceremony.title}
                 loading="eager"
-                className="relative w-full h-full object-contain"
+                className="block w-full h-auto"
               />
             </div>
 
