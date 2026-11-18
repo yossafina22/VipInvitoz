@@ -1,5 +1,3 @@
-import { Image } from './Image';
-
 interface InvitationPreviewProps {
   emoji?: string;
   title: string;
@@ -20,15 +18,34 @@ export function InvitationPreview({
   time,
   location,
   family,
-  coverSrc = '/banani/invitation-cover.jpg',
+  coverSrc,
   coverPrompt = 'Invitation de cérémonie',
 }: InvitationPreviewProps) {
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-      <div className="relative h-56 md:h-64 bg-input overflow-hidden">
-        <Image ar="16:9" src={coverSrc} prompt={coverPrompt} className="w-full h-full" />
+      <div
+        className="relative h-56 md:h-64 bg-input overflow-hidden"
+        style={
+          coverSrc
+            ? {
+                backgroundImage: `url(${coverSrc})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : undefined
+        }
+      >
+        {coverSrc && (
+          <div className="absolute inset-0 backdrop-blur-2xl bg-background/30" aria-hidden />
+        )}
+        <img
+          src={coverSrc ?? '/banani/invitation-cover.jpg'}
+          alt={coverPrompt}
+          loading="eager"
+          className="relative w-full h-full object-contain"
+        />
         <div
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-40"
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-40 pointer-events-none"
           aria-hidden
         />
       </div>
