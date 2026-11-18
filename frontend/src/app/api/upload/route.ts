@@ -60,7 +60,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Read env at handler-call time so vi.stubEnv works and operators can flip
     // limits without redeploy. Never hoist these to module top.
-    const allowedMime = (process.env.UPLOAD_ALLOWED_MIME ?? 'image/jpeg,image/png,image/webp')
+    const allowedMime = (
+      process.env.UPLOAD_ALLOWED_MIME ?? 'image/jpeg,image/png,image/webp,image/heic,image/heif'
+    )
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
