@@ -1,21 +1,22 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
+import { routing } from '@/i18n/routing';
 
-// Silent-refresh gate for protected pages.
+// Composed middleware — order matters:
+//   1. next-intl runs first: detects locale (cookie > Accept-Language > default),
+//      redirects bare /dashboard → /dashboard (fr, as-needed) or /en/dashboard,
+//      and sets the NEXT_LOCALE cookie.
+//   2. Auth-refresh runs second on the locale-normalized path: if the user is
+//      hitting a protected prefix without an access cookie but with a refresh
+//      cookie, bounce through /api/auth/refresh-and-return. If no refresh
+//      cookie either, redirect to <locale>/login so the UI language survives.
 //
-// The (15-min) access cookie can expire while a (7-day) refresh cookie is
-// still valid — typically when a tab sat unfocused or the laptop slept. The
-// (authed) layout calling /api/auth/me would 401 and the user would be kicked
-// to /login. This middleware catches that case BEFORE the page renders and
-// bounces the request through /api/auth/refresh-and-return, which mints fresh
-// cookies and 302s back to the original URL — invisible to the user.
+// Edge runtime: no DB, no bcrypt, no Prisma. Both inner middlewares inspect
+// cookies and build redirects only.
 //
-// Protected paths are configured via AUTH_PROTECTED_PREFIXES (comma-separated,
-// e.g. "/dashboard,/account"). Empty by default — the API surface is the only
-// thing shipped, so out-of-the-box this middleware is a no-op.
-//
-// Edge runtime: no DB, no bcrypt, no Prisma. We only inspect cookies and
-// build redirects — the heavy lifting happens in /api/auth/refresh-and-return
-// (runtime=nodejs).
+// Day-1 note: the authed user's User.locale DB column is NOT read here
+// (middleware runs on edge). Cookie + Accept-Language are the only inputs.
+// Sync User.locale ↔ NEXT_LOCALE cookie in a nodejs route at login — Day 2+.
 
 const COOKIE_PREFIX = process.env.COOKIE_PREFIX || 'app';
 const ACCESS_COOKIE = `${COOKIE_PREFIX}-token`;
@@ -27,23 +28,47 @@ const AUTHED_PREFIXES = (process.env.AUTH_PROTECTED_PREFIXES || '')
   .map((s) => s.trim())
   .filter(Boolean);
 
+const intlMiddleware = createMiddleware(routing);
+
+function stripLocalePrefix(pathname: string): { locale: string | null; rest: string } {
+  const segments = pathname.split('/');
+  const first = segments[1];
+  if (first && (routing.locales as readonly string[]).includes(first)) {
+    return { locale: first, rest: '/' + segments.slice(2).join('/') };
+  }
+  return { locale: null, rest: pathname };
+}
+
 function isAuthedPath(pathname: string): boolean {
   return AUTHED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+function withLocalePrefix(locale: string | null, pathname: string): string {
+  if (!locale || locale === routing.defaultLocale) return pathname;
+  return `/${locale}${pathname === '/' ? '' : pathname}`;
+}
+
 export function middleware(req: NextRequest): NextResponse {
-  if (AUTHED_PREFIXES.length === 0) return NextResponse.next();
+  const intlResponse = intlMiddleware(req);
+
+  if (intlResponse.status >= 300 && intlResponse.status < 400) {
+    return intlResponse;
+  }
+
+  if (AUTHED_PREFIXES.length === 0) return intlResponse;
 
   const { pathname, search } = req.nextUrl;
-  if (!isAuthedPath(pathname)) return NextResponse.next();
+  const { locale, rest } = stripLocalePrefix(pathname);
 
-  if (req.cookies.get(ACCESS_COOKIE)?.value) return NextResponse.next();
+  if (!isAuthedPath(rest)) return intlResponse;
+
+  if (req.cookies.get(ACCESS_COOKIE)?.value) return intlResponse;
 
   const target = pathname + search;
 
   if (!req.cookies.get(REFRESH_COOKIE)?.value) {
     const url = req.nextUrl.clone();
-    url.pathname = LOGIN_PATH;
+    url.pathname = withLocalePrefix(locale, LOGIN_PATH);
     url.search = `?next=${encodeURIComponent(target)}`;
     return NextResponse.redirect(url, 303);
   }
@@ -55,5 +80,5 @@ export function middleware(req: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|.*\\..*).*)'],
+  matcher: ['/((?!api|_next|.*\\..*).*)'],
 };
