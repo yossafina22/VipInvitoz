@@ -2,6 +2,16 @@
   "smoke": {
     "helloInvite": "Welcome to VipInvitoz"
   },
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "howto": "How it works",
+    "pricing": "Pricing",
+    "dashboard": "Dashboard",
+    "login": "Sign in",
+    "signup": "Sign up",
+    "menuLabel": "Menu"
+  },
   "landing": {
     "hero": {
       "tag": "The all-in-one African app",

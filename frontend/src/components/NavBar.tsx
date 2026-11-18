@@ -2,16 +2,17 @@
 
 import { Link } from '@/i18n/navigation';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Icon } from './Icon';
 import { LocaleSwitcher } from './LocaleSwitcher';
 import { useAuth } from '@/contexts/AuthContext';
 
 const LINKS = [
-  { label: 'Accueil', key: 'accueil', href: '/' },
-  { label: 'Fonctionnalités', key: 'features', href: '/#features' },
-  { label: 'Comment ça marche', key: 'howto', href: '/#howto' },
-  { label: 'Tarifs', key: 'pricing', href: '/#pricing' },
-];
+  { labelKey: 'home', key: 'accueil', href: '/' },
+  { labelKey: 'features', key: 'features', href: '/#features' },
+  { labelKey: 'howto', key: 'howto', href: '/#howto' },
+  { labelKey: 'pricing', key: 'pricing', href: '/#pricing' },
+] as const;
 
 interface NavBarProps {
   activePage?: string;
@@ -21,6 +22,7 @@ interface NavBarProps {
 export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProps) {
   const [open, setOpen] = useState(false);
   const { user, loading } = useAuth();
+  const t = useTranslations('nav');
   const isDark = variant === 'dark';
   const bg = isDark ? 'bg-dark-surface' : 'bg-background';
   const textColor = isDark ? 'text-primary-foreground' : 'text-foreground';
@@ -50,7 +52,7 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
                   : `${linkColor} hover:text-primary`
               }`}
             >
-              {l.label}
+              {t(l.labelKey)}
             </Link>
           ))}
         </div>
@@ -62,7 +64,7 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
               href="/dashboard"
               className="text-sm font-body font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md"
             >
-              Tableau de bord
+              {t('dashboard')}
             </Link>
           ) : (
             <>
@@ -70,13 +72,13 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
                 href="/auth/login"
                 className={`text-sm font-body font-medium ${textColor} px-4 py-2 rounded-md border ${borderColor}`}
               >
-                Se connecter
+                {t('login')}
               </Link>
               <Link
                 href="/auth/signup"
                 className="text-sm font-body font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md"
               >
-                Créer un compte
+                {t('signup')}
               </Link>
             </>
           )}
@@ -87,7 +89,7 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
           onClick={() => setOpen((o) => !o)}
           className={`md:hidden p-2 ${textColor}`}
           aria-expanded={open}
-          aria-label="Menu"
+          aria-label={t('menuLabel')}
         >
           <Icon name={open ? 'x' : 'menu'} size={22} />
         </button>
@@ -104,7 +106,7 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
                 l.key === activePage ? 'text-primary font-bold' : linkColor
               }`}
             >
-              {l.label}
+              {t(l.labelKey)}
             </Link>
           ))}
           <div className="h-px bg-border my-2" />
@@ -117,7 +119,7 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
               onClick={() => setOpen(false)}
               className="w-full text-center text-sm font-body font-medium bg-primary text-primary-foreground px-4 py-3 rounded-md"
             >
-              Tableau de bord
+              {t('dashboard')}
             </Link>
           ) : (
             <>
@@ -126,14 +128,14 @@ export function NavBar({ activePage = 'accueil', variant = 'light' }: NavBarProp
                 onClick={() => setOpen(false)}
                 className={`w-full text-center text-sm font-body font-medium ${textColor} px-4 py-3 rounded-md border ${borderColor}`}
               >
-                Se connecter
+                {t('login')}
               </Link>
               <Link
                 href="/auth/signup"
                 onClick={() => setOpen(false)}
                 className="w-full text-center text-sm font-body font-medium bg-primary text-primary-foreground px-4 py-3 rounded-md"
               >
-                Créer un compte
+                {t('signup')}
               </Link>
             </>
           )}

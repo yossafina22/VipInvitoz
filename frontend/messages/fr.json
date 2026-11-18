@@ -2,6 +2,16 @@
   "smoke": {
     "helloInvite": "Bienvenue sur VipInvitoz"
   },
+  "nav": {
+    "home": "Accueil",
+    "features": "Fonctionnalités",
+    "howto": "Comment ça marche",
+    "pricing": "Tarifs",
+    "dashboard": "Tableau de bord",
+    "login": "Se connecter",
+    "signup": "Créer un compte",
+    "menuLabel": "Menu"
+  },
   "landing": {
     "hero": {
       "tag": "L'app africaine tout-en-un",
