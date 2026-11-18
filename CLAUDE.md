@@ -192,26 +192,22 @@ When the user asks for a capability that this starter does not ship, recommend t
 ## Session Learnings (auto-updated by handoff)
 
 ### Implicit Rules
-- Prod URL https://vip-invitoz.vercel.app — team fluxiateam, project vip-invitoz. Vercel settings page at https://vercel.com/fluxiateam/vip-invitoz/settings/environment-variables
-- Vercel plan: Pro ($20/mo). Cron freq down to */1 allowed, function timeout 60s, commercial TOS allowed
-- Resend sandbox: only yossafina22@gmail.com receives real emails in prod. Custom domain needs verifying at resend.com/domains
-- DEV_EMAIL_BYPASS must NOT be set in Vercel — its presence routes emails to console instead of Resend
-- Cron routes all POST + require Authorization: Bearer <CRON_SECRET>. Vercel native cron sends the header automatically
-- Auto Mode classifier blocks any log/echo of API-credential prefixes or lengths — even safe truncations are denied as Credential Materialization. Debug via user-side env var Edit + compare, not via server logs
-- Cloudinary CLOUDINARY_CLOUD_NAME=vipinvitoz (10 chars), CLOUDINARY_API_KEY=15 digits, CLOUDINARY_API_SECRET=27 chars mixed. Vercel's env-var popup PLACEHOLDER TEXT (cloudinary://1234...:aBcDe...@mycloud) is a saved value by default — users mistake it for help text; always clear + repaste real value
-- Prisma db:push against shared dev=prod Neon is safe for additive columns with @default but risky for renames/drops. Prefer migrations for schema-breaking changes
-- Git identity per commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'
-- Pre-commit hook runs prettier + eslint + typecheck + 555 tests (1-3 min). Hook rejects any eslint disable-comment that names a rule not registered in the flat config (react-hooks/exhaustive-deps is NOT registered)
-- Images displayed via plain <img> — @next/next/no-img-element is NOT configured
-- Phone camera photos commonly 5-15MB; upload-client.ts downscale handles the overflow without needing server-side body-limit tuning
-- CRLF warnings on Windows during commit are benign (git handles conversion)
+- Vercel Cron Jobs sends HTTP GET to configured paths (NOT POST). Route handlers MUST export GET or alias POST as GET, else every tick returns 405 silently and nothing drains
+- Vercel env var Secret type hides the saved value in the Edit popup (shows empty Value field). Users mistake this for 'unset'. For non-sensitive config use Config type, OR delete the var entirely and let code defaults win
+- Pre-commit hook (husky + lint-staged) runs prettier + eslint + typecheck repo-wide, not just on staged files. With 20+ WIP files on feat branch, typecheck takes 3-5 min — do not TaskStop early, wait it out
+- EMAIL_FROM is the canonical env var name for the email queue sender. NOT RESEND_FROM_EMAIL, NOT RESEND_EMAIL_FROM. Required by email-queue-singleton.ts along with UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN + RESEND_API_KEY
+- Windows + OneDrive-backed repo: find, ls -R, git worktree remove, ln -s are all slow or hang past 60s. Prefer Glob/Grep over find; skip worktree gymnastics; use stash+switch for branch moves
+- Git identity per commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'. MUST prefix the git commit command directly — chained after && in a compound does not carry env to the second command
+- All 6 cron handlers go through verifyCronSecret (crypto.timingSafeEqual against CRON_SECRET env). Vercel cron automatically attaches Authorization: Bearer ${CRON_SECRET}. Local curl testing needs the same bearer header
+- Resend sandbox: only the account owner's verified email receives in prod. x-resend-monthly-quota + x-resend-daily-quota response headers tell you remaining sends; verify custom domain at resend.com/domains to escape sandbox
+- Auto Mode classifier blocks any log/echo of API-credential prefixes or lengths — even safe truncations are denied as Credential Materialization. Debug via user-side env var Edit + delete+recreate, not via server logs
 
 ### Key Decisions
-- Decision: Palette lives in editor with smart auto-default from ceremony.type (not a Settings-page global) — Reason: per-ceremony choice; mariage-and-deuil in same account shouldn't share a palette
-- Decision: DEUIL ceremonies get a locked mourning subset (noir-minimal + faire-part-classique) enforced at API via coercePaletteForType, not client alone — Reason: defense in depth, a tampered client cannot slip a festive palette on a mourning invitation
-- Decision: Catalog sized to 10 (2 rows of 5 on desktop) — Reason: user asked to fill remaining picker space after seeing 9-tile asymmetry on lg
-- Decision: Client-side downscale to 2000px JPEG q=0.85 for files >1.5MB (HEIC/HEIF bypass canvas, go to server heic-convert) — Reason: iPhone photos 5-15MB routinely exceed server 10MB cap; downscale brings them to ~600KB without visible loss at invitation card size
-- Decision: Echo Cloudinary rejection text back to client via UPLOAD_FAILED response.message instead of generic 'Storage write failed' — Reason: 401/403/429/5xx look identical on the wire; operator needs the real reason to fix env var typos in under a minute
-- Decision: Prisma db:push rather than migration — Reason: shared dev=prod Neon, additive-only column with @default, no renames or drops, zero downtime risk
+- Decision: Alias POST as GET in all 6 cron routes rather than rename POST→GET or duplicate handlers — Reason: preserves existing POST tests + manual curl workflow, zero regression risk, one line per file
+- Decision: Display cover photo at natural ratio (block w-full h-auto) in both guest pages and editor preview — Reason: user wanted full photo visible without any crop or blur, Instagram/Pinterest-style card that adapts to the photo not the other way around
+- Decision: Include image/heic + image/heif in the default UPLOAD_ALLOWED_MIME so iPhone uploads work without env var override — Reason: iPhone is dominant user cohort; defaults should Just Work out of the box
+- Decision: Infer MIME from file extension server-side when browser sends empty or application/octet-stream, then use inferred MIME for allowlist + sniff + storage — Reason: Windows Edge/Chrome without HEIF extension ships HEIC files with wrong MIME; magic-byte sniff remains the trust boundary so attacker renaming evil.exe→cute.heic is still blocked
+- Decision: Delete UPLOAD_ALLOWED_MIME env var on Vercel entirely instead of editing it — Reason: lets code default win forever, avoids maintaining the mime list in two places
+- Decision: Fix cron issue this session (option A) rather than defer and keep draining manually (option B) — Reason: manual drain script was unsustainable for daily operations + December launch deadline
 
 <!-- handoff:learnings:end -->

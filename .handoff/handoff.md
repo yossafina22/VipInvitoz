@@ -1,98 +1,92 @@
 ---
-date: 2026-11-14T23:31:03.229Z
+date: 2026-11-18T13:28:29.586Z
 project: VipInvitoz
-session: 60b268af
+session: ea584485
 schema_version: 1
-next_steps_count: 5
+next_steps_count: 6
 has_blockers: true
-keywords: cloudinary-401, palette-10, mobile-upload, noir-minimal, deuil-lock, vercel-pro, mobile-nav, smoke-test
-headline: Ship VipInvitoz to production on Vercel Pro. Core Intent: African ceremonies SaaS (mariage/bapteme/anniversaire/deuil). 
+keywords: cron-get-alias, vercel-cron, heic-mime-fallback, cover-natural-ratio, resend-quota, ci-failing, i18n-day-1, smoke-test
+headline: Goal: Ship VipInvitoz to production on Vercel Pro and unblock organizer flow end-to-end. Core Intent: African ceremonies
 ---
 
 # Session Handoff Snapshot
-> **Generated:** 15.11.2026, 00:31:03
+> **Generated:** 18.11.2026, 14:28:29
 
 ## 🎯 High-Level Objective
-* **Goal:** Ship VipInvitoz to production on Vercel Pro. Core Intent: African ceremonies SaaS (mariage/bapteme/anniversaire/deuil). Unblock organizer flow end-to-end so foadjoraoul@yahoo.de (VIP) can test signup → ceremony → palette → upload → AI → invite → RSVP without hitting quota, upload or palette-rendering bugs before December launch.
+* **Goal:** Goal: Ship VipInvitoz to production on Vercel Pro and unblock organizer flow end-to-end. Core Intent: African ceremonies SaaS (mariage/bapteme/anniversaire/deuil) for pre-December launch — organizer must be able to signup → create ceremony → upload cover → generate AI invitation → cycle palettes → invite guests → guests RSVP without manual intervention.
 
 ## 📌 Current State & Next Steps
-* **Status:** DONE: Vercel Pro live. Hamburger mobile nav deployed. Palette picker visible in editor with 10 presets (8 celebration + 2 mourning) and compact grid (3/4/5 cols). CSS vars drive title/subtitle/divider/paragraphs/quote/CTA/grid cells on /i/[slug] + preview + editor center column. Noir Minimal is now true dark mode. DEUIL lock allows switching between Noir Minimal and Faire-part Classique only. coercePaletteForType enforces mourning tone at API. db:push ran on shared Neon so invitationPalette column exists everywhere. PENDING: Upload still 401 — user needs to delete + re-create CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET on Vercel from scratch (likely trailing whitespace or copy-paste truncation). Expected lengths are CLOUDINARY_CLOUD_NAME ~10 chars (vipinvitoz), CLOUDINARY_API_KEY 15 digits, CLOUDINARY_API_SECRET 27 chars mixed. Error response body now shows Cloudinary's real rejection text so user can see WHY on next attempt.
-* **Blocker:** ["Cloudinary 401 persists in prod despite user claiming re-paste of API_KEY and API_SECRET + redeploy without cache. Vercel env vars still contain wrong values (hypothesis: trailing whitespace, newline captured from double-click, or guillemets accidentally pasted). Next session: either (a) ask user to delete + re-create the 2 vars fresh, or (b) temporarily log env fingerprint (len + prefix 3 chars) — blocked by Auto Mode classifier earlier, would need user to grant exception. Upload UI meanwhile keeps failing end-to-end", "Resend still sandbox-locked to yossafina22@gmail.com — blocks inviting external guests until custom domain is verified at resend.com/domains"]
-* **Next Action:** Finish Cloudinary 401 debug: ask user to delete + re-create CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET on Vercel from scratch (fresh add, not edit), paying attention to no trailing whitespace or guillemets, then redeploy without cache. If still 401, read Vercel logs filtered on 'upload: cloudinary rejected' for the real error.message now that ddc4708/9f6262d unwrap it properly
+* **Status:** DONE: 6 commits shipped on main this session — 8fcd9a5 (editor preview cover), a700bfc (contain + blur fallback), 7b8d4c5 (natural ratio h-auto in 4 files), fda5454 (HEIC default allowlist), 84dda14 (extension-based MIME inference), 64f5df4 (cron GET alias on all 6 routes). Vercel prod builds Ready for each. End-to-end invitation + RSVP flow works automatically via Vercel cron. 589/589 unit tests green locally. PENDING: (1) GitHub Actions CI red on every push since this session started, independent of Vercel — needs sign-in + reading the actual failing step; no impact on prod but pollutes user inbox. (2) Resend sandbox quota down to 3 emails/month, only yossafina22@gmail.com receives — verify custom domain at resend.com/domains OR upgrade plan before December launch. (3) i18n branch feat/i18n-day-1 was advancing in parallel session during this one; latest commit observed ea2571a (next/link + navigation helpers swap + tripwire). Not merged to main yet. (4) 4 stashes left in stack from debug session (stash@{0}/1/2/3) — safe to git stash clear once i18n WIP is committed.
+* **Blocker:** ["GitHub Actions CI red on every push since this session started (run #31 and later for commits 84dda14, 64f5df4 etc). Independent of Vercel — prod deploys stay healthy — but each push emails a CI failure notification. Diagnostic needs sign-in to GitHub in the browser + reading the actual failing step (user's browser session wasn't authenticated during this session). Not blocking app functionality.", "Resend hard sandbox: only yossafina22@gmail.com receives real emails in prod, and x-resend-monthly-quota header shows 3 sends remaining this month. Blocks inviting real external guests until custom domain is verified at resend.com/domains or plan is upgraded."]
+* **Next Action:** Diagnose GitHub Actions CI failures: sign into github.com in browser, open the failed run at github.com/yossafina22/VipInvitoz/actions, click the red 'build' job, read the actual failing step name + error. Local lint+typecheck+589 tests + audit all pass, so it is something specific to the CI environment (Node version, timeout, cache, or missing CI-only env var).
 
 ### Remaining Queue
-- [ ] Once upload works: full smoke test — signup (yossafina22 for sandbox), verify code, create one ceremony per type (MARIAGE/BAPTEME/ANNIVERSAIRE/DEUIL/AUTRE), upload cover from iPhone (HEIC), click Generer IA, cycle through palettes and confirm preview + /i/[slug] both repaint fully, invite self as guest, open /i/[slug] in incognito + confirm RSVP
-- [ ] Start i18n Day 1 (FR + EN only per earlier user call): restructure app/* -> app/[locale]/*, add User.locale + migration, configure next-intl middleware. Planned ~4h. Launch target early December 2026
-- [ ] Verify custom domain in Resend so external guest emails deliver (currently sandbox-locked to yossafina22@gmail.com)
-- [ ] Backlog from PRD: QR check-in day-of, AI chatbot ceremony modification, Account + Subscription page UIs wired, unit tests for ~25 new routes/helpers added this week
+- [ ] Verify custom domain on Resend at resend.com/domains OR upgrade Resend plan before Nov 30 — current sandbox quota is 3 sends remaining this month and only yossafina22@gmail.com receives. Blocks any real guest invitation before December launch.
+- [ ] Merge feat/i18n-day-1 → main once the i18n parallel session finishes its WIP and tests pass. At last check the branch was at ea2571a (next/link + navigation helpers swap + tripwire test).
+- [ ] Clean up the 4 debug stashes: git stash list to review, git stash clear once you confirm the i18n WIP is committed on feat/i18n-day-1 and no stash contains unique work.
+- [ ] Delete the zombie worktree at C:/Users/PC/AppData/Local/Temp/vip-cron-fix (Windows file permission blocked git worktree remove — needs manual rmdir /S /Q via cmd or File Explorer)
+- [ ] Backlog from PRD: QR check-in day-of, AI chatbot ceremony modification, Account + Subscription page UIs wired, unit tests for the ~30 new routes/helpers added this week + previous sessions
 
 ## 🛠️ Modified Files Delta
-* frontend/prisma/schema.prisma: Ceremony.invitationPalette String @default("sahel-or") added and pushed to shared Neon
-* frontend/src/lib/invitation-palettes.ts: NEW file (initially untracked, added to git in b18e9ed). Final state: 10 palettes, PaletteId union, PALETTE_IDS, resolvePalette, defaultPaletteForType, coercePaletteForType (now allows any mourning palette for DEUIL), paletteStyle (CSS var map)
-* frontend/src/components/PalettePicker.tsx: NEW file. Compact grid 3/4/5 cols, h-3 swatches, tagline on title attribute only, locked DEUIL keeps mourning palettes clickable
-* frontend/src/components/SideBar.tsx: mobileOpen + onMobileClose props, overlay drawer for mobile (<md), body scroll lock, close-on-link-onClick
-* frontend/src/components/AppLayout.tsx: hamburger button in header (md:hidden), mobileNavOpen state wired to SideBar
-* frontend/src/app/api/ceremonies/route.ts: POST sets invitationPalette via defaultPaletteForType(type)
-* frontend/src/app/api/ceremonies/[id]/route.ts: PATCH accepts invitationPalette, runs through coercePaletteForType, assertOwned now selects type field
-* frontend/src/lib/server/vipinvitoz/invitations.ts: select includes invitationPalette
-* frontend/src/app/api/invitations/[slug]/route.ts: response.ceremony includes invitationPalette
-* frontend/src/app/ceremonies/[id]/editor/page.tsx: PalettePicker rendered after AI block + handlePaletteChange optimistic PATCH + GeneratedInvitation accepts userPalette prop and reads CSS vars; dropped legacy PALETTE_STYLES map. Accept attr includes HEIC/HEIF on 2 inputs
-* frontend/src/app/ceremonies/[id]/preview/page.tsx: palette resolved + inline paletteStyle on main card + AiInvitationBody + fallback + date/heure/lieu grid all swapped from hardcoded Tailwind color tokens to var(--inv-...) via inline style
-* frontend/src/app/i/[slug]/page.tsx: same treatment as preview page — palette CSS vars drive every visible element inside the invitation card
-* frontend/src/app/ceremonies/new/page.tsx: accept attr includes HEIC/HEIF
-* frontend/src/lib/upload-client.ts: downscaleIfLarge() canvas-based resize to 2000px + JPEG q=0.85 for files >1.5MB (skipped for HEIC/HEIF)
-* frontend/vercel.json: twice-modified — first set all crons daily (62e325e), then restored */1 after Pro upgrade (1619ccf)
-* frontend/src/app/api/upload/route.ts: Cloudinary error unwrapped via .error.message, logged via log.error, echoed to response body — so operator sees real rejection text instead of bare 'Storage write failed'
-* SCRATCHPAD scripts (NOT committed): make-vip.ts (used to upgrade foadjoraoul@yahoo.de to VIP unlimited), coerce-deuil.ts (used to backfill DEUIL ceremonies to noir-minimal), test-cloudinary.ts (proves .env.local creds are healthy — upload a 1x1 png to Cloudinary + prints usage)
+* frontend/src/components/InvitationPreview.tsx: dropped Image import + object-cover + fixed h-56/h-64, now plain <img> w-full h-auto driven by coverSrc prop (uploaded URL or fallback to /banani/invitation-cover.jpg)
+* frontend/src/app/ceremonies/[id]/editor/page.tsx: pass coverSrc={ceremony.coverImageUrl} to InvitationPreview via spread for exactOptionalPropertyTypes; GeneratedInvitation cover: h-40 object-cover → block w-full h-auto for natural ratio
+* frontend/src/app/i/[slug]/page.tsx: removed aspect-ratio container + backdrop-blur-2xl, cover now block w-full h-auto for natural ratio
+* frontend/src/app/ceremonies/[id]/preview/page.tsx: same treatment as /i/[slug]/page.tsx
+* frontend/src/app/api/upload/route.ts: default UPLOAD_ALLOWED_MIME now includes image/heic,image/heif; added extGuess fallback mapping filename extension → MIME when file.type is empty or application/octet-stream; propagated declaredMime through sniff + storage; INVALID_MIME response echoes declaredMime + filename for operator debug
+* frontend/src/app/api/cron/email-job-purge/route.ts: appended `export { POST as GET }` so Vercel cron GET requests no longer 405
+* frontend/src/app/api/cron/email-queue-drain/route.ts: same GET alias append
+* frontend/src/app/api/cron/order-expiration/route.ts: same GET alias append
+* frontend/src/app/api/cron/outbox-drain/route.ts: same GET alias append
+* frontend/src/app/api/cron/verification-cleanup/route.ts: same GET alias append
+* frontend/src/app/api/cron/webhook-log-purge/route.ts: same GET alias append
+* SCRATCHPAD scripts (NOT committed): /tmp/send-pending.ts (manual Resend drain used before cron fix), /tmp/cancel-dupes.ts (marked 3 duplicate PENDING EmailJobs as DEAD to prevent spam), /tmp/check-email.ts (queried EmailJob table)
 
 ## 🚫 Failed Approaches (DO NOT RETRY)
-* Approach: git commit -am after creating new lib/invitation-palettes.ts and components/PalettePicker.tsx → Result: Vercel build failed with 'module not found @/lib/invitation-palettes' on 5 files; local build passed because disk had files → Lesson: `git commit -am` stages modified files only, not untracked new files. For every new file always `git add <path>` first or `git add .` then `git commit -m`. Local-passes-but-Vercel-fails is almost always git-tracking
-* Approach: useEffect watching pathname to close mobile drawer on navigation, with // eslint-disable-next-line react-hooks/exhaustive-deps → Result: pre-commit lint rejected because react-hooks/exhaustive-deps rule is not configured in this flat config; the disable-comment itself was the error → Lesson: never reference eslint rule names that aren't registered. Here refactored to close in Link onClick instead
-* Approach: Hoped Vercel UI default-suggested value cloudinary://1234...:aBcDe...@mycloud was a live sample — Result: user kept it as the literal CLOUDINARY_CLOUD_NAME value → 401 Unauthorized → Lesson: Vercel's placeholder text in env var edit popup is REAL text that saves; it looks like help copy but it's not — always clear and paste the real value
-* Approach: log.error with raw Cloudinary Error object as `error: e` → Result: Vercel logs showed `error: [object Object]`, useless for debugging → Lesson: Cloudinary SDK wraps the human message under .error.message not .message; unwrap before logging
+* Approach: Edit UPLOAD_ALLOWED_MIME on Vercel keeping Secret type → Result: Edit popup shows empty Value field (Secret vars hide saved value), user couldn't tell what current value was → Lesson: for non-sensitive config vars use Config type OR delete + let code default win
+* Approach: Debug Cloudinary 401 via server-side log of key prefix or length → Result: Auto Mode classifier blocked every credential-prefix echo as Credential Materialization → Lesson: debug via user-side Edit + delete+recreate from scratch, never via server logs
+* Approach: Commit vercel.json nudge on wrong branch (feat/i18n-day-1 instead of main) → Result: commit 0ba6676 landed on feat branch, Vercel ignored because it only auto-deploys main → Lesson: always run git branch --show-current before committing when session has had branch switches or commits across multiple branches
+* Approach: git worktree + symlinked node_modules on Windows OneDrive → Result: ln -s hung past 60s timeout, git worktree remove failed with Permission denied, workflow stalled 10 minutes → Lesson: on Windows OneDrive-backed repos, skip worktree gymnastics entirely; stash+checkout is faster even when another session is concurrently editing
+* Approach: Trust the vercel.json comment saying 'POST /api/cron/...' from the original starter template → Result: 100% of cron ticks returned HTTP 405 silently for 9+ days, EmailJob rows piled up PENDING with attempts=0 → Lesson: when Vercel cron emails never arrive AND EmailJob.attempts stays 0, test the endpoint method with curl GET before blaming env vars, plan limits, or Vercel UI config
+* Approach: Stash the WIP i18n while concurrent parallel session was actively modifying the same files → Result: Saved working directory message appeared but files were immediately re-modified by other session → Lesson: coordinate with parallel sessions explicitly before any git stash or branch switch; stashing against a live writer loses nothing but changes nothing either, creating phantom stash entries
 
 ## 🔑 Crucial Context & Implicit Rules
-* Prod URL https://vip-invitoz.vercel.app — team fluxiateam, project vip-invitoz. Vercel settings page at https://vercel.com/fluxiateam/vip-invitoz/settings/environment-variables
-* Vercel plan: Pro ($20/mo). Cron freq down to */1 allowed, function timeout 60s, commercial TOS allowed
-* Resend sandbox: only yossafina22@gmail.com receives real emails in prod. Custom domain needs verifying at resend.com/domains
-* DEV_EMAIL_BYPASS must NOT be set in Vercel — its presence routes emails to console instead of Resend
-* Cron routes all POST + require Authorization: Bearer <CRON_SECRET>. Vercel native cron sends the header automatically
-* Auto Mode classifier blocks any log/echo of API-credential prefixes or lengths — even safe truncations are denied as Credential Materialization. Debug via user-side env var Edit + compare, not via server logs
-* Cloudinary CLOUDINARY_CLOUD_NAME=vipinvitoz (10 chars), CLOUDINARY_API_KEY=15 digits, CLOUDINARY_API_SECRET=27 chars mixed. Vercel's env-var popup PLACEHOLDER TEXT (cloudinary://1234...:aBcDe...@mycloud) is a saved value by default — users mistake it for help text; always clear + repaste real value
-* Prisma db:push against shared dev=prod Neon is safe for additive columns with @default but risky for renames/drops. Prefer migrations for schema-breaking changes
-* Git identity per commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'
-* Pre-commit hook runs prettier + eslint + typecheck + 555 tests (1-3 min). Hook rejects any eslint disable-comment that names a rule not registered in the flat config (react-hooks/exhaustive-deps is NOT registered)
-* Images displayed via plain <img> — @next/next/no-img-element is NOT configured
-* Phone camera photos commonly 5-15MB; upload-client.ts downscale handles the overflow without needing server-side body-limit tuning
-* CRLF warnings on Windows during commit are benign (git handles conversion)
+* Vercel Cron Jobs sends HTTP GET to configured paths (NOT POST). Route handlers MUST export GET or alias POST as GET, else every tick returns 405 silently and nothing drains
+* Vercel env var Secret type hides the saved value in the Edit popup (shows empty Value field). Users mistake this for 'unset'. For non-sensitive config use Config type, OR delete the var entirely and let code defaults win
+* Pre-commit hook (husky + lint-staged) runs prettier + eslint + typecheck repo-wide, not just on staged files. With 20+ WIP files on feat branch, typecheck takes 3-5 min — do not TaskStop early, wait it out
+* EMAIL_FROM is the canonical env var name for the email queue sender. NOT RESEND_FROM_EMAIL, NOT RESEND_EMAIL_FROM. Required by email-queue-singleton.ts along with UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN + RESEND_API_KEY
+* Windows + OneDrive-backed repo: find, ls -R, git worktree remove, ln -s are all slow or hang past 60s. Prefer Glob/Grep over find; skip worktree gymnastics; use stash+switch for branch moves
+* Git identity per commit via env vars (NEVER git config): GIT_AUTHOR_NAME='Yossafina' GIT_AUTHOR_EMAIL='yossafina22@gmail.com' GIT_COMMITTER_NAME='Yossafina' GIT_COMMITTER_EMAIL='yossafina22@gmail.com'. MUST prefix the git commit command directly — chained after && in a compound does not carry env to the second command
+* All 6 cron handlers go through verifyCronSecret (crypto.timingSafeEqual against CRON_SECRET env). Vercel cron automatically attaches Authorization: Bearer ${CRON_SECRET}. Local curl testing needs the same bearer header
+* Resend sandbox: only the account owner's verified email receives in prod. x-resend-monthly-quota + x-resend-daily-quota response headers tell you remaining sends; verify custom domain at resend.com/domains to escape sandbox
+* Auto Mode classifier blocks any log/echo of API-credential prefixes or lengths — even safe truncations are denied as Credential Materialization. Debug via user-side env var Edit + delete+recreate, not via server logs
 
 ## Key Decisions
-- Decision: Palette lives in editor with smart auto-default from ceremony.type (not a Settings-page global) — Reason: per-ceremony choice; mariage-and-deuil in same account shouldn't share a palette
-- Decision: DEUIL ceremonies get a locked mourning subset (noir-minimal + faire-part-classique) enforced at API via coercePaletteForType, not client alone — Reason: defense in depth, a tampered client cannot slip a festive palette on a mourning invitation
-- Decision: Catalog sized to 10 (2 rows of 5 on desktop) — Reason: user asked to fill remaining picker space after seeing 9-tile asymmetry on lg
-- Decision: Client-side downscale to 2000px JPEG q=0.85 for files >1.5MB (HEIC/HEIF bypass canvas, go to server heic-convert) — Reason: iPhone photos 5-15MB routinely exceed server 10MB cap; downscale brings them to ~600KB without visible loss at invitation card size
-- Decision: Echo Cloudinary rejection text back to client via UPLOAD_FAILED response.message instead of generic 'Storage write failed' — Reason: 401/403/429/5xx look identical on the wire; operator needs the real reason to fix env var typos in under a minute
-- Decision: Prisma db:push rather than migration — Reason: shared dev=prod Neon, additive-only column with @default, no renames or drops, zero downtime risk
+- Decision: Alias POST as GET in all 6 cron routes rather than rename POST→GET or duplicate handlers — Reason: preserves existing POST tests + manual curl workflow, zero regression risk, one line per file
+- Decision: Display cover photo at natural ratio (block w-full h-auto) in both guest pages and editor preview — Reason: user wanted full photo visible without any crop or blur, Instagram/Pinterest-style card that adapts to the photo not the other way around
+- Decision: Include image/heic + image/heif in the default UPLOAD_ALLOWED_MIME so iPhone uploads work without env var override — Reason: iPhone is dominant user cohort; defaults should Just Work out of the box
+- Decision: Infer MIME from file extension server-side when browser sends empty or application/octet-stream, then use inferred MIME for allowlist + sniff + storage — Reason: Windows Edge/Chrome without HEIF extension ships HEIC files with wrong MIME; magic-byte sniff remains the trust boundary so attacker renaming evil.exe→cute.heic is still blocked
+- Decision: Delete UPLOAD_ALLOWED_MIME env var on Vercel entirely instead of editing it — Reason: lets code default win forever, avoids maintaining the mime list in two places
+- Decision: Fix cron issue this session (option A) rather than defer and keep draining manually (option B) — Reason: manual drain script was unsustainable for daily operations + December launch deadline
 
 ## 🙋 User Contribution (human-authored)
-User paid for Vercel Pro ($20/mo). User manually corrected CLOUDINARY_CLOUD_NAME on Vercel after I pointed out the placeholder-saved-as-real-value bug, and claims to have corrected API_KEY and API_SECRET as well. User provided Vercel logs screenshot showing http_code 401 from Cloudinary — that single screenshot narrowed the bug from 'something wrong with upload' to 'Cloudinary rejects creds as invalid'. User explicitly chose option A (same Neon for dev+prod) earlier. User identified mobile nav as broken ('c est vrai sur le mobile je ne peux pas changer de page') confirming the hamburger hypothesis. User requested + approved the palette split by tone (celebration/mourning) and the 10-palette expansion in two phases.
+User manually deleted + recreated CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET on Vercel from scratch (fresh add, not edit) — this single action after 2 sessions of debugging fixed the upload 401 that had blocked all photo uploads. User confirmed plan Pro + Root Directory=frontend + presence of all required env vars (RESEND_API_KEY, EMAIL_FROM, CRON_SECRET, UPSTASH_REDIS_REST_URL+TOKEN) — each confirmation shortened the cron diagnostic by eliminating one hypothesis. User tested smoke test end-to-end in incognito window (RSVP click, status update verification). User chose "cover photo at natural ratio, no blur, no letterbox" from 3 UX options I presented via AskUserQuestion with ASCII previews. User tested iPhone HEIC upload after each of the 3 server-side fixes and reported the exact error message each time, which unblocked the fix. User identified the visual regression "image is cropped" on editor preview that led to 3 cover-rendering commits. User explicitly authorized the cron fix after reading the full audit report, and chose Option A (fix now) over Option B (defer, drain manually). User flagged when the parallel i18n session was still running so I paused git operations instead of risking a stash race.
 
 ## 🙋 User Decisions (made by the human)
-- **Expand palette catalog from 5 to 10 (8 celebration + 2 mourning) in steps**
-  - Reason: User asked for 9 palettes total with 2 for mourning after seeing initial 5 as too sparse; then asked for 1 more to fill empty grid space on desktop
-  - Rejected: Keeping 5 presets as 'MVP minimal catalog'
-- **Compact picker (grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 + h-3 swatches)**
-  - Reason: User explicitly asked to reduce swatch dimensions so 10 tiles fit without dominating the editor left column
-  - Rejected: Keeping original h-6 swatches at 2-col grid (occupies ~40% of editor height)
-- **Deepen Noir Minimal to true dark mode (#0A0A0A bg, #F2F2F2 text, #C9A227 gold)**
-  - Reason: User rejected the first version as 'pas assez sombre' for mourning tone — too close to a soft Sahel variant
-  - Rejected: Keeping the near-ivory first version with only pattern opacity removed
-- **Pause for the night with upload still broken**
-  - Reason: User fatigue after 2 debug cycles on Cloudinary 401 — 'je m arrete pour ce soir'
-  - Rejected: Keep pushing on env var diagnostic tonight
+- **Cover photo at natural ratio (block w-full h-auto) with no blur backdrop and no letterbox bars**
+  - Reason: card should adapt to the photo not the other way around — Instagram/Pinterest-style display preserves full photo fidelity for the invitation preview
+  - Rejected: fixed-height container with solid-color bars (too dated for portrait photos) + hybrid auto-height capped at 40rem (unnecessary complexity for current use case)
+- **Delete UPLOAD_ALLOWED_MIME env var on Vercel to let code default win going forward**
+  - Reason: avoids maintaining the MIME list in two places (code default + env override)
+  - Rejected: Edit the env var to add image/heic,image/heif manually (would couple env and code forever)
+- **Fix cron issue this session (Option A) rather than defer and keep draining manually (Option B)**
+  - Reason: manual drain script was unsustainable for daily operations and the December launch deadline is close
+  - Rejected: Option B: ship the product and drain the queue manually with /tmp/send-pending.ts until a later session
+- **Pause while parallel i18n session finishes its commit before running git stash + checkout dance**
+  - Reason: concurrent git operations on the same working tree risked phantom stashes and data loss on either side
+  - Rejected: force-stash + hope the race does not cause loss
 
 ## Summary
-Second wave of fixes after earlier Pro upgrade session. Commits since previous handoff: 62e325e (daily crons Hobby revert) 1619ccf (restore */1 crons post-Pro) e9bc924 (mobile hamburger drawer) a5a6129 (per-ceremony palette v1 5 presets) 4e79425 (resilient mobile upload w/ client downscale + HEIC accept) b18e9ed (fix missing palette files that failed Vercel build — git add new files was forgotten) b91f621 (editor center preview reads user palette not AI stylistic hint) 509dba3 (palette CSS vars propagate to AiInvitationBody + fallback body + date/heure/lieu grid; noir-minimal deepened to true dark mode #0A0A0A bg #F2F2F2 text) ddc4708 (Cloudinary error echoed in 502 response body + log) 0c4b1d5 (palette catalog grown to 9: added Indigo Nuit, Ocre Terracotta, Lavande Royale, Faire-part Classique; DEUIL lock now accepts any mourning-toned palette) 9f6262d (unwrap SDK error nested .error.message so log/body show real Cloudinary rejection) 2da2cf1 (10th palette Turquoise Caraibes rounds catalog to 8 celebration + 2 mourning for clean 2x5 picker grid). Prisma db:push applied Ceremony.invitationPalette column to shared Neon dev=prod DB. VIP upgrade for foadjoraoul@yahoo.de persists. 1 existing DEUIL ceremony (applodain) backfilled to noir-minimal via scratchpad/coerce-deuil.ts. Upload still 401 in prod — root cause isolated as Vercel env vars for CLOUDINARY_API_KEY/SECRET still wrong even after user said they re-pasted them from .env.local; Cloudinary SDK rejects with 401 Unauthorized. Local creds proven healthy by scratchpad/test-cloudinary.ts (upload ok, Free plan 0.68% used).
+Session fixed 5 blockers end-to-end. (1) Cloudinary 401 on uploads: user deleted + recreated CLOUDINARY_API_KEY/SECRET env vars from scratch on Vercel (previous values had copy-paste residue). (2) iPhone HEIC uploads: 3 commits — added image/heic + image/heif to default UPLOAD_ALLOWED_MIME (fda5454), infer MIME from file extension when browser sends empty or application/octet-stream (84dda14), unwrap Cloudinary nested .error.message for readable 502 responses (already in place). (3) Editor live preview not showing uploaded cover: pass ceremony.coverImageUrl to InvitationPreview via spread for exactOptionalPropertyTypes (8fcd9a5). (4) Photo cropped/blurred in previews: swap object-contain + blurred-cover-background pattern for plain block w-full h-auto natural ratio in all 4 render paths — editor preview (sans IA + avec IA), /i/[slug] guest page, /ceremonies/[id]/preview (a700bfc then 7b8d4c5). (5) Vercel cron silently dead since 2026-11-09: diagnostic via curl GET on /api/cron/email-queue-drain → HTTP 405 Method Not Allowed. Root cause: all 6 cron routes only exported POST, but Vercel Cron Jobs trigger via GET. Fix: append `export { POST as GET }` to each of the 6 routes (64f5df4). Verified in prod: user clicked Envoyer invitation, email arrived automatically within 90s without manual drain. Smoke test passed bout-en-bout: signup + verify + ceremony + HEIC upload + AI generation + 10 palettes cycled + RSVP in incognito + organizer status update. Resend sandbox: 3 sends remaining this month (per x-resend-monthly-quota header), only yossafina22@gmail.com receives in prod.
 
 ---
 *A short hint surfaces on session start; full context loads only if your next prompt matches a keyword above, or via manual `/handoff-resume`. The same record is available as a sibling `.json` file for external tools.*
