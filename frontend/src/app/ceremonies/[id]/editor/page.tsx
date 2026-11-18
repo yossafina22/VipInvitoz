@@ -597,6 +597,7 @@ export default function InvitationEditorPage() {
                 time={firstHuman.time}
                 location={firstOcc?.locationName ?? '—'}
                 family=""
+                {...(ceremony.coverImageUrl ? { coverSrc: ceremony.coverImageUrl } : {})}
               />
             )}
           </div>
