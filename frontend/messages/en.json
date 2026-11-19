@@ -32,6 +32,54 @@
     "notificationsLabel": "Notifications",
     "logoutLabel": "Sign out"
   },
+  "invitation": {
+    "loading": "Loading your invitation…",
+    "notFoundTitle": "Invitation not found",
+    "notFoundDesc": "This invitation link is invalid or has been revoked.",
+    "errorTitle": "Loading error",
+    "errorDesc": "Could not load the invitation. Please try again in a moment.",
+    "backHome": "Back to home",
+    "header": {
+      "label": "INVITATION",
+      "backLabel": "Back",
+      "shareLabel": "Share"
+    },
+    "shareText": "You're invited to {title}",
+    "greeting": "Dear {name}",
+    "details": {
+      "dateLabel": "Date",
+      "timeLabel": "Time",
+      "placeLabel": "Venue",
+      "fullAddressLabel": "Full address",
+      "instructionsLabel": "Directions",
+      "otherOccasionsLabel": "Other occasions"
+    },
+    "rsvp": {
+      "confirmedBadge": "✓ Attendance confirmed",
+      "confirmBtn": "✓ I confirm my attendance",
+      "declinedBadge": "Absence recorded",
+      "declineBtn": "I can't make it"
+    },
+    "music": "Music: {label}",
+    "companions": {
+      "title": "Number of companions",
+      "aloneOption": "+ Just me",
+      "plusN": "+ {n}",
+      "savedHint": "✓ Companion count saved",
+      "savingHint": "Saving…",
+      "autoSaveHint": "Change freely — it's saved automatically.",
+      "initialHint": "Let us know how many people will accompany you."
+    },
+    "qr": {
+      "title": "Your entry badge",
+      "hint": "Show this QR code at the entrance on the day of the ceremony."
+    },
+    "cta": {
+      "addToCalendar": "Add to calendar",
+      "whatsapp": "WhatsApp",
+      "share": "Share"
+    }
+  },
   "auth": {
     "shell": {
       "heroTitle": "Your ceremony starts here.",

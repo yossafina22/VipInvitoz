@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Icon } from '@/components/Icon';
 import { QRCode } from '@/components/QRCode';
@@ -56,20 +57,13 @@ const CEREMONY_EMOJI: Record<string, string> = {
   AUTRE: '✨',
 };
 
-const DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
-
-const TIME_FMT = new Intl.DateTimeFormat('fr-FR', {
-  hour: '2-digit',
-  minute: '2-digit',
-});
+const LOCALE_TAG: Record<string, string> = { fr: 'fr-FR', en: 'en-US' };
 
 export default function GuestInvitationPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
+  const t = useTranslations('invitation');
+  const locale = useLocale();
   const [status, setStatus] = useState<Status>('loading');
   const [data, setData] = useState<InvitationResponse | null>(null);
   const [rsvp, setRsvp] = useState<RSVPStatus>('idle');
@@ -77,6 +71,24 @@ export default function GuestInvitationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [savedGuests, setSavedGuests] = useState(1);
   const [companionsSaved, setCompanionsSaved] = useState(false);
+
+  const dateFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(LOCALE_TAG[locale] ?? 'fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+    [locale],
+  );
+  const timeFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(LOCALE_TAG[locale] ?? 'fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [locale],
+  );
 
   useEffect(() => {
     if (!slug) return;
@@ -145,37 +157,33 @@ export default function GuestInvitationPage() {
   useEffect(() => {
     if (rsvp !== 'confirmed') return;
     if (guests === savedGuests) return;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       void submitRsvp('CONFIRMED');
     }, 600);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [guests, rsvp, savedGuests]);
 
-  // Loading skeleton
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Chargement de votre invitation…</p>
+        <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </div>
     );
   }
 
-  // Not found or error
   if (status !== 'ready' || !data) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-sm text-center">
           <div className="text-5xl mb-3 opacity-30">💌</div>
           <h1 className="font-headings font-bold text-xl mb-2">
-            {status === 'not-found' ? 'Invitation introuvable' : 'Erreur de chargement'}
+            {status === 'not-found' ? t('notFoundTitle') : t('errorTitle')}
           </h1>
           <p className="text-sm text-muted-foreground mb-4">
-            {status === 'not-found'
-              ? 'Le lien de cette invitation est invalide ou a été révoqué.'
-              : 'Impossible de charger l’invitation. Veuillez réessayer dans un instant.'}
+            {status === 'not-found' ? t('notFoundDesc') : t('errorDesc')}
           </p>
           <Link href="/" className="text-primary font-bold text-sm">
-            Retour à l’accueil
+            {t('backHome')}
           </Link>
         </div>
       </div>
@@ -193,7 +201,7 @@ export default function GuestInvitationPage() {
     if (typeof window === 'undefined') return;
     const payload = {
       title: ceremony.title,
-      text: `Vous êtes invité(e) à ${ceremony.title}`,
+      text: t('shareText', { title: ceremony.title }),
       url: invitationUrl,
     };
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -207,15 +215,15 @@ export default function GuestInvitationPage() {
     <div className="bg-background font-body min-h-screen pb-6">
       {/* Header */}
       <div className="bg-dark-surface px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <Link href="/" className="text-primary-foreground" aria-label="Retour">
+        <Link href="/" className="text-primary-foreground" aria-label={t('header.backLabel')}>
           <Icon name="arrow-left" size={18} />
         </Link>
-        <div className="text-xs text-gold font-bold tracking-widest">INVITATION</div>
+        <div className="text-xs text-gold font-bold tracking-widest">{t('header.label')}</div>
         <button
           type="button"
           onClick={handleShare}
           className="text-primary-foreground"
-          aria-label="Partager"
+          aria-label={t('header.shareLabel')}
         >
           <Icon name="share-2" size={18} />
         </button>
@@ -261,7 +269,7 @@ export default function GuestInvitationPage() {
                 className="text-[11px] font-body uppercase tracking-[0.25em] mb-3"
                 style={{ color: 'var(--inv-gold)' }}
               >
-                Cher·e {guest.name}
+                {t('greeting', { name: guest.name })}
               </div>
 
               {ceremony.invitationJson ? (
@@ -307,14 +315,14 @@ export default function GuestInvitationPage() {
                 <div className="grid grid-cols-3 gap-2 mb-8 max-w-md mx-auto">
                   {[
                     {
-                      label: 'Date',
-                      value: DATE_FMT.format(new Date(firstOcc.startsAt)),
+                      label: t('details.dateLabel'),
+                      value: dateFmt.format(new Date(firstOcc.startsAt)),
                     },
                     {
-                      label: 'Heure',
-                      value: TIME_FMT.format(new Date(firstOcc.startsAt)),
+                      label: t('details.timeLabel'),
+                      value: timeFmt.format(new Date(firstOcc.startsAt)),
                     },
-                    { label: 'Lieu', value: firstOcc.locationName },
+                    { label: t('details.placeLabel'), value: firstOcc.locationName },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -352,7 +360,7 @@ export default function GuestInvitationPage() {
                       : 'bg-success text-primary-foreground hover:bg-success/90 hover:shadow-md'
                   }`}
                 >
-                  {rsvp === 'confirmed' ? '✓ Présence confirmée' : '✓ Je confirme ma présence'}
+                  {rsvp === 'confirmed' ? t('rsvp.confirmedBadge') : t('rsvp.confirmBtn')}
                 </button>
                 <button
                   type="button"
@@ -364,14 +372,14 @@ export default function GuestInvitationPage() {
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                   }`}
                 >
-                  {rsvp === 'declined' ? 'Absence enregistrée' : 'Je ne peux pas venir'}
+                  {rsvp === 'declined' ? t('rsvp.declinedBadge') : t('rsvp.declineBtn')}
                 </button>
               </div>
 
               {ceremony.musicLabel && (
                 <div className="mt-8 pt-6 border-t border-gold/20 flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <Icon name="music" size={12} className="text-gold" />
-                  <span>Musique : {ceremony.musicLabel}</span>
+                  <span>{t('music', { label: ceremony.musicLabel })}</span>
                 </div>
               )}
             </div>
@@ -385,7 +393,9 @@ export default function GuestInvitationPage() {
                 <div className="flex items-start gap-3">
                   <Icon name="map-pin" size={14} className="text-primary mt-1 shrink-0" />
                   <div className="flex-1 text-xs">
-                    <div className="font-bold text-foreground mb-0.5">Lieu complet</div>
+                    <div className="font-bold text-foreground mb-0.5">
+                      {t('details.fullAddressLabel')}
+                    </div>
                     <div className="text-muted-foreground">{firstOcc.locationAddress}</div>
                   </div>
                 </div>
@@ -393,7 +403,9 @@ export default function GuestInvitationPage() {
                   <div className="flex items-start gap-3">
                     <Icon name="info" size={14} className="text-primary mt-1 shrink-0" />
                     <div className="flex-1 text-xs">
-                      <div className="font-bold text-foreground mb-0.5">Indications</div>
+                      <div className="font-bold text-foreground mb-0.5">
+                        {t('details.instructionsLabel')}
+                      </div>
                       <div className="text-muted-foreground">{firstOcc.instructions}</div>
                     </div>
                   </div>
@@ -402,12 +414,14 @@ export default function GuestInvitationPage() {
                   <div className="flex items-start gap-3 pt-3 border-t border-border">
                     <Icon name="calendar" size={14} className="text-primary mt-1 shrink-0" />
                     <div className="flex-1 text-xs">
-                      <div className="font-bold text-foreground mb-1">Autres occasions</div>
+                      <div className="font-bold text-foreground mb-1">
+                        {t('details.otherOccasionsLabel')}
+                      </div>
                       <ul className="text-muted-foreground space-y-0.5">
                         {occasions.slice(1).map((o) => (
                           <li key={o.id}>
-                            {o.label} — {DATE_FMT.format(new Date(o.startsAt))}{' '}
-                            {TIME_FMT.format(new Date(o.startsAt))} · {o.locationName}
+                            {o.label} — {dateFmt.format(new Date(o.startsAt))}{' '}
+                            {timeFmt.format(new Date(o.startsAt))} · {o.locationName}
                           </li>
                         ))}
                       </ul>
@@ -421,7 +435,7 @@ export default function GuestInvitationPage() {
             {rsvp !== 'declined' && (
               <div className="bg-secondary border border-border rounded-xl p-4">
                 <div className="text-sm font-body font-bold text-secondary-foreground mb-3">
-                  Nombre d&apos;accompagnants
+                  {t('companions.title')}
                 </div>
                 <div className="flex gap-2 mb-3">
                   {[1, 2, 3, 4].map((n) => (
@@ -435,31 +449,27 @@ export default function GuestInvitationPage() {
                           : 'border-border text-foreground hover:border-primary'
                       }`}
                     >
-                      {n === 1 ? '+ Moi seul' : `+ ${n - 1}`}
+                      {n === 1 ? t('companions.aloneOption') : t('companions.plusN', { n: n - 1 })}
                     </button>
                   ))}
                 </div>
                 <div className="text-xs text-secondary-foreground">
                   {rsvp === 'confirmed'
                     ? companionsSaved
-                      ? '✓ Nombre d’accompagnants enregistré'
+                      ? t('companions.savedHint')
                       : guests !== savedGuests
-                        ? 'Enregistrement…'
-                        : 'Modifiez librement, l’enregistrement est automatique.'
-                    : 'Indiquez combien de personnes vous accompagneront.'}
+                        ? t('companions.savingHint')
+                        : t('companions.autoSaveHint')
+                    : t('companions.initialHint')}
                 </div>
               </div>
             )}
 
             {/* QR code */}
             <div className="bg-card border border-border rounded-xl p-5 flex flex-col items-center gap-3">
-              <div className="text-sm font-body font-bold text-foreground">
-                Votre badge d&apos;entrée
-              </div>
+              <div className="text-sm font-body font-bold text-foreground">{t('qr.title')}</div>
               <QRCode value={invitationUrl} size={180} />
-              <p className="text-xs text-muted-foreground text-center max-w-xs">
-                Présentez ce QR code à l&apos;entrée le jour de la cérémonie.
-              </p>
+              <p className="text-xs text-muted-foreground text-center max-w-xs">{t('qr.hint')}</p>
             </div>
 
             {/* CTA */}
@@ -468,7 +478,7 @@ export default function GuestInvitationPage() {
                 type="button"
                 className="block w-full text-center bg-primary text-primary-foreground font-body font-bold py-3 rounded-lg text-sm"
               >
-                Ajouter au calendrier
+                {t('cta.addToCalendar')}
               </button>
               <div className="flex gap-2 mt-2">
                 <a
@@ -478,7 +488,7 @@ export default function GuestInvitationPage() {
                   className="flex-1 text-center bg-secondary text-secondary-foreground font-body font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1"
                 >
                   <Icon name="message-circle" size={12} />
-                  WhatsApp
+                  {t('cta.whatsapp')}
                 </a>
                 <button
                   type="button"
@@ -486,7 +496,7 @@ export default function GuestInvitationPage() {
                   className="flex-1 text-center bg-muted text-muted-foreground font-body font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1"
                 >
                   <Icon name="share-2" size={12} />
-                  Partager
+                  {t('cta.share')}
                 </button>
               </div>
             </div>

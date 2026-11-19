@@ -32,6 +32,54 @@
     "notificationsLabel": "Notifications",
     "logoutLabel": "Déconnexion"
   },
+  "invitation": {
+    "loading": "Chargement de votre invitation…",
+    "notFoundTitle": "Invitation introuvable",
+    "notFoundDesc": "Le lien de cette invitation est invalide ou a été révoqué.",
+    "errorTitle": "Erreur de chargement",
+    "errorDesc": "Impossible de charger l'invitation. Veuillez réessayer dans un instant.",
+    "backHome": "Retour à l'accueil",
+    "header": {
+      "label": "INVITATION",
+      "backLabel": "Retour",
+      "shareLabel": "Partager"
+    },
+    "shareText": "Vous êtes invité(e) à {title}",
+    "greeting": "Cher·e {name}",
+    "details": {
+      "dateLabel": "Date",
+      "timeLabel": "Heure",
+      "placeLabel": "Lieu",
+      "fullAddressLabel": "Lieu complet",
+      "instructionsLabel": "Indications",
+      "otherOccasionsLabel": "Autres occasions"
+    },
+    "rsvp": {
+      "confirmedBadge": "✓ Présence confirmée",
+      "confirmBtn": "✓ Je confirme ma présence",
+      "declinedBadge": "Absence enregistrée",
+      "declineBtn": "Je ne peux pas venir"
+    },
+    "music": "Musique : {label}",
+    "companions": {
+      "title": "Nombre d'accompagnants",
+      "aloneOption": "+ Moi seul",
+      "plusN": "+ {n}",
+      "savedHint": "✓ Nombre d'accompagnants enregistré",
+      "savingHint": "Enregistrement…",
+      "autoSaveHint": "Modifiez librement, l'enregistrement est automatique.",
+      "initialHint": "Indiquez combien de personnes vous accompagneront."
+    },
+    "qr": {
+      "title": "Votre badge d'entrée",
+      "hint": "Présentez ce QR code à l'entrée le jour de la cérémonie."
+    },
+    "cta": {
+      "addToCalendar": "Ajouter au calendrier",
+      "whatsapp": "WhatsApp",
+      "share": "Partager"
+    }
+  },
   "auth": {
     "shell": {
       "heroTitle": "Votre cérémonie commence ici.",
