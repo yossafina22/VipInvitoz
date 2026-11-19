@@ -1,4 +1,7 @@
+'use client';
+
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Image } from './Image';
 import { UserAvatar } from './UserAvatar';
@@ -12,13 +15,15 @@ interface AuthShellProps {
   children: ReactNode;
 }
 
-const STATS = [
-  { val: '20', label: 'invités offerts' },
-  { val: '6', label: 'modifications IA' },
-  { val: '0 FCFA', label: 'pour commencer' },
-];
-
 export function AuthShell({ active, title, subtitle, children }: AuthShellProps) {
+  const t = useTranslations('auth.shell');
+
+  const stats = [
+    { val: t('statsGuestsValue'), label: t('statsGuestsLabel') },
+    { val: t('statsAiValue'), label: t('statsAiLabel') },
+    { val: t('statsPriceValue'), label: t('statsPriceLabel') },
+  ];
+
   return (
     <div className="bg-background font-body min-h-screen flex flex-col">
       <NavBar activePage="" />
@@ -30,23 +35,20 @@ export function AuthShell({ active, title, subtitle, children }: AuthShellProps)
               VipInvitoz
             </div>
             <h2 className="font-headings font-bold text-3xl xl:text-4xl text-primary-foreground leading-tight mb-4">
-              Votre cérémonie commence ici.
+              {t('heroTitle')}
             </h2>
-            <p className="text-base text-muted-foreground leading-relaxed">
-              Créez votre compte en 2 minutes et générez votre première invitation dès
-              aujourd&apos;hui — gratuitement.
-            </p>
+            <p className="text-base text-muted-foreground leading-relaxed">{t('heroSubtitle')}</p>
           </div>
           <div className="relative z-10">
             <Image
               ar="4:3"
               src="/banani/auth.jpg"
-              prompt="Famille africaine joyeuse célébrant un mariage, lumières dorées et terracotta"
+              prompt={t('heroImagePrompt')}
               className="w-full rounded-xl"
             />
           </div>
           <div className="relative z-10 flex gap-6 mt-8">
-            {STATS.map((s) => (
+            {stats.map((s) => (
               <div key={s.label} className="text-center">
                 <div className="font-headings font-bold text-2xl text-gold">{s.val}</div>
                 <div className="text-xs text-muted-foreground">{s.label}</div>
@@ -66,7 +68,7 @@ export function AuthShell({ active, title, subtitle, children }: AuthShellProps)
                     : 'text-muted-foreground'
                 }`}
               >
-                Créer un compte
+                {t('tabSignup')}
               </Link>
               <Link
                 href="/auth/login"
@@ -74,7 +76,7 @@ export function AuthShell({ active, title, subtitle, children }: AuthShellProps)
                   active === 'login' ? 'bg-card font-bold text-foreground' : 'text-muted-foreground'
                 }`}
               >
-                Se connecter
+                {t('tabLogin')}
               </Link>
             </div>
             <h1 className="font-headings font-bold text-2xl md:text-3xl text-foreground mb-2">
@@ -88,9 +90,7 @@ export function AuthShell({ active, title, subtitle, children }: AuthShellProps)
                   <UserAvatar key={i} index={i} name={n} className="w-8 h-8 border-2 border-card" />
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Rejoignez 50 000+ familles qui utilisent VipInvitoz
-              </p>
+              <p className="text-xs text-muted-foreground">{t('socialProof')}</p>
             </div>
           </div>
         </div>

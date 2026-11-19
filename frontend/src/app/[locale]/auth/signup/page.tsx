@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Link } from '@/i18n/navigation';
 import { AuthShell } from '@/components/AuthShell';
@@ -9,6 +10,8 @@ import { api, ApiError } from '@/lib/api';
 
 export default function SignupPage() {
   const router = useRouter();
+  const t = useTranslations('auth.signup');
+  const tCommon = useTranslations('auth.common');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,25 +28,21 @@ export default function SignupPage() {
       router.push(`/auth/verify-email?${query.toString()}`);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message || 'Impossible de créer le compte. Vérifiez vos informations.');
+        setError(err.message || t('defaultError'));
       } else {
-        setError('Erreur réseau. Réessayez.');
+        setError(tCommon('networkError'));
       }
       setLoading(false);
     }
   };
 
   return (
-    <AuthShell
-      active="signup"
-      title="Bienvenue sur VipInvitoz"
-      subtitle="Créez votre compte pour commencer à organiser vos cérémonies."
-    >
+    <AuthShell active="signup" title={t('title')} subtitle={t('subtitle')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <FormField
           name="name"
-          label="Prénom & Nom"
-          placeholder="Ex: Fatoumata Diallo"
+          label={t('nameLabel')}
+          placeholder={t('namePlaceholder')}
           value={name}
           onChange={setName}
           autoComplete="name"
@@ -51,8 +50,8 @@ export default function SignupPage() {
         <FormField
           name="email"
           type="email"
-          label="Email"
-          placeholder="fatou@exemple.com"
+          label={tCommon('emailLabel')}
+          placeholder={tCommon('emailPlaceholder')}
           value={email}
           onChange={setEmail}
           autoComplete="email"
@@ -61,13 +60,13 @@ export default function SignupPage() {
         <FormField
           name="password"
           type="password"
-          label="Mot de passe"
-          placeholder="Minimum 8 caractères"
+          label={tCommon('passwordLabel')}
+          placeholder={t('passwordPlaceholder')}
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
           required
-          hint="Au moins 8 caractères, avec une majuscule et un chiffre."
+          hint={t('passwordHint')}
         />
         {error && (
           <p className="text-sm text-danger" role="alert">
@@ -79,18 +78,21 @@ export default function SignupPage() {
           disabled={loading}
           className="bg-primary text-primary-foreground text-center font-body font-bold py-3.5 rounded-xl text-base mt-2 disabled:opacity-50"
         >
-          {loading ? 'Création…' : 'Créer mon compte →'}
+          {loading ? t('submitLoading') : t('submit')}
         </button>
         <p className="text-xs text-muted-foreground text-center mt-2">
-          En créant un compte, vous acceptez nos{' '}
-          <Link href="/legal/terms" className="text-primary">
-            CGU
-          </Link>{' '}
-          et notre{' '}
-          <Link href="/legal/privacy" className="text-primary">
-            Politique de confidentialité
-          </Link>
-          .
+          {t.rich('termsAndPrivacy', {
+            terms: (chunks) => (
+              <Link href="/legal/terms" className="text-primary">
+                {chunks}
+              </Link>
+            ),
+            privacy: (chunks) => (
+              <Link href="/legal/privacy" className="text-primary">
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
       </form>
     </AuthShell>

@@ -14,42 +14,49 @@
 'use client';
 
 import { Suspense } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 
-const ERROR_MESSAGES: Record<string, string> = {
-  GOOGLE_EMAIL_NOT_VERIFIED:
-    "Votre adresse Google n'est pas vérifiée. Vérifiez-la sur votre compte Google, puis réessayez.",
-  OAUTH_STATE_MISMATCH:
-    'La connexion a été interrompue (vérification de sécurité). Cela peut arriver si la page Google est restée ouverte trop longtemps — réessayez.',
-  OAUTH_CODE_EXCHANGE_FAILED: 'Google a refusé la connexion. Réessayez dans un instant.',
-  OAUTH_PROVIDER_DISABLED:
-    'La connexion via Google n’est pas activée sur ce serveur. Contactez le support.',
-  OAUTH_GENERIC: 'Une erreur inattendue est survenue pendant la connexion. Réessayez.',
-};
+const KNOWN_CODES = [
+  'GOOGLE_EMAIL_NOT_VERIFIED',
+  'OAUTH_STATE_MISMATCH',
+  'OAUTH_CODE_EXCHANGE_FAILED',
+  'OAUTH_PROVIDER_DISABLED',
+  'OAUTH_GENERIC',
+] as const;
+
+type KnownCode = (typeof KNOWN_CODES)[number];
+
+function isKnownCode(code: string): code is KnownCode {
+  return (KNOWN_CODES as readonly string[]).includes(code);
+}
 
 function AuthErrorBody() {
   const params = useSearchParams();
+  const t = useTranslations('auth.error');
   const code = params.get('code') ?? params.get('error') ?? '';
   const normalized = code.toUpperCase();
-  const message =
-    ERROR_MESSAGES[normalized] ??
-    'Une erreur inconnue est survenue pendant la connexion. Réessayez.';
+  const message = isKnownCode(normalized) ? t(`codes.${normalized}`) : t('codeUnknown');
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-4">
-      <h1 className="text-2xl font-bold">Échec de connexion</h1>
+      <h1 className="text-2xl font-bold">{t('title')}</h1>
       <p className="text-sm text-gray-700">{message}</p>
-      {code && <p className="font-mono text-xs text-gray-400">code: {code}</p>}
+      {code && (
+        <p className="font-mono text-xs text-gray-400">
+          {t('codePrefix')} {code}
+        </p>
+      )}
       <div className="flex flex-col gap-2">
         <Link
-          href="/login"
+          href="/auth/login"
           className="rounded-md bg-black px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-800"
         >
-          Retour à la connexion
+          {t('backToLogin')}
         </Link>
         <Link href="/" className="text-center text-sm text-gray-600 underline">
-          Accueil
+          {t('home')}
         </Link>
       </div>
     </main>

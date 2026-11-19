@@ -32,6 +32,77 @@
     "notificationsLabel": "Notifications",
     "logoutLabel": "Déconnexion"
   },
+  "auth": {
+    "shell": {
+      "heroTitle": "Votre cérémonie commence ici.",
+      "heroSubtitle": "Créez votre compte en 2 minutes et générez votre première invitation dès aujourd'hui — gratuitement.",
+      "heroImagePrompt": "Famille africaine joyeuse célébrant un mariage, lumières dorées et terracotta",
+      "statsGuestsValue": "20",
+      "statsGuestsLabel": "invités offerts",
+      "statsAiValue": "6",
+      "statsAiLabel": "modifications IA",
+      "statsPriceValue": "0 FCFA",
+      "statsPriceLabel": "pour commencer",
+      "tabSignup": "Créer un compte",
+      "tabLogin": "Se connecter",
+      "socialProof": "Rejoignez 50 000+ familles qui utilisent VipInvitoz"
+    },
+    "common": {
+      "emailLabel": "Email",
+      "emailPlaceholder": "fatou@exemple.com",
+      "passwordLabel": "Mot de passe",
+      "networkError": "Erreur réseau. Réessayez."
+    },
+    "login": {
+      "title": "Bon retour parmi nous",
+      "subtitle": "Connectez-vous pour reprendre où vous en étiez.",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Mot de passe oublié ?",
+      "submit": "Se connecter →",
+      "submitLoading": "Connexion…",
+      "defaultError": "Email ou mot de passe incorrect."
+    },
+    "signup": {
+      "title": "Bienvenue sur VipInvitoz",
+      "subtitle": "Créez votre compte pour commencer à organiser vos cérémonies.",
+      "nameLabel": "Prénom & Nom",
+      "namePlaceholder": "Ex: Fatoumata Diallo",
+      "passwordPlaceholder": "Minimum 8 caractères",
+      "passwordHint": "Au moins 8 caractères, avec une majuscule et un chiffre.",
+      "submit": "Créer mon compte →",
+      "submitLoading": "Création…",
+      "defaultError": "Impossible de créer le compte. Vérifiez vos informations.",
+      "termsAndPrivacy": "En créant un compte, vous acceptez nos <terms>CGU</terms> et notre <privacy>Politique de confidentialité</privacy>."
+    },
+    "verifyEmail": {
+      "title": "Vérifiez votre email",
+      "description": "Nous avons envoyé un code à <strong>{email}</strong>. Saisissez-le ci-dessous pour activer votre compte.",
+      "descriptionFallback": "votre adresse",
+      "codeLabel": "Code de vérification",
+      "codePlaceholder": "XXXXXXXX",
+      "submit": "Vérifier mon email →",
+      "submitLoading": "Vérification…",
+      "defaultError": "Code invalide ou expiré.",
+      "resendPrompt": "Vous n'avez pas reçu le code ?",
+      "resendButton": "Renvoyer",
+      "resendSuccess": "Un nouveau code vous a été envoyé par email.",
+      "resendError": "Nous n'avons pas pu renvoyer le code. Vérifiez l'adresse email."
+    },
+    "error": {
+      "title": "Échec de connexion",
+      "codePrefix": "code:",
+      "codeUnknown": "Une erreur inconnue est survenue pendant la connexion. Réessayez.",
+      "codes": {
+        "GOOGLE_EMAIL_NOT_VERIFIED": "Votre adresse Google n'est pas vérifiée. Vérifiez-la sur votre compte Google, puis réessayez.",
+        "OAUTH_STATE_MISMATCH": "La connexion a été interrompue (vérification de sécurité). Cela peut arriver si la page Google est restée ouverte trop longtemps — réessayez.",
+        "OAUTH_CODE_EXCHANGE_FAILED": "Google a refusé la connexion. Réessayez dans un instant.",
+        "OAUTH_PROVIDER_DISABLED": "La connexion via Google n'est pas activée sur ce serveur. Contactez le support.",
+        "OAUTH_GENERIC": "Une erreur inattendue est survenue pendant la connexion. Réessayez."
+      },
+      "backToLogin": "Retour à la connexion",
+      "home": "Accueil"
+    }
+  },
   "dashboard": {
     "pageTitle": "Tableau de bord",
     "loading": "Chargement…",

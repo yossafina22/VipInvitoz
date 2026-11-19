@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Link } from '@/i18n/navigation';
 import { AuthShell } from '@/components/AuthShell';
@@ -15,6 +16,8 @@ interface LoginResponse {
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useAuth();
+  const t = useTranslations('auth.login');
+  const tCommon = useTranslations('auth.common');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,26 +37,22 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message || 'Email ou mot de passe incorrect.');
+        setError(err.message || t('defaultError'));
       } else {
-        setError('Erreur réseau. Réessayez.');
+        setError(tCommon('networkError'));
       }
       setLoading(false);
     }
   };
 
   return (
-    <AuthShell
-      active="login"
-      title="Bon retour parmi nous"
-      subtitle="Connectez-vous pour reprendre où vous en étiez."
-    >
+    <AuthShell active="login" title={t('title')} subtitle={t('subtitle')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <FormField
           name="email"
           type="email"
-          label="Email"
-          placeholder="fatou@exemple.com"
+          label={tCommon('emailLabel')}
+          placeholder={tCommon('emailPlaceholder')}
           value={email}
           onChange={setEmail}
           autoComplete="email"
@@ -62,8 +61,8 @@ export default function LoginPage() {
         <FormField
           name="password"
           type="password"
-          label="Mot de passe"
-          placeholder="••••••••"
+          label={tCommon('passwordLabel')}
+          placeholder={t('passwordPlaceholder')}
           value={password}
           onChange={setPassword}
           autoComplete="current-password"
@@ -71,7 +70,7 @@ export default function LoginPage() {
         />
         <div className="flex items-center justify-between -mt-1">
           <Link href="/auth/forgot-password" className="text-xs text-primary font-body font-medium">
-            Mot de passe oublié ?
+            {t('forgotPassword')}
           </Link>
         </div>
         {error && (
@@ -84,7 +83,7 @@ export default function LoginPage() {
           disabled={loading}
           className="bg-primary text-primary-foreground text-center font-body font-bold py-3.5 rounded-xl text-base mt-2 disabled:opacity-50"
         >
-          {loading ? 'Connexion…' : 'Se connecter →'}
+          {loading ? t('submitLoading') : t('submit')}
         </button>
       </form>
     </AuthShell>

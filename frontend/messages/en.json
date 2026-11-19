@@ -32,6 +32,77 @@
     "notificationsLabel": "Notifications",
     "logoutLabel": "Sign out"
   },
+  "auth": {
+    "shell": {
+      "heroTitle": "Your ceremony starts here.",
+      "heroSubtitle": "Create your account in 2 minutes and generate your first invitation today — for free.",
+      "heroImagePrompt": "Joyful African family celebrating a wedding, gold and terracotta lighting",
+      "statsGuestsValue": "20",
+      "statsGuestsLabel": "free guests",
+      "statsAiValue": "6",
+      "statsAiLabel": "AI edits",
+      "statsPriceValue": "$0",
+      "statsPriceLabel": "to get started",
+      "tabSignup": "Sign up",
+      "tabLogin": "Sign in",
+      "socialProof": "Join 50,000+ families using VipInvitoz"
+    },
+    "common": {
+      "emailLabel": "Email",
+      "emailPlaceholder": "fatou@example.com",
+      "passwordLabel": "Password",
+      "networkError": "Network error. Please try again."
+    },
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to pick up where you left off.",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in →",
+      "submitLoading": "Signing in…",
+      "defaultError": "Email or password incorrect."
+    },
+    "signup": {
+      "title": "Welcome to VipInvitoz",
+      "subtitle": "Create your account to start organizing your ceremonies.",
+      "nameLabel": "First & Last Name",
+      "namePlaceholder": "e.g. Fatoumata Diallo",
+      "passwordPlaceholder": "At least 8 characters",
+      "passwordHint": "At least 8 characters, with one uppercase letter and one digit.",
+      "submit": "Create my account →",
+      "submitLoading": "Creating…",
+      "defaultError": "Could not create account. Please check your information.",
+      "termsAndPrivacy": "By creating an account you agree to our <terms>Terms</terms> and our <privacy>Privacy Policy</privacy>."
+    },
+    "verifyEmail": {
+      "title": "Verify your email",
+      "description": "We sent a code to <strong>{email}</strong>. Enter it below to activate your account.",
+      "descriptionFallback": "your address",
+      "codeLabel": "Verification code",
+      "codePlaceholder": "XXXXXXXX",
+      "submit": "Verify my email →",
+      "submitLoading": "Verifying…",
+      "defaultError": "Code invalid or expired.",
+      "resendPrompt": "Didn't receive the code?",
+      "resendButton": "Resend",
+      "resendSuccess": "A new code has been sent to your email.",
+      "resendError": "We couldn't resend the code. Check the email address."
+    },
+    "error": {
+      "title": "Sign-in failed",
+      "codePrefix": "code:",
+      "codeUnknown": "An unknown error occurred during sign-in. Please try again.",
+      "codes": {
+        "GOOGLE_EMAIL_NOT_VERIFIED": "Your Google address is not verified. Verify it on your Google account, then try again.",
+        "OAUTH_STATE_MISMATCH": "The sign-in was interrupted (security check). This can happen if the Google page was open too long — try again.",
+        "OAUTH_CODE_EXCHANGE_FAILED": "Google refused the sign-in. Try again in a moment.",
+        "OAUTH_PROVIDER_DISABLED": "Google sign-in is not enabled on this server. Please contact support.",
+        "OAUTH_GENERIC": "An unexpected error occurred during sign-in. Please try again."
+      },
+      "backToLogin": "Back to sign in",
+      "home": "Home"
+    }
+  },
   "dashboard": {
     "pageTitle": "Dashboard",
     "loading": "Loading…",

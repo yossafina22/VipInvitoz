@@ -2,6 +2,7 @@
 
 import { Suspense, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { NavBar } from '@/components/NavBar';
 import { api, ApiError, storeCsrfToken } from '@/lib/api';
@@ -15,6 +16,8 @@ function VerifyEmailForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { refresh } = useAuth();
+  const t = useTranslations('auth.verifyEmail');
+  const tCommon = useTranslations('auth.common');
   const email = params.get('email') ?? '';
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -35,9 +38,9 @@ function VerifyEmailForm() {
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message || 'Code invalide ou expiré.');
+        setError(err.message || t('defaultError'));
       } else {
-        setError('Erreur réseau. Réessayez.');
+        setError(tCommon('networkError'));
       }
       setLoading(false);
     }
@@ -48,9 +51,9 @@ function VerifyEmailForm() {
     setResendInfo(null);
     try {
       await api('/api/auth/resend-verification', { method: 'POST', body: { email } });
-      setResendInfo('Un nouveau code vous a été envoyé par email.');
+      setResendInfo(t('resendSuccess'));
     } catch {
-      setResendInfo("Nous n'avons pas pu renvoyer le code. Vérifiez l'adresse email.");
+      setResendInfo(t('resendError'));
     }
   };
 
@@ -61,16 +64,17 @@ function VerifyEmailForm() {
         <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 md:p-8">
           <div className="text-4xl text-center mb-4">📬</div>
           <h1 className="font-headings font-bold text-2xl md:text-3xl text-foreground text-center mb-2">
-            Vérifiez votre email
+            {t('title')}
           </h1>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            Nous avons envoyé un code à{' '}
-            <strong className="text-foreground break-all">{email || 'votre adresse'}</strong>.
-            Saisissez-le ci-dessous pour activer votre compte.
+            {t.rich('description', {
+              email: email || t('descriptionFallback'),
+              strong: (chunks) => <strong className="text-foreground break-all">{chunks}</strong>,
+            })}
           </p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label htmlFor="code" className="text-sm font-body font-medium text-foreground">
-              Code de vérification
+              {t('codeLabel')}
               <span className="text-primary ml-1" aria-hidden>
                 *
               </span>
@@ -81,7 +85,7 @@ function VerifyEmailForm() {
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 8))}
-              placeholder="XXXXXXXX"
+              placeholder={t('codePlaceholder')}
               maxLength={8}
               autoComplete="one-time-code"
               required
@@ -98,18 +102,18 @@ function VerifyEmailForm() {
               disabled={loading || code.length < 8}
               className="bg-primary text-primary-foreground text-center font-body font-bold py-3.5 rounded-xl text-base disabled:opacity-50"
             >
-              {loading ? 'Vérification…' : 'Vérifier mon email →'}
+              {loading ? t('submitLoading') : t('submit')}
             </button>
           </form>
           <div className="mt-6 pt-4 border-t border-border text-center">
             <p className="text-xs text-muted-foreground">
-              Vous n&apos;avez pas reçu le code ?{' '}
+              {t('resendPrompt')}{' '}
               <button
                 type="button"
                 onClick={handleResend}
                 className="text-primary font-body font-medium"
               >
-                Renvoyer
+                {t('resendButton')}
               </button>
             </p>
           </div>
