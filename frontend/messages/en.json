@@ -32,6 +32,59 @@
     "notificationsLabel": "Notifications",
     "logoutLabel": "Sign out"
   },
+  "dashboard": {
+    "pageTitle": "Dashboard",
+    "loading": "Loading…",
+    "welcome": "Hi {name} 👋",
+    "taglineUpcoming": "Your next ceremony is in {days, plural, one {# day} other {# days}}. All set!",
+    "taglineNone": "No upcoming ceremony. Create one to get started.",
+    "newCeremony": "New ceremony",
+    "upgradeBannerMessage": "Upgrade to VIP to unlock budget tracking and vendor coordination.",
+    "upgradeBannerCta": "See the VIP plan",
+    "stats": {
+      "activeCeremoniesLabel": "Active ceremonies",
+      "activeCeremoniesSub": "{total} total",
+      "confirmedGuestsLabel": "Confirmed guests",
+      "confirmedGuestsSubEmpty": "No guests yet",
+      "confirmedGuestsSub": "out of {total, plural, one {# guest} other {# guests}}",
+      "confirmedGuestsSubWithCompanions": "out of {total, plural, one {# guest} other {# guests}} (+{companions} companions)",
+      "pendingRsvpLabel": "Pending RSVPs",
+      "pendingRsvpSubEmpty": "Everyone has replied",
+      "pendingRsvpSub": "automatic reminder available",
+      "aiCreditsLabel": "AI credits left",
+      "aiCreditsSubUnlimited": "unlimited ({tier})",
+      "aiCreditsSub": "out of {initial} ({tier})"
+    },
+    "ceremoniesSection": {
+      "title": "My ceremonies",
+      "seeAll": "See all",
+      "emptyTitle": "No ceremony yet",
+      "emptyDesc": "Get started by creating your first ceremony.",
+      "emptyCta": "Create my ceremony",
+      "dateFallback": "—"
+    },
+    "rsvpSection": {
+      "title": "Global RSVP status",
+      "emptyMessage": "Add guests to see your RSVPs appear here.",
+      "companionsLabel": "Companions",
+      "companionsValue": "{count, plural, one {# person} other {# people}}"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "awaConfirmed": "Awa Camara confirmed (+2)",
+      "mamadouDeclined": "Mamadou Sy declined",
+      "qrGenerated": "12 QR codes generated",
+      "aiEdited": "Invitation edited by AI",
+      "fiveMinAgo": "5 min ago",
+      "oneHourAgo": "1h ago",
+      "yesterday": "yesterday"
+    },
+    "tiers": {
+      "FREEMIUM": "Freemium",
+      "PREMIUM": "Premium",
+      "VIP": "VIP"
+    }
+  },
   "footer": {
     "tagline": "The all-in-one platform for African families — from invitation to the big day.",
     "columns": {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Link } from '@/i18n/navigation';
 import { AppLayout } from '@/components/AppLayout';
@@ -54,35 +55,36 @@ const TYPE_MAP: Record<string, CeremonyCardType> = {
   AUTRE: 'coutumier',
 };
 
-const DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
+const LOCALE_TAG: Record<string, string> = { fr: 'fr-FR', en: 'en-US' };
 
 function daysBetween(target: Date): number {
   return Math.ceil((target.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
 }
 
-// TODO: wire RSVP + activity to real data once Invitation.rsvpStatus
-// aggregation endpoint ships. Left hardcoded on purpose for now.
 const ACTIVITY = [
-  {
-    icon: 'user-plus',
-    text: 'Awa Camara a confirmé (+2)',
-    time: 'il y a 5 min',
-    color: 'text-success',
-  },
-  { icon: 'user-x', text: 'Mamadou Sy a décliné', time: 'il y a 1h', color: 'text-danger' },
-  { icon: 'qr-code', text: '12 QR codes générés', time: 'hier', color: 'text-primary' },
-  { icon: 'sparkles', text: 'Invitation modifiée par IA', time: 'hier', color: 'text-gold' },
-];
+  { icon: 'user-plus', textKey: 'awaConfirmed', timeKey: 'fiveMinAgo', color: 'text-success' },
+  { icon: 'user-x', textKey: 'mamadouDeclined', timeKey: 'oneHourAgo', color: 'text-danger' },
+  { icon: 'qr-code', textKey: 'qrGenerated', timeKey: 'yesterday', color: 'text-primary' },
+  { icon: 'sparkles', textKey: 'aiEdited', timeKey: 'yesterday', color: 'text-gold' },
+] as const;
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('dashboard');
   const [ceremonies, setCeremonies] = useState<Ceremony[] | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+
+  const dateFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(LOCALE_TAG[locale] ?? 'fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+    [locale],
+  );
 
   useEffect(() => {
     if (!loading && !user) router.replace('/auth/login');
@@ -114,7 +116,7 @@ export default function DashboardPage() {
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Chargement…</p>
+        <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </div>
     );
   }
@@ -135,16 +137,16 @@ export default function DashboardPage() {
     .filter(({ daysLeft }) => daysLeft >= 0)
     .sort((a, b) => a.daysLeft - b.daysLeft)[0];
   const tagline = nextCeremony
-    ? `Votre prochaine cérémonie est dans ${nextCeremony.daysLeft} jour${nextCeremony.daysLeft > 1 ? 's' : ''}. Tout roule !`
-    : 'Aucune cérémonie à venir. Créez-en une pour commencer.';
+    ? t('taglineUpcoming', { days: nextCeremony.daysLeft })
+    : t('taglineNone');
 
   return (
-    <AppLayout pageTitle="Tableau de bord" tier="premium">
+    <AppLayout pageTitle={t('pageTitle')} tier="premium">
       <div className="mb-5">
         <AlertBanner
           type="upgrade"
-          message="Passez en VIP pour débloquer le suivi budget et la coordination prestataires."
-          cta="Voir le plan VIP"
+          message={t('upgradeBannerMessage')}
+          cta={t('upgradeBannerCta')}
           href="/#pricing"
         />
       </div>
@@ -152,7 +154,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="font-headings font-bold text-xl md:text-2xl text-foreground">
-            Bonjour, {capitalized} 👋
+            {t('welcome', { name: capitalized })}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{tagline}</p>
         </div>
@@ -161,46 +163,55 @@ export default function DashboardPage() {
           className="bg-primary text-primary-foreground font-body font-bold px-4 md:px-5 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <Icon name="plus" size={16} />
-          Nouvelle cérémonie
+          {t('newCeremony')}
         </Link>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
         <StatCard
-          label="Cérémonies actives"
+          label={t('stats.activeCeremoniesLabel')}
           value={ceremonies === null ? '…' : String(activeCeremonies.length)}
           icon="calendar-heart"
           color="primary"
-          sub={ceremonies === null ? 'Chargement…' : `${ceremonies.length} au total`}
+          sub={
+            ceremonies === null
+              ? t('loading')
+              : t('stats.activeCeremoniesSub', { total: ceremonies.length })
+          }
         />
         <StatCard
-          label="Invités confirmés"
+          label={t('stats.confirmedGuestsLabel')}
           value={stats === null ? '…' : String(stats.guestsConfirmed)}
           icon="user-check"
           color="success"
           sub={
             stats === null
-              ? 'Chargement…'
+              ? t('loading')
               : stats.guestsTotal === 0
-                ? 'Aucun invité encore'
-                : `sur ${stats.guestsTotal} invité${stats.guestsTotal > 1 ? 's' : ''}${stats.companions > 0 ? ` (+${stats.companions} accomp.)` : ''}`
+                ? t('stats.confirmedGuestsSubEmpty')
+                : stats.companions > 0
+                  ? t('stats.confirmedGuestsSubWithCompanions', {
+                      total: stats.guestsTotal,
+                      companions: stats.companions,
+                    })
+                  : t('stats.confirmedGuestsSub', { total: stats.guestsTotal })
           }
         />
         <StatCard
-          label="RSVP en attente"
+          label={t('stats.pendingRsvpLabel')}
           value={stats === null ? '…' : String(stats.guestsPending)}
           icon="clock"
           color="gold"
           sub={
             stats === null
-              ? 'Chargement…'
+              ? t('loading')
               : stats.guestsPending === 0
-                ? 'Tout le monde a répondu'
-                : 'relance automatique possible'
+                ? t('stats.pendingRsvpSubEmpty')
+                : t('stats.pendingRsvpSub')
           }
         />
         <StatCard
-          label="Crédits IA restants"
+          label={t('stats.aiCreditsLabel')}
           value={
             stats === null
               ? '…'
@@ -212,10 +223,13 @@ export default function DashboardPage() {
           color="muted"
           sub={
             stats === null
-              ? 'Chargement…'
+              ? t('loading')
               : stats.aiCredits.unlimited
-                ? `illimité (${stats.tier})`
-                : `sur ${stats.aiCredits.initial} (${stats.tier === 'FREEMIUM' ? 'Freemium' : stats.tier === 'PREMIUM' ? 'Premium' : 'VIP'})`
+                ? t('stats.aiCreditsSubUnlimited', { tier: t(`tiers.${stats.tier}`) })
+                : t('stats.aiCreditsSub', {
+                    initial: stats.aiCredits.initial,
+                    tier: t(`tiers.${stats.tier}`),
+                  })
           }
         />
       </div>
@@ -223,9 +237,11 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-headings font-bold text-lg text-foreground">Mes cérémonies</h3>
+            <h3 className="font-headings font-bold text-lg text-foreground">
+              {t('ceremoniesSection.title')}
+            </h3>
             <Link href="/ceremonies" className="text-sm text-primary font-medium">
-              Tout voir
+              {t('ceremoniesSection.seeAll')}
             </Link>
           </div>
           {ceremonies === null ? (
@@ -241,16 +257,16 @@ export default function DashboardPage() {
             <div className="bg-card border border-dashed border-border rounded-xl p-8 text-center">
               <div className="text-4xl mb-3 opacity-40">💍</div>
               <h4 className="font-headings font-bold text-base text-foreground mb-1">
-                Aucune cérémonie pour l&apos;instant
+                {t('ceremoniesSection.emptyTitle')}
               </h4>
               <p className="text-sm text-muted-foreground mb-4">
-                Commencez par créer votre première cérémonie.
+                {t('ceremoniesSection.emptyDesc')}
               </p>
               <Link
                 href="/ceremonies/new"
                 className="inline-block bg-primary text-primary-foreground font-body font-bold px-5 py-2.5 rounded-lg text-sm"
               >
-                Créer ma cérémonie
+                {t('ceremoniesSection.emptyCta')}
               </Link>
             </div>
           ) : (
@@ -263,8 +279,12 @@ export default function DashboardPage() {
                   id={c.id}
                   title={c.title}
                   type={TYPE_MAP[c.type] ?? 'coutumier'}
-                  date={occ ? DATE_FMT.format(new Date(occ.startsAt)) : '—'}
-                  location={occ?.locationName ?? '—'}
+                  date={
+                    occ
+                      ? dateFmt.format(new Date(occ.startsAt))
+                      : t('ceremoniesSection.dateFallback')
+                  }
+                  location={occ?.locationName ?? t('ceremoniesSection.dateFallback')}
                   guestsConfirmed={0}
                   guestsTotal={c._count?.guests ?? 0}
                   daysLeft={daysLeft}
@@ -278,14 +298,12 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4">
           <div className="bg-card border border-border rounded-xl p-5">
             <h3 className="font-headings font-bold text-base text-foreground mb-4">
-              Statut RSVP global
+              {t('rsvpSection.title')}
             </h3>
             {stats === null ? (
               <div className="h-10 bg-muted rounded animate-pulse" />
             ) : stats.guestsTotal === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Ajoutez des invités pour voir vos RSVP apparaître ici.
-              </p>
+              <p className="text-sm text-muted-foreground">{t('rsvpSection.emptyMessage')}</p>
             ) : (
               <RSVPStatusBar
                 confirmed={stats.guestsConfirmed}
@@ -295,18 +313,17 @@ export default function DashboardPage() {
               />
             )}
             <div className="mt-4 pt-4 border-t border-border">
-              <div className="text-xs text-muted-foreground mb-1">Accompagnants</div>
+              <div className="text-xs text-muted-foreground mb-1">
+                {t('rsvpSection.companionsLabel')}
+              </div>
               <div className="font-headings font-bold text-xl text-foreground">
-                +{stats?.companions ?? 0}{' '}
-                <span className="text-sm text-muted-foreground font-body">
-                  personne{(stats?.companions ?? 0) > 1 ? 's' : ''}
-                </span>
+                +{t('rsvpSection.companionsValue', { count: stats?.companions ?? 0 })}
               </div>
             </div>
           </div>
           <div className="bg-card border border-border rounded-xl p-5">
             <h3 className="font-headings font-bold text-base text-foreground mb-4">
-              Activité récente
+              {t('activity.title')}
             </h3>
             <ul className="flex flex-col gap-3">
               {ACTIVITY.map((a, i) => (
@@ -316,8 +333,10 @@ export default function DashboardPage() {
                   >
                     <Icon name={a.icon} size={11} />
                   </div>
-                  <div className="flex-1 text-xs text-foreground">{a.text}</div>
-                  <div className="text-xs text-muted-foreground whitespace-nowrap">{a.time}</div>
+                  <div className="flex-1 text-xs text-foreground">{t(`activity.${a.textKey}`)}</div>
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">
+                    {t(`activity.${a.timeKey}`)}
+                  </div>
                 </li>
               ))}
             </ul>

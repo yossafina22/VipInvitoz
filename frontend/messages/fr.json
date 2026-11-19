@@ -32,6 +32,59 @@
     "notificationsLabel": "Notifications",
     "logoutLabel": "Déconnexion"
   },
+  "dashboard": {
+    "pageTitle": "Tableau de bord",
+    "loading": "Chargement…",
+    "welcome": "Bonjour, {name} 👋",
+    "taglineUpcoming": "Votre prochaine cérémonie est dans {days, plural, one {# jour} other {# jours}}. Tout roule !",
+    "taglineNone": "Aucune cérémonie à venir. Créez-en une pour commencer.",
+    "newCeremony": "Nouvelle cérémonie",
+    "upgradeBannerMessage": "Passez en VIP pour débloquer le suivi budget et la coordination prestataires.",
+    "upgradeBannerCta": "Voir le plan VIP",
+    "stats": {
+      "activeCeremoniesLabel": "Cérémonies actives",
+      "activeCeremoniesSub": "{total} au total",
+      "confirmedGuestsLabel": "Invités confirmés",
+      "confirmedGuestsSubEmpty": "Aucun invité encore",
+      "confirmedGuestsSub": "sur {total, plural, one {# invité} other {# invités}}",
+      "confirmedGuestsSubWithCompanions": "sur {total, plural, one {# invité} other {# invités}} (+{companions} accomp.)",
+      "pendingRsvpLabel": "RSVP en attente",
+      "pendingRsvpSubEmpty": "Tout le monde a répondu",
+      "pendingRsvpSub": "relance automatique possible",
+      "aiCreditsLabel": "Crédits IA restants",
+      "aiCreditsSubUnlimited": "illimité ({tier})",
+      "aiCreditsSub": "sur {initial} ({tier})"
+    },
+    "ceremoniesSection": {
+      "title": "Mes cérémonies",
+      "seeAll": "Tout voir",
+      "emptyTitle": "Aucune cérémonie pour l'instant",
+      "emptyDesc": "Commencez par créer votre première cérémonie.",
+      "emptyCta": "Créer ma cérémonie",
+      "dateFallback": "—"
+    },
+    "rsvpSection": {
+      "title": "Statut RSVP global",
+      "emptyMessage": "Ajoutez des invités pour voir vos RSVP apparaître ici.",
+      "companionsLabel": "Accompagnants",
+      "companionsValue": "{count, plural, one {# personne} other {# personnes}}"
+    },
+    "activity": {
+      "title": "Activité récente",
+      "awaConfirmed": "Awa Camara a confirmé (+2)",
+      "mamadouDeclined": "Mamadou Sy a décliné",
+      "qrGenerated": "12 QR codes générés",
+      "aiEdited": "Invitation modifiée par IA",
+      "fiveMinAgo": "il y a 5 min",
+      "oneHourAgo": "il y a 1h",
+      "yesterday": "hier"
+    },
+    "tiers": {
+      "FREEMIUM": "Freemium",
+      "PREMIUM": "Premium",
+      "VIP": "VIP"
+    }
+  },
   "footer": {
     "tagline": "La plateforme tout-en-un pour les familles africaines — de l'invitation au jour J.",
     "columns": {
