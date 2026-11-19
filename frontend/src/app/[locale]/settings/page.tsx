@@ -17,17 +17,33 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api';
 import { useAuth, useUser } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 
+const KNOWN_PASSWORD_ERRORS = [
+  'INVALID_CREDENTIALS',
+  'PASSWORD_BANNED',
+  'PASSWORD_TOO_SHORT',
+  'PASSWORD_PWNED',
+  'PASSWORD_ALREADY_SET',
+  'VALIDATION_FAILED',
+] as const;
+
+type KnownPasswordError = (typeof KNOWN_PASSWORD_ERRORS)[number];
+
+function isKnownPasswordError(code: string): code is KnownPasswordError {
+  return (KNOWN_PASSWORD_ERRORS as readonly string[]).includes(code);
+}
+
 export default function SettingsPage() {
   const user = useUser();
   const { refresh } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations('settings');
 
-  // Password form state — fields used by either branch.
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,7 +53,7 @@ export default function SettingsPage() {
   if (!user) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-2 px-4">
-        <p className="text-sm text-gray-600">Chargement…</p>
+        <p className="text-sm text-gray-600">{t('loading')}</p>
       </main>
     );
   }
@@ -50,11 +66,11 @@ export default function SettingsPage() {
     setError(null);
 
     if (newPassword.length === 0) {
-      setError('Saisis un nouveau mot de passe.');
+      setError(t('password.emptyError'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('La confirmation ne correspond pas au nouveau mot de passe.');
+      setError(t('password.mismatchError'));
       return;
     }
 
@@ -65,13 +81,13 @@ export default function SettingsPage() {
           method: 'PUT',
           body: { currentPassword, newPassword },
         });
-        toast('Mot de passe mis à jour.', 'success');
+        toast(t('password.successChange'), 'success');
       } else {
         await api('/api/auth/set-password', {
           method: 'POST',
           body: { newPassword },
         });
-        toast('Mot de passe défini. Tu peux maintenant te connecter par email.', 'success');
+        toast(t('password.successSet'), 'success');
       }
       setCurrentPassword('');
       setNewPassword('');
@@ -79,18 +95,18 @@ export default function SettingsPage() {
       await refresh();
     } catch (err) {
       if (err instanceof ApiError) {
-        const map: Record<string, string> = {
-          INVALID_CREDENTIALS: 'Mot de passe actuel incorrect.',
-          PASSWORD_BANNED: 'Ce mot de passe est trop courant.',
-          PASSWORD_TOO_SHORT: err.message || 'Mot de passe trop court.',
-          PASSWORD_PWNED: 'Ce mot de passe a fuité — choisis-en un autre.',
-          PASSWORD_ALREADY_SET:
-            'Un mot de passe est déjà défini. Utilise « changer le mot de passe ».',
-          VALIDATION_FAILED: 'Champs invalides.',
-        };
-        setError(map[err.code] ?? err.message);
+        if (err.code === 'PASSWORD_TOO_SHORT' && err.message) {
+          // Server sometimes sends a dynamic min-length message — prefer it
+          // over the generic translated fallback so the user sees the exact
+          // threshold.
+          setError(err.message);
+        } else if (isKnownPasswordError(err.code)) {
+          setError(t(`password.errors.${err.code}`));
+        } else {
+          setError(err.message);
+        }
       } else {
-        setError('Erreur réseau. Réessaie.');
+        setError(t('password.networkError'));
       }
     } finally {
       setSubmitting(false);
@@ -100,24 +116,22 @@ export default function SettingsPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-8 px-4 py-12">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">Paramètres</h1>
-        <p className="text-sm text-gray-600">Connecté en tant que {user.email}</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-sm text-gray-600">{t('connectedAs', { email: user.email })}</p>
       </header>
 
       {/* ── Password section ─────────────────────────────────────────── */}
       <section className="flex flex-col gap-3 rounded-lg border border-gray-200 p-5">
         <h2 className="text-lg font-semibold">
-          {hasPassword ? 'Changer le mot de passe' : 'Définir un mot de passe'}
+          {hasPassword ? t('password.changeTitle') : t('password.setTitle')}
         </h2>
         <p className="text-sm text-gray-600">
-          {hasPassword
-            ? 'Tu peux modifier ton mot de passe ici. Les autres sessions seront déconnectées.'
-            : 'Tu t’es connecté via Google. Définis un mot de passe pour pouvoir aussi te connecter par email.'}
+          {hasPassword ? t('password.changeDesc') : t('password.setDesc')}
         </p>
         <form onSubmit={onSubmitPassword} className="mt-2 flex flex-col gap-4">
           {hasPassword && (
             <label className="flex flex-col gap-1 text-sm">
-              Mot de passe actuel
+              {t('password.currentLabel')}
               <input
                 type="password"
                 required
@@ -129,7 +143,7 @@ export default function SettingsPage() {
             </label>
           )}
           <label className="flex flex-col gap-1 text-sm">
-            Nouveau mot de passe
+            {t('password.newLabel')}
             <input
               type="password"
               required
@@ -140,7 +154,7 @@ export default function SettingsPage() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            Confirmer le nouveau mot de passe
+            {t('password.confirmLabel')}
             <input
               type="password"
               required
@@ -161,43 +175,41 @@ export default function SettingsPage() {
             className="rounded-md bg-black px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
           >
             {submitting
-              ? 'Enregistrement…'
+              ? t('password.submitting')
               : hasPassword
-                ? 'Changer le mot de passe'
-                : 'Définir le mot de passe'}
+                ? t('password.changeBtn')
+                : t('password.setBtn')}
           </button>
         </form>
       </section>
 
       {/* ── Linked providers section ────────────────────────────────── */}
       <section className="flex flex-col gap-3 rounded-lg border border-gray-200 p-5">
-        <h2 className="text-lg font-semibold">Comptes liés</h2>
+        <h2 className="text-lg font-semibold">{t('linked.title')}</h2>
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col">
-            <span className="text-sm font-medium">Google</span>
+            <span className="text-sm font-medium">{t('linked.googleLabel')}</span>
             <span className="text-xs text-gray-500">
-              {googleLinked
-                ? 'Tu peux te connecter via Google.'
-                : 'Lie ton compte Google pour te connecter en un clic.'}
+              {googleLinked ? t('linked.googleLinkedDesc') : t('linked.googleNotLinkedDesc')}
             </span>
           </div>
           {googleLinked ? (
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-              Lié
+              {t('linked.linkedPill')}
             </span>
           ) : (
             <a
               href="/api/auth/oauth/google/start?next=/settings"
               className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
             >
-              Lier Google
+              {t('linked.linkGoogleBtn')}
             </a>
           )}
         </div>
       </section>
 
       <Link href="/dashboard" className="text-center text-sm text-gray-600 underline">
-        Retour au dashboard
+        {t('backToDashboard')}
       </Link>
     </main>
   );

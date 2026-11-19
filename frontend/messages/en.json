@@ -32,6 +32,45 @@
     "notificationsLabel": "Notifications",
     "logoutLabel": "Sign out"
   },
+  "settings": {
+    "loading": "Loading…",
+    "title": "Settings",
+    "connectedAs": "Signed in as {email}",
+    "password": {
+      "changeTitle": "Change password",
+      "setTitle": "Set a password",
+      "changeDesc": "You can change your password here. Other sessions will be signed out.",
+      "setDesc": "You signed in with Google. Set a password to also sign in with email.",
+      "currentLabel": "Current password",
+      "newLabel": "New password",
+      "confirmLabel": "Confirm new password",
+      "submitting": "Saving…",
+      "changeBtn": "Change password",
+      "setBtn": "Set password",
+      "emptyError": "Enter a new password.",
+      "mismatchError": "Confirmation does not match the new password.",
+      "networkError": "Network error. Please try again.",
+      "successChange": "Password updated.",
+      "successSet": "Password set. You can now sign in with email too.",
+      "errors": {
+        "INVALID_CREDENTIALS": "Current password is incorrect.",
+        "PASSWORD_BANNED": "This password is too common.",
+        "PASSWORD_TOO_SHORT": "Password too short.",
+        "PASSWORD_PWNED": "This password has leaked — pick another one.",
+        "PASSWORD_ALREADY_SET": "A password is already set. Use \"change password\".",
+        "VALIDATION_FAILED": "Invalid fields."
+      }
+    },
+    "linked": {
+      "title": "Linked accounts",
+      "googleLabel": "Google",
+      "googleLinkedDesc": "You can sign in with Google.",
+      "googleNotLinkedDesc": "Link your Google account to sign in with one click.",
+      "linkedPill": "Linked",
+      "linkGoogleBtn": "Link Google"
+    },
+    "backToDashboard": "Back to dashboard"
+  },
   "invitation": {
     "loading": "Loading your invitation…",
     "notFoundTitle": "Invitation not found",

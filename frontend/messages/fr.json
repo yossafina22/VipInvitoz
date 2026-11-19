@@ -32,6 +32,45 @@
     "notificationsLabel": "Notifications",
     "logoutLabel": "Déconnexion"
   },
+  "settings": {
+    "loading": "Chargement…",
+    "title": "Paramètres",
+    "connectedAs": "Connecté en tant que {email}",
+    "password": {
+      "changeTitle": "Changer le mot de passe",
+      "setTitle": "Définir un mot de passe",
+      "changeDesc": "Tu peux modifier ton mot de passe ici. Les autres sessions seront déconnectées.",
+      "setDesc": "Tu t'es connecté via Google. Définis un mot de passe pour pouvoir aussi te connecter par email.",
+      "currentLabel": "Mot de passe actuel",
+      "newLabel": "Nouveau mot de passe",
+      "confirmLabel": "Confirmer le nouveau mot de passe",
+      "submitting": "Enregistrement…",
+      "changeBtn": "Changer le mot de passe",
+      "setBtn": "Définir le mot de passe",
+      "emptyError": "Saisis un nouveau mot de passe.",
+      "mismatchError": "La confirmation ne correspond pas au nouveau mot de passe.",
+      "networkError": "Erreur réseau. Réessaie.",
+      "successChange": "Mot de passe mis à jour.",
+      "successSet": "Mot de passe défini. Tu peux maintenant te connecter par email.",
+      "errors": {
+        "INVALID_CREDENTIALS": "Mot de passe actuel incorrect.",
+        "PASSWORD_BANNED": "Ce mot de passe est trop courant.",
+        "PASSWORD_TOO_SHORT": "Mot de passe trop court.",
+        "PASSWORD_PWNED": "Ce mot de passe a fuité — choisis-en un autre.",
+        "PASSWORD_ALREADY_SET": "Un mot de passe est déjà défini. Utilise « changer le mot de passe ».",
+        "VALIDATION_FAILED": "Champs invalides."
+      }
+    },
+    "linked": {
+      "title": "Comptes liés",
+      "googleLabel": "Google",
+      "googleLinkedDesc": "Tu peux te connecter via Google.",
+      "googleNotLinkedDesc": "Lie ton compte Google pour te connecter en un clic.",
+      "linkedPill": "Lié",
+      "linkGoogleBtn": "Lier Google"
+    },
+    "backToDashboard": "Retour au dashboard"
+  },
   "invitation": {
     "loading": "Chargement de votre invitation…",
     "notFoundTitle": "Invitation introuvable",
