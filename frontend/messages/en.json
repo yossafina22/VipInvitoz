@@ -716,7 +716,7 @@
       "newLabelPrompt": "Category name",
       "plannedPrompt": "Planned amount for “{label}”",
       "confirmDelete": "Delete the category “{label}”?",
-      "notEmpty": "This category still has expenses. Move or delete them first."
+      "notEmpty": "This category still has expenses. Move or delete them first (for a vendor: Vendors → Edit → Budget category)."
     },
     "expenses": {
       "title": "Expenses",
@@ -824,6 +824,8 @@
       "imageUploading": "Uploading…",
       "imageRemove": "Remove photo",
       "budgetNote": "This amount is added to the budget automatically.",
+      "category": "Budget category",
+      "categoryAuto": "Automatic (by vendor type)",
       "cancel": "Cancel",
       "save": "Save",
       "saving": "Saving…"

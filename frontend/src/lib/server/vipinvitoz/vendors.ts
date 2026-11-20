@@ -38,13 +38,19 @@ function expenseStatus(paid: boolean): 'PAID' | 'PENDING' {
   return paid ? 'PAID' : 'PENDING';
 }
 
+// Matches any of `labels` (the default label in every locale, so a budget
+// seeded in French is found from the English UI); creates it under labels[0].
 export async function findOrCreateBudgetCategory(
   tx: Tx,
   ceremonyId: string,
-  label: string,
+  labels: readonly [string, ...string[]],
 ): Promise<string> {
   const existing = await tx.budgetCategory.findFirst({
-    where: { ceremonyId, label: { equals: label, mode: 'insensitive' } },
+    where: {
+      ceremonyId,
+      OR: labels.map((label) => ({ label: { equals: label, mode: 'insensitive' as const } })),
+    },
+    orderBy: { order: 'asc' },
     select: { id: true },
   });
   if (existing) return existing.id;
@@ -53,10 +59,20 @@ export async function findOrCreateBudgetCategory(
     _max: { order: true },
   });
   const created = await tx.budgetCategory.create({
-    data: { ceremonyId, label, order: (last._max.order ?? -1) + 1 },
+    data: { ceremonyId, label: labels[0], order: (last._max.order ?? -1) + 1 },
     select: { id: true },
   });
   return created.id;
+}
+
+function defaultCategoryLabels(
+  locale: BudgetLocale,
+  index: number,
+): readonly [string, ...string[]] {
+  const other: BudgetLocale = locale === 'fr' ? 'en' : 'fr';
+  const own = DEFAULT_CATEGORY_LABELS[locale][index] ?? 'Divers';
+  const alt = DEFAULT_CATEGORY_LABELS[other][index];
+  return alt ? [own, alt] : [own];
 }
 
 export interface CreateVendorInput {
@@ -68,6 +84,8 @@ export interface CreateVendorInput {
   phone: string | null;
   amount: number;
   paid: boolean;
+  /** A category of this ceremony the caller already checked; omitted → preset default. */
+  categoryId?: string | null;
 }
 
 export async function createVendor(
@@ -82,10 +100,15 @@ export async function createVendor(
     input.presetKey && isVendorPresetKey(input.presetKey)
       ? VENDOR_PRESETS[input.presetKey].budgetCategoryIndex
       : CUSTOM_VENDOR_CATEGORY_INDEX;
-  const categoryLabel = DEFAULT_CATEGORY_LABELS[input.locale][index] ?? 'Divers';
 
   return prisma.$transaction(async (tx) => {
-    const categoryId = await findOrCreateBudgetCategory(tx, input.ceremonyId, categoryLabel);
+    const categoryId =
+      input.categoryId ??
+      (await findOrCreateBudgetCategory(
+        tx,
+        input.ceremonyId,
+        defaultCategoryLabels(input.locale, index),
+      ));
     const amount = new Prisma.Decimal(input.amount);
     const vendor = await tx.vendor.create({
       data: {
@@ -119,6 +142,8 @@ export interface UpdateVendorInput {
   phone?: string | null;
   amount?: number;
   paid?: boolean;
+  /** A category of the vendor's ceremony the caller already checked. */
+  categoryId?: string;
 }
 
 export async function updateVendor(
@@ -143,10 +168,25 @@ export async function updateVendor(
         label: vendor.name,
         unitAmount: vendor.amount,
         status: expenseStatus(vendor.paid),
+        ...(patch.categoryId !== undefined ? { categoryId: patch.categoryId } : {}),
       },
     });
     return vendor;
   });
+}
+
+// The caller owns the vendor/ceremony; this keeps a category id from
+// another ceremony (even one the caller owns) out of its budget.
+export async function categoryInCeremony(
+  prisma: PrismaClient,
+  categoryId: string,
+  ceremonyId: string,
+): Promise<boolean> {
+  const found = await prisma.budgetCategory.findFirst({
+    where: { id: categoryId, ceremonyId },
+    select: { id: true },
+  });
+  return found !== null;
 }
 
 export function findOwnedVendor(
@@ -157,7 +197,7 @@ export function findOwnedVendor(
   return prisma.vendor.findFirst({ where: { id: vendorId, ceremony: { userId } } });
 }
 
-export function serializeVendor(v: Vendor) {
+export function serializeVendor(v: Vendor & { expense?: { categoryId: string } | null }) {
   return {
     id: v.id,
     presetKey: v.presetKey,
@@ -166,5 +206,6 @@ export function serializeVendor(v: Vendor) {
     phone: v.phone,
     amount: v.amount.toFixed(2),
     paid: v.paid,
+    categoryId: v.expense?.categoryId ?? null,
   };
 }

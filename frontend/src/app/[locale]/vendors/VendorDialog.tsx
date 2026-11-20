@@ -15,6 +15,13 @@ export interface VendorDto {
   phone: string | null;
   amount: string;
   paid: boolean;
+  /** Budget category of the mirrored expense. */
+  categoryId: string | null;
+}
+
+export interface CategoryOption {
+  id: string;
+  label: string;
 }
 
 export interface VendorPayload {
@@ -23,11 +30,14 @@ export interface VendorPayload {
   paid: boolean;
   phone: string | null;
   imageUrl: string | null;
+  /** null → the preset's default category (create only). */
+  categoryId: string | null;
 }
 
 interface VendorDialogProps {
   initial: VendorDto | null;
   defaultName: string;
+  categories: CategoryOption[];
   error: string | null;
   onClose: () => void;
   onSave: (payload: VendorPayload) => Promise<void>;
@@ -37,7 +47,14 @@ const INPUT =
   'w-full bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary';
 const LABEL = 'text-xs text-muted-foreground';
 
-export function VendorDialog({ initial, defaultName, error, onClose, onSave }: VendorDialogProps) {
+export function VendorDialog({
+  initial,
+  defaultName,
+  categories,
+  error,
+  onClose,
+  onSave,
+}: VendorDialogProps) {
   const t = useTranslations('vendors.dialog');
   const tErr = useTranslations('vendors.errors');
   const [name, setName] = useState(initial?.name ?? defaultName);
@@ -45,6 +62,7 @@ export function VendorDialog({ initial, defaultName, error, onClose, onSave }: V
   const [paid, setPaid] = useState(initial?.paid ?? false);
   const [phone, setPhone] = useState(initial?.phone ?? '');
   const [imageUrl, setImageUrl] = useState<string | null>(initial?.imageUrl ?? null);
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -71,7 +89,14 @@ export function VendorDialog({ initial, defaultName, error, onClose, onSave }: V
   async function handleSave() {
     if (!valid || saving || uploading) return;
     setSaving(true);
-    await onSave({ name: name.trim(), amount: amountNum, paid, phone: phoneNormalized, imageUrl });
+    await onSave({
+      name: name.trim(),
+      amount: amountNum,
+      paid,
+      phone: phoneNormalized,
+      imageUrl,
+      categoryId: categoryId || null,
+    });
     setSaving(false);
   }
 
@@ -123,6 +148,22 @@ export function VendorDialog({ initial, defaultName, error, onClose, onSave }: V
           </label>
         </div>
         <p className="text-xs text-muted-foreground -mt-1">{t('budgetNote')}</p>
+
+        <label className="flex flex-col gap-1.5">
+          <span className={LABEL}>{t('category')}</span>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className={INPUT}
+          >
+            {!initial?.categoryId && <option value="">{t('categoryAuto')}</option>}
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <label className="flex flex-col gap-1.5">
           <span className={LABEL}>{t('phone')}</span>

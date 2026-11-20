@@ -1,7 +1,8 @@
 // VIP vendors — update / delete.
 //
-// PATCH  /api/vendors/[id] — any of { name, imageUrl, phone, amount, paid };
-//        the linked budget expense is updated in the same transaction.
+// PATCH  /api/vendors/[id] — any of { name, imageUrl, phone, amount, paid, categoryId };
+//        the linked budget expense is updated in the same transaction. categoryId
+//        moves that expense and must belong to the vendor's ceremony (else 404).
 // DELETE /api/vendors/[id] → { ok: true }; the linked expense cascades.
 // CSRF + auth + VIP. Vendor not owned by the caller → 404.
 
@@ -13,10 +14,11 @@ import { z } from 'zod';
 import { makeRequestContext, withRequestContext } from '@/lib/server/observability/request-context';
 import { prisma } from '@/lib/server/prisma';
 import { MoneySchema } from '@/lib/server/vipinvitoz/budget';
-import { guardBudgetMutation, parseBody } from '@/lib/server/vipinvitoz/budget-http';
+import { guardBudgetMutation, notFound, parseBody } from '@/lib/server/vipinvitoz/budget-http';
 import {
   ImageUrlSchema,
   PhoneSchema,
+  categoryInCeremony,
   findOwnedVendor,
   serializeVendor,
   updateVendor,
@@ -29,6 +31,7 @@ const Body = z
     phone: PhoneSchema.nullable().optional(),
     amount: MoneySchema.optional(),
     paid: z.boolean().optional(),
+    categoryId: z.string().min(1).max(64).optional(),
   })
   .refine((b) => Object.keys(b).length > 0, { message: 'EMPTY_PATCH' });
 
@@ -50,6 +53,12 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
     const owned = await findOwnedVendor(prisma, guard.userId, id);
     if (!owned) return vendorNotFound();
+    if (
+      body.categoryId !== undefined &&
+      !(await categoryInCeremony(prisma, body.categoryId, owned.ceremonyId))
+    ) {
+      return notFound('CATEGORY_NOT_FOUND');
+    }
 
     const patch: Parameters<typeof updateVendor>[2] = {};
     if (body.name !== undefined) patch.name = body.name;
@@ -57,6 +66,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     if (body.phone !== undefined) patch.phone = body.phone;
     if (body.amount !== undefined) patch.amount = body.amount;
     if (body.paid !== undefined) patch.paid = body.paid;
+    if (body.categoryId !== undefined) patch.categoryId = body.categoryId;
 
     const vendor = await updateVendor(prisma, owned.id, patch);
     return NextResponse.json({ vendor: serializeVendor(vendor) });

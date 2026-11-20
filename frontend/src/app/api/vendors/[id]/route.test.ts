@@ -68,6 +68,28 @@ describe('PATCH /api/vendors/[id]', () => {
     );
     expect((await PATCH(jsonRequest(URL, 'PATCH', { paid: true }), params('v1'))).status).toBe(403);
   });
+
+  it("returns 404 when the new category is not in the vendor's ceremony", async () => {
+    prismaMock.vendor.findFirst.mockResolvedValue(owned as never);
+    prismaMock.budgetCategory.findFirst.mockResolvedValue(null);
+    const res = await PATCH(jsonRequest(URL, 'PATCH', { categoryId: 'foreign' }), params('v1'));
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toBe('CATEGORY_NOT_FOUND');
+    expect(prismaMock.budgetCategory.findFirst).toHaveBeenCalledWith({
+      where: { id: 'foreign', ceremonyId: 'cer1' },
+      select: { id: true },
+    });
+    expect(updateVendor).not.toHaveBeenCalled();
+  });
+
+  it('moves the vendor to another budget category', async () => {
+    prismaMock.vendor.findFirst.mockResolvedValue(owned as never);
+    prismaMock.budgetCategory.findFirst.mockResolvedValue({ id: 'cat-dj' } as never);
+    vi.mocked(updateVendor).mockResolvedValue(owned as never);
+    const res = await PATCH(jsonRequest(URL, 'PATCH', { categoryId: 'cat-dj' }), params('v1'));
+    expect(res.status).toBe(200);
+    expect(vi.mocked(updateVendor).mock.calls[0]?.[2]).toEqual({ categoryId: 'cat-dj' });
+  });
 });
 
 describe('DELETE /api/vendors/[id]', () => {

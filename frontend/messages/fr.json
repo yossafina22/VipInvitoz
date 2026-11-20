@@ -716,7 +716,7 @@
       "newLabelPrompt": "Nom du poste",
       "plannedPrompt": "Montant prévu pour « {label} »",
       "confirmDelete": "Supprimer le poste « {label} » ?",
-      "notEmpty": "Ce poste contient encore des dépenses. Déplacez-les ou supprimez-les d’abord."
+      "notEmpty": "Ce poste contient encore des dépenses. Déplacez-les ou supprimez-les d’abord (pour un prestataire : Prestataires → Modifier → Poste du budget)."
     },
     "expenses": {
       "title": "Dépenses",
@@ -824,6 +824,8 @@
       "imageUploading": "Envoi…",
       "imageRemove": "Retirer la photo",
       "budgetNote": "Ce montant est ajouté automatiquement au budget.",
+      "category": "Poste du budget",
+      "categoryAuto": "Automatique (selon le type)",
       "cancel": "Annuler",
       "save": "Enregistrer",
       "saving": "Enregistrement…"

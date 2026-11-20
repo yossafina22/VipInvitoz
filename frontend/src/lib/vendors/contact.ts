@@ -1,12 +1,15 @@
 // Vendor contact helpers shared by server (validation) and client (links).
 
-// E.164: '+' then 8–15 digits, first digit non-zero. An international prefix
-// is required — wa.me cannot guess the country of a local number.
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+
+// Returns E.164 or null. An international prefix is required — wa.me cannot
+// guess the country of a local number. libphonenumber applies each country's
+// trunk-zero rule ("+33 06…" → +336…, while +225 07… keeps its 0).
 export function normalizePhone(raw: string): string | null {
-  let s = raw.trim().replace(/\(0\)/g, '');
-  s = s.replace(/[\s.()-]/g, '');
-  if (s.startsWith('00')) s = `+${s.slice(2)}`;
-  return /^\+[1-9]\d{7,14}$/.test(s) ? s : null;
+  const s = raw.trim().replace(/^00/, '+');
+  if (!s.startsWith('+')) return null;
+  const parsed = parsePhoneNumberFromString(s);
+  return parsed?.isValid() ? parsed.number : null;
 }
 
 export function whatsappUrl(e164: string): string {

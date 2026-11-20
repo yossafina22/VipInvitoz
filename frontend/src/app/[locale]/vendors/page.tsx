@@ -7,7 +7,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { PageHeader } from '@/components/PageHeader';
 import { Icon } from '@/components/Icon';
 import { api, ApiError } from '@/lib/api';
-import { toVCard, whatsappUrl } from '@/lib/vendors/contact';
+import { whatsappUrl } from '@/lib/vendors/contact';
 import {
   VENDOR_PRESETS,
   VENDOR_PRESET_KEYS,
@@ -15,7 +15,13 @@ import {
   type VendorPresetKey,
 } from '@/lib/vendors/presets';
 import { LOCALE_TAG, budgetQuery } from '../budget/budget-types';
-import { VendorDialog, type VendorDto, type VendorPayload } from './VendorDialog';
+import {
+  VendorDialog,
+  type CategoryOption,
+  type VendorDto,
+  type VendorPayload,
+} from './VendorDialog';
+import { prepareVCardUrl } from './vendor-links';
 
 type Status = 'loading' | 'ready' | 'vip-required' | 'error';
 type DialogState =
@@ -26,6 +32,7 @@ type DialogState =
 interface VendorsResponse {
   ceremonyId: string | null;
   vendors: VendorDto[];
+  categories: CategoryOption[];
   total: string;
   paidTotal: string;
 }
@@ -33,21 +40,6 @@ interface VendorsResponse {
 interface CeremonyOption {
   id: string;
   title: string;
-}
-
-function downloadVCard(vendor: VendorDto, note: string) {
-  if (!vendor.phone) return;
-  const blob = new Blob([toVCard({ name: vendor.name, phone: vendor.phone, note })], {
-    type: 'text/vcard;charset=utf-8',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${vendor.name.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || 'contact'}.vcf`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function VendorAvatar({ vendor }: { vendor: VendorDto }) {
@@ -136,7 +128,11 @@ export default function VendorsPage() {
     setDialogError(null);
     try {
       if (dialog.mode === 'edit') {
-        await api(`/api/vendors/${dialog.vendor.id}`, { method: 'PATCH', body: payload });
+        const { categoryId, ...rest } = payload;
+        await api(`/api/vendors/${dialog.vendor.id}`, {
+          method: 'PATCH',
+          body: categoryId ? { ...rest, categoryId } : rest,
+        });
       } else {
         await api(`/api/vendors?locale=${locale}`, {
           method: 'POST',
@@ -147,6 +143,16 @@ export default function VendorsPage() {
       await load();
     } catch (err) {
       setDialogError(errorMessage(err));
+    }
+  }
+
+  async function openContactCard(vendor: VendorDto) {
+    if (!data?.ceremonyId) return;
+    try {
+      const url = await prepareVCardUrl((path) => api(path), locale, data.ceremonyId, vendor.id);
+      window.location.assign(url);
+    } catch (err) {
+      showToast(errorMessage(err));
     }
   }
 
@@ -414,7 +420,7 @@ export default function VendorsPage() {
                       </a>
                       <button
                         type="button"
-                        onClick={() => downloadVCard(v, presetLabel(v.presetKey) ?? '')}
+                        onClick={() => void openContactCard(v)}
                         className="flex items-center gap-1.5 bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1.5 rounded-md"
                       >
                         <Icon name="contact" size={12} />
@@ -438,6 +444,7 @@ export default function VendorsPage() {
         <VendorDialog
           initial={dialog.mode === 'edit' ? dialog.vendor : null}
           defaultName={dialog.mode === 'create' ? (presetLabel(dialog.presetKey) ?? '') : ''}
+          categories={data?.categories ?? []}
           error={dialogError}
           onClose={() => setDialog(null)}
           onSave={saveVendor}

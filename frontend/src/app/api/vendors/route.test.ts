@@ -57,9 +57,17 @@ describe('GET /api/vendors', () => {
 
   it('lists vendors with amounts as strings and the total', async () => {
     prismaMock.ceremony.findFirst.mockResolvedValue({ id: 'cer1' } as never);
+    prismaMock.ceremony.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.budgetCategory.findMany.mockResolvedValue([]);
     prismaMock.vendor.findMany.mockResolvedValue([
-      vendorRow,
-      { ...vendorRow, id: 'v2', amount: new Prisma.Decimal('150000.50'), paid: true },
+      { ...vendorRow, expense: { categoryId: 'cat-1' } },
+      {
+        ...vendorRow,
+        id: 'v2',
+        amount: new Prisma.Decimal('150000.50'),
+        paid: true,
+        expense: null,
+      },
     ] as never);
     const body = await (await GET(new NextRequest(URL))).json();
     expect(body.ceremonyId).toBe('cer1');
@@ -67,9 +75,25 @@ describe('GET /api/vendors', () => {
       id: 'v1',
       amount: '820000.00',
       phone: '+221771234567',
+      categoryId: 'cat-1',
     });
+    expect(body.vendors[1].categoryId).toBeNull();
     expect(body.total).toBe('970000.50');
     expect(body.paidTotal).toBe('150000.50');
+  });
+
+  it('returns the budget categories for the category picker', async () => {
+    prismaMock.ceremony.findFirst.mockResolvedValue({ id: 'cer1' } as never);
+    prismaMock.ceremony.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.vendor.findMany.mockResolvedValue([]);
+    prismaMock.budgetCategory.findMany.mockResolvedValue([
+      { id: 'cat-1', label: 'Traiteur' },
+    ] as never);
+    const body = await (await GET(new NextRequest(`${URL}?locale=fr`))).json();
+    expect(body.categories).toEqual([{ id: 'cat-1', label: 'Traiteur' }]);
+    expect(prismaMock.budgetCategory.findMany.mock.calls[0]?.[0]).toMatchObject({
+      where: { ceremonyId: 'cer1' },
+    });
   });
 });
 
@@ -120,5 +144,27 @@ describe('POST /api/vendors', () => {
       NextResponse.json({ error: 'TIER_REQUIRED', requiredTier: 'VIP' }, { status: 403 }),
     );
     expect((await POST(jsonRequest(URL, 'POST', valid))).status).toBe(403);
+  });
+
+  it('returns 404 when the picked category belongs to another ceremony', async () => {
+    prismaMock.ceremony.findFirst.mockResolvedValue({ id: 'cer1' } as never);
+    prismaMock.budgetCategory.findFirst.mockResolvedValue(null);
+    const res = await POST(jsonRequest(URL, 'POST', { ...valid, categoryId: 'foreign' }));
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toBe('CATEGORY_NOT_FOUND');
+    expect(prismaMock.budgetCategory.findFirst).toHaveBeenCalledWith({
+      where: { id: 'foreign', ceremonyId: 'cer1' },
+      select: { id: true },
+    });
+    expect(createVendor).not.toHaveBeenCalled();
+  });
+
+  it('passes the picked category to createVendor', async () => {
+    prismaMock.ceremony.findFirst.mockResolvedValue({ id: 'cer1' } as never);
+    prismaMock.budgetCategory.findFirst.mockResolvedValue({ id: 'cat-1' } as never);
+    vi.mocked(createVendor).mockResolvedValue(vendorRow as never);
+    const res = await POST(jsonRequest(URL, 'POST', { ...valid, categoryId: 'cat-1' }));
+    expect(res.status).toBe(201);
+    expect(vi.mocked(createVendor).mock.calls[0]?.[1]).toMatchObject({ categoryId: 'cat-1' });
   });
 });

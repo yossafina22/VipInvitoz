@@ -23,6 +23,7 @@ import {
   CreditCard,
   Crown,
   Download,
+  Eye,
   Flower,
   Globe,
   HelpCircle,
@@ -43,6 +44,7 @@ import {
   Mic2,
   Move,
   Music,
+  Pencil,
   Navigation,
   Phone,
   Play,
@@ -101,6 +103,7 @@ const MAP: Record<string, LucideIcon> = {
   'credit-card': CreditCard,
   crown: Crown,
   download: Download,
+  eye: Eye,
   flower: Flower,
   globe: Globe,
   'help-circle': HelpCircle,
@@ -121,6 +124,7 @@ const MAP: Record<string, LucideIcon> = {
   'mic-2': Mic2,
   move: Move,
   music: Music,
+  pencil: Pencil,
   navigation: Navigation,
   phone: Phone,
   play: Play,
@@ -152,6 +156,8 @@ const MAP: Record<string, LucideIcon> = {
   wallet: Wallet,
   x: X,
 };
+
+export const ICON_NAMES: readonly string[] = Object.keys(MAP);
 
 interface IconProps {
   name: string;

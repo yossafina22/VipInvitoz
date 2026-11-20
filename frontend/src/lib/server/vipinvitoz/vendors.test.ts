@@ -11,21 +11,32 @@ beforeEach(() => {
 });
 
 describe('findOrCreateBudgetCategory', () => {
-  it('reuses an existing category matched case-insensitively', async () => {
+  it('reuses an existing category matching any of the labels case-insensitively', async () => {
     prismaMock.budgetCategory.findFirst.mockResolvedValue({ id: 'c1' } as never);
-    expect(await findOrCreateBudgetCategory(prismaMock as never, 'cer1', 'Traiteur')).toBe('c1');
+    expect(
+      await findOrCreateBudgetCategory(prismaMock as never, 'cer1', ['Catering', 'Traiteur']),
+    ).toBe('c1');
     expect(prismaMock.budgetCategory.findFirst).toHaveBeenCalledWith({
-      where: { ceremonyId: 'cer1', label: { equals: 'Traiteur', mode: 'insensitive' } },
+      where: {
+        ceremonyId: 'cer1',
+        OR: [
+          { label: { equals: 'Catering', mode: 'insensitive' } },
+          { label: { equals: 'Traiteur', mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { order: 'asc' },
       select: { id: true },
     });
     expect(prismaMock.budgetCategory.create).not.toHaveBeenCalled();
   });
 
-  it('creates the category last when missing', async () => {
+  it('creates the category last, under the first label, when missing', async () => {
     prismaMock.budgetCategory.findFirst.mockResolvedValue(null);
     prismaMock.budgetCategory.aggregate.mockResolvedValue({ _max: { order: 4 } } as never);
     prismaMock.budgetCategory.create.mockResolvedValue({ id: 'new' } as never);
-    expect(await findOrCreateBudgetCategory(prismaMock as never, 'cer1', 'Transport')).toBe('new');
+    expect(
+      await findOrCreateBudgetCategory(prismaMock as never, 'cer1', ['Transport', 'Transport']),
+    ).toBe('new');
     expect(prismaMock.budgetCategory.create.mock.calls[0]?.[0]?.data).toMatchObject({
       ceremonyId: 'cer1',
       label: 'Transport',
@@ -52,10 +63,7 @@ describe('createVendor', () => {
       paid: false,
     });
 
-    const cat = prismaMock.budgetCategory.findFirst.mock.calls[0]?.[0] as {
-      where: { label: { equals: string } };
-    };
-    expect(cat.where.label.equals).toBe('Traiteur');
+    expect(categoryLabelsQueried()).toEqual(['Traiteur', 'Catering']);
     expect(prismaMock.budgetExpense.create.mock.calls[0]?.[0]?.data).toMatchObject({
       ceremonyId: 'cer1',
       categoryId: 'cat-catering',
@@ -88,15 +96,58 @@ describe('createVendor', () => {
       paid: true,
     });
 
-    const cat = prismaMock.budgetCategory.findFirst.mock.calls[0]?.[0] as {
-      where: { label: { equals: string } };
-    };
-    expect(cat.where.label.equals).toBe('Miscellaneous');
+    expect(categoryLabelsQueried()).toEqual(['Miscellaneous', 'Divers']);
     expect(prismaMock.budgetExpense.create.mock.calls[0]?.[0]?.data).toMatchObject({
       status: 'PAID',
     });
   });
+
+  it('finds the French-seeded category when the vendor is added in English', async () => {
+    prismaMock.ceremony.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.budgetCategory.findFirst.mockResolvedValue({ id: 'cat-traiteur' } as never);
+    prismaMock.vendor.create.mockResolvedValue({ id: 'v3' } as never);
+    prismaMock.budgetExpense.create.mockResolvedValue({ id: 'e3' } as never);
+
+    await createVendor(prismaMock as never, { ...baseInput, locale: 'en', presetKey: 'catering' });
+
+    expect(categoryLabelsQueried()).toContain('Traiteur');
+    expect(prismaMock.budgetCategory.create).not.toHaveBeenCalled();
+    expect(prismaMock.budgetExpense.create.mock.calls[0]?.[0]?.data).toMatchObject({
+      categoryId: 'cat-traiteur',
+    });
+  });
+
+  it('uses the category the organiser picked instead of the preset one', async () => {
+    prismaMock.ceremony.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.vendor.create.mockResolvedValue({ id: 'v4' } as never);
+    prismaMock.budgetExpense.create.mockResolvedValue({ id: 'e4' } as never);
+
+    await createVendor(prismaMock as never, { ...baseInput, categoryId: 'cat-picked' });
+
+    expect(prismaMock.budgetCategory.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.budgetExpense.create.mock.calls[0]?.[0]?.data).toMatchObject({
+      categoryId: 'cat-picked',
+    });
+  });
 });
+
+const baseInput = {
+  ceremonyId: 'cer1',
+  locale: 'fr' as const,
+  presetKey: null,
+  name: 'Wedding planner',
+  imageUrl: null,
+  phone: null,
+  amount: 100,
+  paid: false,
+};
+
+function categoryLabelsQueried(): string[] {
+  const arg = prismaMock.budgetCategory.findFirst.mock.calls[0]?.[0] as {
+    where: { OR: { label: { equals: string } }[] };
+  };
+  return arg.where.OR.map((c) => c.label.equals);
+}
 
 describe('updateVendor', () => {
   it('mirrors name, amount and paid onto the linked expense', async () => {
@@ -122,6 +173,24 @@ describe('updateVendor', () => {
     expect(call.data.label).toBe('Mama Fatou');
     expect(call.data.status).toBe('PAID');
     expect(call.data.unitAmount.toFixed(2)).toBe('900000.00');
+    expect(call.data).not.toHaveProperty('categoryId');
+  });
+
+  it('moves the linked expense to another budget category', async () => {
+    prismaMock.vendor.update.mockResolvedValue({
+      id: 'v1',
+      name: 'Sono',
+      amount: D(100),
+      paid: false,
+    } as never);
+    prismaMock.budgetExpense.updateMany.mockResolvedValue({ count: 1 });
+
+    await updateVendor(prismaMock as never, 'v1', { categoryId: 'cat-dj' });
+
+    const call = prismaMock.budgetExpense.updateMany.mock.calls[0]?.[0] as {
+      data: { categoryId?: string };
+    };
+    expect(call.data.categoryId).toBe('cat-dj');
   });
 });
 
