@@ -675,6 +675,82 @@
       "cancelCta": "Ne pas renouveler"
     }
   },
+  "budget": {
+    "pageTitle": "Budget",
+    "title": "Suivi budget",
+    "subtitle": "Garde l'œil sur chaque poste de dépense, dans ta propre monnaie.",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger le budget.",
+    "retry": "Réessayer",
+    "export": "Exporter",
+    "addExpense": "Dépense",
+    "noCeremony": {
+      "title": "Aucune cérémonie",
+      "desc": "Créez d'abord une cérémonie pour suivre son budget.",
+      "cta": "Créer une cérémonie"
+    },
+    "vipRequired": {
+      "title": "Réservé au VIP",
+      "desc": "Le suivi budget est inclus dans le plan VIP.",
+      "cta": "Retour au tableau de bord"
+    },
+    "summary": {
+      "totalPlanned": "Budget total",
+      "spent": "Dépensé",
+      "remaining": "Restant",
+      "upcoming": "À venir : {amount}",
+      "percent": "{percent} % du budget",
+      "daysUntil": "{days, plural, =0 {Jour J aujourd’hui} one {Jour J dans # jour} other {Jour J dans # jours}}",
+      "daysPast": "Cérémonie passée",
+      "noDate": "Pas encore de date"
+    },
+    "categories": {
+      "title": "Par poste",
+      "add": "Poste",
+      "empty": "Aucun poste. Ajoutez votre premier poste de dépense.",
+      "plannedLabel": "Prévu",
+      "spentOfPlanned": "{spent} / {planned}",
+      "rename": "Renommer",
+      "delete": "Supprimer",
+      "newLabelPrompt": "Nom du poste",
+      "plannedPrompt": "Montant prévu pour « {label} »",
+      "confirmDelete": "Supprimer le poste « {label} » ?",
+      "notEmpty": "Ce poste contient encore des dépenses. Déplacez-les ou supprimez-les d’abord."
+    },
+    "expenses": {
+      "title": "Dépenses",
+      "empty": "Aucune dépense pour le moment.",
+      "noDate": "Sans date",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "confirmDelete": "Supprimer la dépense « {label} » ?",
+      "needCategory": "Créez d'abord un poste de dépense."
+    },
+    "status": {
+      "PAID": "Payé",
+      "PENDING": "En attente",
+      "PLANNED": "Prévu"
+    },
+    "dialog": {
+      "createTitle": "Nouvelle dépense",
+      "editTitle": "Modifier la dépense",
+      "label": "Libellé",
+      "labelPlaceholder": "Ex : Location de chaises",
+      "category": "Poste",
+      "quantity": "Quantité",
+      "unitAmount": "Prix unitaire",
+      "total": "Total : {amount}",
+      "status": "Statut",
+      "date": "Date",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…"
+    },
+    "errors": {
+      "invalid": "Valeurs invalides (2 décimales maximum, pas de montant négatif).",
+      "generic": "Une erreur est survenue. Réessayez."
+    }
+  },
   "footer": {
     "tagline": "La plateforme tout-en-un pour les familles africaines — de l'invitation au jour J.",
     "columns": {

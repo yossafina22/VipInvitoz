@@ -675,6 +675,82 @@
       "cancelCta": "Don't renew"
     }
   },
+  "budget": {
+    "pageTitle": "Budget",
+    "title": "Budget tracking",
+    "subtitle": "Keep an eye on every expense category, in your own currency.",
+    "loading": "Loading…",
+    "loadError": "Could not load the budget.",
+    "retry": "Try again",
+    "export": "Export",
+    "addExpense": "Expense",
+    "noCeremony": {
+      "title": "No ceremony",
+      "desc": "Create a ceremony first to track its budget.",
+      "cta": "Create a ceremony"
+    },
+    "vipRequired": {
+      "title": "VIP only",
+      "desc": "Budget tracking is included in the VIP plan.",
+      "cta": "Back to dashboard"
+    },
+    "summary": {
+      "totalPlanned": "Total budget",
+      "spent": "Spent",
+      "remaining": "Remaining",
+      "upcoming": "Upcoming: {amount}",
+      "percent": "{percent}% of budget",
+      "daysUntil": "{days, plural, =0 {The big day is today} one {The big day is in # day} other {The big day is in # days}}",
+      "daysPast": "Ceremony has passed",
+      "noDate": "No date yet"
+    },
+    "categories": {
+      "title": "By category",
+      "add": "Category",
+      "empty": "No categories. Add your first expense category.",
+      "plannedLabel": "Planned",
+      "spentOfPlanned": "{spent} / {planned}",
+      "rename": "Rename",
+      "delete": "Delete",
+      "newLabelPrompt": "Category name",
+      "plannedPrompt": "Planned amount for “{label}”",
+      "confirmDelete": "Delete the category “{label}”?",
+      "notEmpty": "This category still has expenses. Move or delete them first."
+    },
+    "expenses": {
+      "title": "Expenses",
+      "empty": "No expenses yet.",
+      "noDate": "No date",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete the expense “{label}”?",
+      "needCategory": "Create an expense category first."
+    },
+    "status": {
+      "PAID": "Paid",
+      "PENDING": "Pending",
+      "PLANNED": "Planned"
+    },
+    "dialog": {
+      "createTitle": "New expense",
+      "editTitle": "Edit expense",
+      "label": "Label",
+      "labelPlaceholder": "E.g. Chair rental",
+      "category": "Category",
+      "quantity": "Quantity",
+      "unitAmount": "Unit price",
+      "total": "Total: {amount}",
+      "status": "Status",
+      "date": "Date",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…"
+    },
+    "errors": {
+      "invalid": "Invalid values (2 decimals max, no negative amounts).",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
   "footer": {
     "tagline": "The all-in-one platform for African families — from invitation to the big day.",
     "columns": {
