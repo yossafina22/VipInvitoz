@@ -74,6 +74,7 @@ describe('GET /api/budget', () => {
         unitAmount: D(5),
         status: 'PAID',
         date: new Date('2026-12-01T00:00:00Z'),
+        vendorId: 'v1',
       },
     ] as never);
     prismaMock.ceremonyOccasion.findFirst.mockResolvedValue(null);
@@ -101,6 +102,7 @@ describe('GET /api/budget', () => {
       total: '1000.00',
       status: 'PAID',
       date: '2026-12-01',
+      vendorId: 'v1',
     });
     expect(body.summary).toMatchObject({ spent: '1000.00', percentSpent: 100 });
     expect(body.daysUntil).toBeNull();

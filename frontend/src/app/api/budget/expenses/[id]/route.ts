@@ -25,6 +25,11 @@ import {
 } from '@/lib/server/vipinvitoz/budget';
 import { guardBudgetMutation, notFound, parseBody } from '@/lib/server/vipinvitoz/budget-http';
 
+// A vendor's expense mirrors the vendor amount; edit it from /vendors instead.
+function managedByVendor() {
+  return NextResponse.json({ error: 'EXPENSE_MANAGED_BY_VENDOR' }, { status: 409 });
+}
+
 const Body = z
   .object({
     categoryId: z.string().min(1).optional(),
@@ -50,6 +55,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
     const owned = await findOwnedExpense(prisma, guard.userId, id);
     if (!owned) return notFound('EXPENSE_NOT_FOUND');
+    if (owned.vendorId) return managedByVendor();
 
     if (body.categoryId !== undefined && body.categoryId !== owned.categoryId) {
       const target = await findOwnedCategory(prisma, guard.userId, body.categoryId);
@@ -83,6 +89,7 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
 
     const owned = await findOwnedExpense(prisma, guard.userId, id);
     if (!owned) return notFound('EXPENSE_NOT_FOUND');
+    if (owned.vendorId) return managedByVendor();
 
     await prisma.budgetExpense.delete({ where: { id: owned.id } });
     return NextResponse.json({ ok: true });

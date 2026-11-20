@@ -224,7 +224,7 @@ export function toBudgetCsv(
 export function serializeExpense(
   e: Pick<
     BudgetExpense,
-    'id' | 'categoryId' | 'label' | 'quantity' | 'unitAmount' | 'status' | 'date'
+    'id' | 'categoryId' | 'label' | 'quantity' | 'unitAmount' | 'status' | 'date' | 'vendorId'
   >,
 ) {
   return {
@@ -236,6 +236,7 @@ export function serializeExpense(
     total: lineTotal(e.quantity, e.unitAmount).toFixed(2),
     status: e.status,
     date: e.date ? e.date.toISOString().slice(0, 10) : null,
+    vendorId: e.vendorId ?? null,
   };
 }
 

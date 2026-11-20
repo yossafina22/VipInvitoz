@@ -92,3 +92,26 @@ describe('DELETE /api/budget/expenses/[id]', () => {
     expect(prismaMock.budgetExpense.delete).toHaveBeenCalledWith({ where: { id: 'e1' } });
   });
 });
+
+describe('vendor-managed expenses', () => {
+  it('refuses to PATCH an expense mirrored from a vendor', async () => {
+    prismaMock.budgetExpense.findFirst.mockResolvedValue({
+      ...ownedExpense,
+      vendorId: 'v1',
+    } as never);
+    const res = await PATCH(jsonRequest(URL, 'PATCH', { status: 'PAID' }), params('e1'));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe('EXPENSE_MANAGED_BY_VENDOR');
+    expect(prismaMock.budgetExpense.update).not.toHaveBeenCalled();
+  });
+
+  it('refuses to DELETE an expense mirrored from a vendor', async () => {
+    prismaMock.budgetExpense.findFirst.mockResolvedValue({
+      ...ownedExpense,
+      vendorId: 'v1',
+    } as never);
+    const res = await DELETE(jsonRequest(URL, 'DELETE'), params('e1'));
+    expect(res.status).toBe(409);
+    expect(prismaMock.budgetExpense.delete).not.toHaveBeenCalled();
+  });
+});
