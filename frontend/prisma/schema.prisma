@@ -46,18 +46,18 @@ model User {
   // Multi-tenancy is opt-in per project: by default no resource is org-scoped.
   // Apps that need it (marketplace, B2B SaaS, classifieds) wire owner relations
   // on their domain models.
-  ownedOrganizations Organization[]      @relation("OrgOwner")
+  ownedOrganizations Organization[]       @relation("OrgOwner")
   memberships        OrganizationMember[] @relation("OrgMembership")
 
   // VipInvitoz domain
-  subscription      Subscription?
-  ceremonies        Ceremony[]
-  aiGenerations     AiGeneration[]
+  subscription    Subscription?
+  ceremonies      Ceremony[]
+  aiGenerations   AiGeneration[]
   // Optional phone for SMS OTP fallback when email is missing. Format E.164.
-  phone             String?   @unique
-  phoneVerifiedAt   DateTime?
+  phone           String?        @unique
+  phoneVerifiedAt DateTime?
   // Interface language choice (FR default). Changeable via settings.
-  locale            String    @default("fr") // fr | en | de
+  locale          String         @default("fr") // fr | en | de
 
   @@index([email])
   @@index([role])
@@ -105,14 +105,14 @@ model AdminAction {
 // used as a stable URL segment.
 // ───────────────────────────────────────────────────────────────────────
 model Organization {
-  id        String   @id @default(cuid())
-  slug      String   @unique
+  id        String               @id @default(cuid())
+  slug      String               @unique
   name      String
   ownerId   String
-  owner     User     @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  owner     User                 @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   members   OrganizationMember[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   @@index([ownerId])
 }
@@ -283,21 +283,21 @@ model WebhookLog {
 // at the call site — the schema is currency-agnostic.
 // ───────────────────────────────────────────────────────────────────────
 model Order {
-  id              String    @id @default(cuid())
-  userId          String? // nullable — guest checkout supported
-  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  amount          Int // gross amount, smallest unit
-  currency        String    @default("XOF") // ISO 4217
-  status          String    @default("PENDING") // PENDING | PAID | EXPIRED | FAILED | REFUNDED
-  customerEmail   String?
-  customerPhone   String?
-  customerName    String?
-  metadata        Json? // app-specific fields
+  id            String  @id @default(cuid())
+  userId        String? // nullable — guest checkout supported
+  user          User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  amount        Int // gross amount, smallest unit
+  currency      String  @default("XOF") // ISO 4217
+  status        String  @default("PENDING") // PENDING | PAID | EXPIRED | FAILED | REFUNDED
+  customerEmail String?
+  customerPhone String?
+  customerName  String?
+  metadata      Json? // app-specific fields
 
   // Stripe-grade idempotency. Required header on POST /api/orders; replay
   // with same value returns the original Order row instead of double-charging.
   // Nullable so existing rows pre-migration don't break the @unique constraint.
-  idempotencyKey  String?   @unique
+  idempotencyKey String? @unique
 
   // Provider reference
   provider         String // e.g. "bictorys"
@@ -321,12 +321,12 @@ model Order {
 }
 
 model Withdrawal {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user        User   @relation(fields: [userId], references: [id], onDelete: Restrict)
   amount      Int // requested amount, smallest unit
-  currency    String   @default("XOF")
-  status      String   @default("PENDING") // PENDING | PROCESSING | COMPLETED | FAILED | CANCELLED
+  currency    String @default("XOF")
+  status      String @default("PENDING") // PENDING | PROCESSING | COMPLETED | FAILED | CANCELLED
   destination Json // { method: "WAVE" | "ORANGE_MONEY" | ..., phone: "+221...", accountName?: "..." }
 
   // Provider reference
@@ -356,24 +356,24 @@ model Withdrawal {
 // Renouvellement MANUEL trimestriel (PRD §6) — pas d'autorenew en V1.
 // orderId lie la souscription active à l'Order de paiement qui l'a créée.
 model Subscription {
-  id                   String    @id @default(cuid())
-  userId               String    @unique
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tier                 String    @default("FREEMIUM") // FREEMIUM | PREMIUM | VIP
-  status               String    @default("ACTIVE") // ACTIVE | EXPIRED | CANCELLED
-  startedAt            DateTime  @default(now())
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier               String    @default("FREEMIUM") // FREEMIUM | PREMIUM | VIP
+  status             String    @default("ACTIVE") // ACTIVE | EXPIRED | CANCELLED
+  startedAt          DateTime  @default(now())
   // Null pour FREEMIUM (jamais expiré). Daté pour PREMIUM/VIP (fin de trimestre).
-  expiresAt            DateTime?
+  expiresAt          DateTime?
   // Crédits IA restants pour le trimestre courant. -1 = illimité (VIP).
   // Reset à chaque renouvellement.
-  aiCreditsRemaining   Int       @default(6)
+  aiCreditsRemaining Int       @default(6)
   // Nombre max de cérémonies simultanées. 1 = Freemium+Premium, -1 = VIP illimité.
   // (La règle Premium/VIP multi-cérémonie est arbitrée côté app en lisant tier.)
-  maxCeremonies        Int       @default(1)
+  maxCeremonies      Int       @default(1)
   // Référence au dernier Order réglé qui a activé / renouvelé la souscription.
-  orderId              String?   @unique
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  orderId            String?   @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@index([tier, status])
   @@index([status, expiresAt])
@@ -386,27 +386,27 @@ model Subscription {
 // status DRAFT → ACTIVE (invitations envoyables) → PAST (date dépassée)
 //                      → ARCHIVED (effacée par l'orga).
 model Ceremony {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type           String // MARIAGE | BAPTEME | ANNIVERSAIRE | DEUIL | AUTRE
-  title          String // ex: "Mariage de Fatoumata & Ibrahima"
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String // MARIAGE | BAPTEME | ANNIVERSAIRE | DEUIL | AUTRE
+  title             String // ex: "Mariage de Fatoumata & Ibrahima"
   // Description libre (1 phrase) utilisée comme prompt pour la génération IA.
-  description    String
-  status         String   @default("DRAFT") // DRAFT | ACTIVE | PAST | ARCHIVED
-  coverImageUrl  String?
+  description       String
+  status            String  @default("DRAFT") // DRAFT | ACTIVE | PAST | ARCHIVED
+  coverImageUrl     String?
   // Fichier musical de fond pour la page invitation (Cloudinary URL).
-  musicUrl       String?
-  musicLabel     String? // ex: "Jazz africain doux"
+  musicUrl          String?
+  musicLabel        String? // ex: "Jazz africain doux"
   // Résultat de la génération IA — stocké en JSON pour pouvoir éditer
   // par bloc sans re-générer tout. Structure : { blocks: [...] }
-  invitationJson Json?
+  invitationJson    Json?
   // Compteur de modifications IA consommées sur cette cérémonie.
-  aiModCount     Int      @default(0)
+  aiModCount        Int     @default(0)
   // Palette de couleurs appliquée à l'invitation (carte /i/[slug] + preview).
   // Les ids valides vivent dans lib/invitation-palettes.ts. Pour DEUIL on force
   // 'noir-minimal' côté API, pas de contrainte DB (string libre volontairement).
-  invitationPalette String @default("sahel-or")
+  invitationPalette String  @default("sahel-or")
 
   occasions        CeremonyOccasion[]
   guests           Guest[]
@@ -416,6 +416,7 @@ model Ceremony {
   seatingTables    SeatingTable[]
   budgetCategories BudgetCategory[]
   budgetExpenses   BudgetExpense[]
+  vendors          Vendor[]
 
   // Set once the default budget categories were created, so deleting them all
   // never re-seeds them.
@@ -498,9 +499,9 @@ model Invitation {
   guest      Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
 
   // URL publique /i/[slug] — opaque (nanoid 12 chars par défaut).
-  slug     String  @unique
+  slug     String    @unique
   // QR code identifier (nanoid 10 chars). Imprimable séparément.
-  qrToken  String  @unique
+  qrToken  String    @unique
   // Canal d'envoi utilisé. Null = pas encore envoyée.
   channel  String? // WHATSAPP | LINK | EMAIL | SMS
   sentAt   DateTime?
@@ -530,22 +531,22 @@ model Invitation {
 // kind : INITIAL (première génération), MODIFICATION (modif ponctuelle),
 // CHATBOT (tour de chat Premium/VIP). costCents pour reporting.
 model AiGeneration {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ceremonyId String?
-  ceremony   Ceremony? @relation(fields: [ceremonyId], references: [id], onDelete: SetNull)
-  kind       String // INITIAL | MODIFICATION | CHATBOT
-  model      String // ex: "claude-sonnet-5-5"
-  prompt     String
-  response   String
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ceremonyId     String?
+  ceremony       Ceremony? @relation(fields: [ceremonyId], references: [id], onDelete: SetNull)
+  kind           String // INITIAL | MODIFICATION | CHATBOT
+  model          String // ex: "claude-sonnet-5-5"
+  prompt         String
+  response       String
   // Tokens from provider response.
-  inputTokens  Int
-  outputTokens Int
+  inputTokens    Int
+  outputTokens   Int
   // Coût estimé en centimes de centime (1000 = 1 cent). Permet de tracker
   // sans arrondi au call et de sommer précisément par user/mois.
   costMicrocents Int
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   @@index([userId, createdAt])
   @@index([ceremonyId, kind])
@@ -638,9 +639,37 @@ model BudgetExpense {
   status     String    @default("PLANNED")
   date       DateTime?
 
+  // Set when the expense mirrors a Vendor amount; managed from /vendors only.
+  vendorId String? @unique
+  vendor   Vendor? @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([ceremonyId, date])
   @@index([categoryId])
+}
+
+// ─── Vendor (VIP) ──────────────────────────────────────────────────────
+// A vendor's amount is mirrored by exactly one BudgetExpense (vendorId), so
+// budget totals stay the single source of truth. presetKey (lib/vendors/presets.ts)
+// drives the default icon; imageUrl (Cloudinary) overrides it. phone is E.164.
+model Vendor {
+  id         String   @id @default(cuid())
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+
+  presetKey String?
+  name      String
+  imageUrl  String?
+  phone     String?
+  amount    Decimal @default(0) @db.Decimal(14, 2)
+  paid      Boolean @default(false)
+
+  expense BudgetExpense?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ceremonyId, createdAt])
 }
