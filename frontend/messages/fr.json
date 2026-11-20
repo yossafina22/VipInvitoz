@@ -546,6 +546,135 @@
     "accept": "✓ Je confirme ma présence",
     "decline": "Je ne peux pas venir"
   },
+  "pricingCard": {
+    "popular": "Populaire",
+    "orPrice": "ou {price} {period}",
+    "defaultPeriod": "/ trimestre",
+    "region": "Afrique & diaspora",
+    "startFree": "Commencer gratuitement",
+    "choosePlan": "Choisir ce plan"
+  },
+  "previewBanner": {
+    "default": "Preview visuel — pas encore branché au backend. Les données affichées sont des exemples."
+  },
+  "account": {
+    "pageTitle": "Paramètres",
+    "title": "Vos paramètres",
+    "subtitle": "Gérez votre profil, vos préférences et vos notifications.",
+    "tabs": {
+      "profile": "Profil",
+      "language": "Langue",
+      "notifications": "Notifications",
+      "privacy": "Confidentialité",
+      "danger": "Zone de danger"
+    },
+    "profile": {
+      "title": "Profil utilisateur",
+      "changePhoto": "Changer la photo",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "phone": "Téléphone",
+      "city": "Ville",
+      "country": "Pays",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "language": {
+      "title": "Langue de l'interface"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "items": {
+        "rsvp": {
+          "label": "RSVP reçus",
+          "desc": "Être alerté quand un invité répond"
+        },
+        "reminders": {
+          "label": "Rappels cérémonies",
+          "desc": "Rappels 7 jours, 24h et 1h avant l'événement"
+        },
+        "newsletter": {
+          "label": "Newsletter",
+          "desc": "Conseils et astuces pour mieux organiser"
+        },
+        "offers": {
+          "label": "Offres & promotions",
+          "desc": "Réductions et offres spéciales"
+        }
+      }
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "comingSoon": "Configuration des partages et de la visibilité des données — à venir dans la prochaine mise à jour."
+    },
+    "danger": {
+      "title": "Zone de danger",
+      "passwordTitle": "Changer le mot de passe",
+      "passwordDesc": "Vous recevrez un lien de réinitialisation par email.",
+      "passwordCta": "Envoyer un lien",
+      "deleteTitle": "Supprimer votre compte",
+      "deleteDesc": "Cette action est irréversible. Toutes vos données seront supprimées.",
+      "deleteCta": "Supprimer mon compte"
+    }
+  },
+  "subscription": {
+    "pageTitle": "Abonnement",
+    "banner": "Vous êtes actuellement sur le plan Premium. Votre abonnement se renouvelle le 14 mars 2025.",
+    "currentTitle": "Votre abonnement actuel",
+    "currentSubtitle": "Premium (payé trimestriellement)",
+    "stats": {
+      "activePlan": "Plan actif",
+      "since": "Depuis 14 déc. 2024",
+      "monthlyCost": "Coût mensuel",
+      "perQuarter": "8 000 FCFA / trim.",
+      "renewal": "Renouvellement",
+      "renewalDate": "14 mars 2025",
+      "renewalIn": "Dans 58 jours",
+      "aiCredits": "Crédits IA",
+      "aiCreditsSub": "Restants ce trim."
+    },
+    "included": "Ce que vous avez",
+    "upgradeTitle": "Voulez-vous upgrader ?",
+    "upgradeSubtitle": "Débloquez les outils VIP pour vos cérémonies.",
+    "features": {
+      "unlimitedGuests": "Invités illimités",
+      "aiEdits12": "12 modifications IA + chatbot",
+      "multiCeremony": "Multi-cérémonie",
+      "seating": "Plan de table drag & drop",
+      "projection": "Projection live photos",
+      "guestbook": "Livre d'or enrichi",
+      "budget": "Suivi budget",
+      "vendors": "Coordination prestataires",
+      "allPremium": "Tout Premium inclus",
+      "aiUnlimited": "Modifications IA illimitées",
+      "budgetRealtime": "Suivi budget temps réel",
+      "orientation": "Orientation invités + navigation",
+      "prioritySupport": "Priorité support"
+    },
+    "paymentTitle": "Moyen de paiement",
+    "paymentSubtitle": "Comment voulez-vous payer ?",
+    "methods": {
+      "card": "Carte bancaire",
+      "regionUemoa": "Sénégal & zone UEMOA",
+      "regionWorld": "Europe & monde"
+    },
+    "manageTitle": "Gérer votre abonnement",
+    "manage": {
+      "vipTitle": "Passer en VIP",
+      "vipDesc": "Débloquez le suivi budget et la coordination prestataires.",
+      "vipCta": "Upgrader",
+      "invoicesTitle": "Factures",
+      "invoicesDesc": "Téléchargez vos factures et reçus.",
+      "invoicesCta": "Voir les factures",
+      "historyTitle": "Historique",
+      "historyDesc": "Vos renouvellements trimestriels passés.",
+      "historyCta": "Consulter",
+      "cancelTitle": "Résilier",
+      "cancelDesc": "Pas de reconduction automatique — votre Premium s'arrête à la date d'expiration si vous ne renouvelez pas.",
+      "cancelCta": "Ne pas renouveler"
+    }
+  },
   "footer": {
     "tagline": "La plateforme tout-en-un pour les familles africaines — de l'invitation au jour J.",
     "columns": {

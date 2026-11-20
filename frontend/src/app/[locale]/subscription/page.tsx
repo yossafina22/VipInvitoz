@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { AppLayout } from '@/components/AppLayout';
 import { PageHeader } from '@/components/PageHeader';
 import { AlertBanner } from '@/components/AlertBanner';
@@ -10,178 +11,191 @@ import { PreviewBanner } from '@/components/PreviewBanner';
 import { Icon } from '@/components/Icon';
 
 const PREMIUM_FEATURES = [
-  { label: 'Invités illimités', included: true },
-  { label: '12 modifications IA + chatbot', included: true },
-  { label: 'Multi-cérémonie', included: true },
-  { label: 'Plan de table drag & drop', included: true },
-  { label: 'Projection live photos', included: true },
-  { label: "Livre d'or enrichi", included: true },
-  { label: 'Suivi budget', included: false },
-  { label: 'Coordination prestataires', included: false },
-];
+  { key: 'unlimitedGuests', included: true },
+  { key: 'aiEdits12', included: true },
+  { key: 'multiCeremony', included: true },
+  { key: 'seating', included: true },
+  { key: 'projection', included: true },
+  { key: 'guestbook', included: true },
+  { key: 'budget', included: false },
+  { key: 'vendors', included: false },
+] as const;
 
 const VIP_FEATURES = [
-  { label: 'Tout Premium inclus', included: true },
-  { label: 'Modifications IA illimitées', included: true },
-  { label: 'Suivi budget temps réel', included: true },
-  { label: 'Coordination prestataires', included: true },
-  { label: 'Orientation invités + navigation', included: true },
-  { label: 'Priorité support', included: true },
-];
+  { key: 'allPremium', included: true },
+  { key: 'aiUnlimited', included: true },
+  { key: 'budgetRealtime', included: true },
+  { key: 'vendors', included: true },
+  { key: 'orientation', included: true },
+  { key: 'prioritySupport', included: true },
+] as const;
 
 type PayMethod = 'WAVE' | 'ORANGE' | 'CARD';
 
 export default function SubscriptionPage() {
+  const t = useTranslations('subscription');
   const [method, setMethod] = useState<PayMethod>('WAVE');
 
+  const premiumFeatures = PREMIUM_FEATURES.map((f) => ({
+    label: t(`features.${f.key}`),
+    included: f.included,
+  }));
+  const vipFeatures = VIP_FEATURES.map((f) => ({
+    label: t(`features.${f.key}`),
+    included: f.included,
+  }));
+
   return (
-    <AppLayout pageTitle="Abonnement" tier="premium">
+    <AppLayout pageTitle={t('pageTitle')} tier="premium">
       <PreviewBanner />
 
-      <AlertBanner
-        type="info"
-        message="Vous êtes actuellement sur le plan Premium. Votre abonnement se renouvelle le 14 mars 2025."
-      />
+      <AlertBanner type="info" message={t('banner')} />
 
       <div className="mt-6">
-        <PageHeader title="Votre abonnement actuel" subtitle="Premium (payé trimestriellement)" />
+        <PageHeader title={t('currentTitle')} subtitle={t('currentSubtitle')} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
         <div className="bg-secondary border border-border rounded-xl p-4">
-          <div className="text-xs text-secondary-foreground font-bold mb-1">Plan actif</div>
+          <div className="text-xs text-secondary-foreground font-bold mb-1">
+            {t('stats.activePlan')}
+          </div>
           <div className="font-headings font-bold text-lg text-foreground">Premium</div>
-          <div className="text-xs text-muted-foreground mt-1">Depuis 14 déc. 2024</div>
+          <div className="text-xs text-muted-foreground mt-1">{t('stats.since')}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-xs text-muted-foreground font-bold mb-1">Coût mensuel</div>
+          <div className="text-xs text-muted-foreground font-bold mb-1">
+            {t('stats.monthlyCost')}
+          </div>
           <div className="font-headings font-bold text-lg text-foreground">~2 667 FCFA</div>
-          <div className="text-xs text-muted-foreground mt-1">8 000 FCFA / trim.</div>
+          <div className="text-xs text-muted-foreground mt-1">{t('stats.perQuarter')}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-xs text-muted-foreground font-bold mb-1">Renouvellement</div>
-          <div className="font-headings font-bold text-lg text-foreground">14 mars 2025</div>
-          <div className="text-xs text-success mt-1">Dans 58 jours</div>
+          <div className="text-xs text-muted-foreground font-bold mb-1">{t('stats.renewal')}</div>
+          <div className="font-headings font-bold text-lg text-foreground">
+            {t('stats.renewalDate')}
+          </div>
+          <div className="text-xs text-success mt-1">{t('stats.renewalIn')}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-xs text-muted-foreground font-bold mb-1">Crédits IA</div>
+          <div className="text-xs text-muted-foreground font-bold mb-1">{t('stats.aiCredits')}</div>
           <div className="font-headings font-bold text-lg text-foreground">8 / 12</div>
-          <div className="text-xs text-muted-foreground mt-1">Restants ce trim.</div>
+          <div className="text-xs text-muted-foreground mt-1">{t('stats.aiCreditsSub')}</div>
         </div>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-5 md:p-6 mb-8">
-        <h3 className="font-headings font-bold text-lg text-foreground mb-4">Ce que vous avez</h3>
+        <h3 className="font-headings font-bold text-lg text-foreground mb-4">{t('included')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {PREMIUM_FEATURES.filter((f) => f.included).map((f, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-2 p-2.5 bg-secondary rounded-lg text-sm text-secondary-foreground"
-            >
-              <Icon name="check-circle" size={16} className="text-primary mt-0.5 shrink-0" />
-              <span>{f.label}</span>
-            </div>
-          ))}
+          {premiumFeatures
+            .filter((f) => f.included)
+            .map((f, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2 p-2.5 bg-secondary rounded-lg text-sm text-secondary-foreground"
+              >
+                <Icon name="check-circle" size={16} className="text-primary mt-0.5 shrink-0" />
+                <span>{f.label}</span>
+              </div>
+            ))}
         </div>
       </div>
 
-      <PageHeader
-        title="Voulez-vous upgrader ?"
-        subtitle="Débloquez les outils VIP pour vos cérémonies."
-      />
+      <PageHeader title={t('upgradeTitle')} subtitle={t('upgradeSubtitle')} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mb-8">
         <PricingCard
           name="Premium"
           priceAfrica="8 000 FCFA"
           priceEurope="11,99 €"
-          features={PREMIUM_FEATURES}
+          features={premiumFeatures}
           tier="premium"
         />
         <PricingCard
           name="VIP"
           priceAfrica="15 000 FCFA"
           priceEurope="21,99 €"
-          features={VIP_FEATURES}
+          features={vipFeatures}
           tier="vip"
           highlight
         />
       </div>
 
-      <PageHeader title="Moyen de paiement" subtitle="Comment voulez-vous payer ?" />
+      <PageHeader title={t('paymentTitle')} subtitle={t('paymentSubtitle')} />
 
       <div className="flex flex-col gap-3 mb-8 max-w-2xl">
         <PaymentMethodCard
           name="Wave"
           icon="smartphone"
-          region="Sénégal & zone UEMOA"
+          region={t('methods.regionUemoa')}
           selected={method === 'WAVE'}
           onClick={() => setMethod('WAVE')}
         />
         <PaymentMethodCard
           name="Orange Money"
           icon="smartphone"
-          region="Sénégal & zone UEMOA"
+          region={t('methods.regionUemoa')}
           selected={method === 'ORANGE'}
           onClick={() => setMethod('ORANGE')}
         />
         <PaymentMethodCard
-          name="Carte bancaire"
+          name={t('methods.card')}
           icon="credit-card"
-          region="Europe & monde"
+          region={t('methods.regionWorld')}
           selected={method === 'CARD'}
           onClick={() => setMethod('CARD')}
         />
       </div>
 
-      <PageHeader title="Gérer votre abonnement" />
+      <PageHeader title={t('manageTitle')} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
         <div className="bg-card border border-border rounded-xl p-5 md:p-6">
-          <h3 className="font-headings font-bold text-lg text-foreground mb-2">Passer en VIP</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Débloquez le suivi budget et la coordination prestataires.
-          </p>
+          <h3 className="font-headings font-bold text-lg text-foreground mb-2">
+            {t('manage.vipTitle')}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">{t('manage.vipDesc')}</p>
           <button
             type="button"
             className="bg-primary text-primary-foreground font-body font-medium px-4 py-2 rounded-lg text-sm"
           >
-            Upgrader
+            {t('manage.vipCta')}
           </button>
         </div>
         <div className="bg-card border border-border rounded-xl p-5 md:p-6">
-          <h3 className="font-headings font-bold text-lg text-foreground mb-2">Factures</h3>
-          <p className="text-sm text-muted-foreground mb-4">Téléchargez vos factures et reçus.</p>
+          <h3 className="font-headings font-bold text-lg text-foreground mb-2">
+            {t('manage.invoicesTitle')}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">{t('manage.invoicesDesc')}</p>
           <button
             type="button"
             className="bg-secondary text-secondary-foreground font-body font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
           >
-            <Icon name="download" size={12} /> Voir les factures
+            <Icon name="download" size={12} /> {t('manage.invoicesCta')}
           </button>
         </div>
         <div className="bg-card border border-border rounded-xl p-5 md:p-6">
-          <h3 className="font-headings font-bold text-lg text-foreground mb-2">Historique</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Vos renouvellements trimestriels passés.
-          </p>
+          <h3 className="font-headings font-bold text-lg text-foreground mb-2">
+            {t('manage.historyTitle')}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">{t('manage.historyDesc')}</p>
           <button
             type="button"
             className="bg-secondary text-secondary-foreground font-body font-medium px-4 py-2 rounded-lg text-sm"
           >
-            Consulter
+            {t('manage.historyCta')}
           </button>
         </div>
         <div className="bg-card border border-border rounded-xl p-5 md:p-6">
-          <h3 className="font-headings font-bold text-lg text-foreground mb-2">Résilier</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Pas de reconduction automatique — votre Premium s&apos;arrête à la date
-            d&apos;expiration si vous ne renouvelez pas.
-          </p>
+          <h3 className="font-headings font-bold text-lg text-foreground mb-2">
+            {t('manage.cancelTitle')}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">{t('manage.cancelDesc')}</p>
           <button
             type="button"
             className="bg-danger-light text-danger font-body font-medium px-4 py-2 rounded-lg text-sm"
           >
-            Ne pas renouveler
+            {t('manage.cancelCta')}
           </button>
         </div>
       </div>

@@ -546,6 +546,135 @@
     "accept": "✓ I will attend",
     "decline": "I can't make it"
   },
+  "pricingCard": {
+    "popular": "Popular",
+    "orPrice": "or {price} {period}",
+    "defaultPeriod": "/ quarter",
+    "region": "Africa & diaspora",
+    "startFree": "Start for free",
+    "choosePlan": "Choose this plan"
+  },
+  "previewBanner": {
+    "default": "Visual preview — not connected to the backend yet. The data shown are examples."
+  },
+  "account": {
+    "pageTitle": "Settings",
+    "title": "Your settings",
+    "subtitle": "Manage your profile, preferences and notifications.",
+    "tabs": {
+      "profile": "Profile",
+      "language": "Language",
+      "notifications": "Notifications",
+      "privacy": "Privacy",
+      "danger": "Danger zone"
+    },
+    "profile": {
+      "title": "User profile",
+      "changePhoto": "Change photo",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "city": "City",
+      "country": "Country",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "language": {
+      "title": "Interface language"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "items": {
+        "rsvp": {
+          "label": "RSVPs received",
+          "desc": "Get notified when a guest replies"
+        },
+        "reminders": {
+          "label": "Ceremony reminders",
+          "desc": "Reminders 7 days, 24h and 1h before the event"
+        },
+        "newsletter": {
+          "label": "Newsletter",
+          "desc": "Tips and tricks to organise better"
+        },
+        "offers": {
+          "label": "Offers & promotions",
+          "desc": "Discounts and special offers"
+        }
+      }
+    },
+    "privacy": {
+      "title": "Privacy",
+      "comingSoon": "Sharing and data visibility settings — coming in the next update."
+    },
+    "danger": {
+      "title": "Danger zone",
+      "passwordTitle": "Change password",
+      "passwordDesc": "You will receive a reset link by email.",
+      "passwordCta": "Send a link",
+      "deleteTitle": "Delete your account",
+      "deleteDesc": "This action cannot be undone. All your data will be deleted.",
+      "deleteCta": "Delete my account"
+    }
+  },
+  "subscription": {
+    "pageTitle": "Subscription",
+    "banner": "You are currently on the Premium plan. Your subscription renews on March 14, 2025.",
+    "currentTitle": "Your current subscription",
+    "currentSubtitle": "Premium (billed quarterly)",
+    "stats": {
+      "activePlan": "Active plan",
+      "since": "Since Dec 14, 2024",
+      "monthlyCost": "Monthly cost",
+      "perQuarter": "8,000 FCFA / quarter",
+      "renewal": "Renewal",
+      "renewalDate": "March 14, 2025",
+      "renewalIn": "In 58 days",
+      "aiCredits": "AI credits",
+      "aiCreditsSub": "Left this quarter"
+    },
+    "included": "What you have",
+    "upgradeTitle": "Want to upgrade?",
+    "upgradeSubtitle": "Unlock the VIP tools for your ceremonies.",
+    "features": {
+      "unlimitedGuests": "Unlimited guests",
+      "aiEdits12": "12 AI edits + chatbot",
+      "multiCeremony": "Multiple ceremonies",
+      "seating": "Drag & drop seating plan",
+      "projection": "Live photo projection",
+      "guestbook": "Enhanced guestbook",
+      "budget": "Budget tracking",
+      "vendors": "Vendor coordination",
+      "allPremium": "Everything in Premium",
+      "aiUnlimited": "Unlimited AI edits",
+      "budgetRealtime": "Real-time budget tracking",
+      "orientation": "Guest directions + navigation",
+      "prioritySupport": "Priority support"
+    },
+    "paymentTitle": "Payment method",
+    "paymentSubtitle": "How would you like to pay?",
+    "methods": {
+      "card": "Bank card",
+      "regionUemoa": "Senegal & WAEMU zone",
+      "regionWorld": "Europe & worldwide"
+    },
+    "manageTitle": "Manage your subscription",
+    "manage": {
+      "vipTitle": "Upgrade to VIP",
+      "vipDesc": "Unlock budget tracking and vendor coordination.",
+      "vipCta": "Upgrade",
+      "invoicesTitle": "Invoices",
+      "invoicesDesc": "Download your invoices and receipts.",
+      "invoicesCta": "View invoices",
+      "historyTitle": "History",
+      "historyDesc": "Your past quarterly renewals.",
+      "historyCta": "View",
+      "cancelTitle": "Cancel",
+      "cancelDesc": "No automatic renewal — your Premium ends on the expiry date if you don't renew.",
+      "cancelCta": "Don't renew"
+    }
+  },
   "footer": {
     "tagline": "The all-in-one platform for African families — from invitation to the big day.",
     "columns": {

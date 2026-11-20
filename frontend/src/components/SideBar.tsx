@@ -117,24 +117,6 @@ export function SideBar({ tier = 'premium', mobileOpen = false, onMobileClose }:
             );
           })}
         </nav>
-        <div className="px-3 py-4 border-t border-border flex flex-col gap-1">
-          <Link
-            href="/subscription"
-            onClick={() => onMobileClose?.()}
-            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-body text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <Icon name="crown" size={16} />
-            <span>{t('subscription')}</span>
-          </Link>
-          <Link
-            href="/account"
-            onClick={() => onMobileClose?.()}
-            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-body text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <Icon name="settings" size={16} />
-            <span>{t('account')}</span>
-          </Link>
-        </div>
       </aside>
     </>
   );

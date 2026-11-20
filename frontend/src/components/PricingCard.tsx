@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Icon } from './Icon';
 
@@ -29,12 +30,13 @@ export function PricingCard({
   name,
   priceAfrica,
   priceEurope,
-  period = '/ trimestre',
+  period,
   features,
   highlight = false,
   tier = 'premium',
   href = '/auth/signup',
 }: PricingCardProps) {
+  const t = useTranslations('pricingCard');
   return (
     <div
       className={`rounded-xl border-2 p-6 md:p-7 flex flex-col relative ${
@@ -43,7 +45,7 @@ export function PricingCard({
     >
       {highlight && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-body font-bold px-3 py-1 rounded-full">
-          Populaire
+          {t('popular')}
         </div>
       )}
       <div
@@ -53,9 +55,9 @@ export function PricingCard({
       </div>
       <div className="font-headings font-bold text-3xl text-foreground mb-1">{priceAfrica}</div>
       <div className="text-sm text-muted-foreground mb-1">
-        ou {priceEurope} {period}
+        {t('orPrice', { price: priceEurope, period: period ?? t('defaultPeriod') })}
       </div>
-      <div className="text-xs text-muted-foreground mb-6">Afrique &amp; diaspora</div>
+      <div className="text-xs text-muted-foreground mb-6">{t('region')}</div>
       <ul className="flex flex-col gap-2.5 flex-1 mb-6">
         {features.map((f, i) => (
           <li key={i} className="flex items-start gap-2 text-sm text-foreground">
@@ -76,7 +78,7 @@ export function PricingCard({
             : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
         }`}
       >
-        {tier === 'freemium' ? 'Commencer gratuitement' : 'Choisir ce plan'}
+        {tier === 'freemium' ? t('startFree') : t('choosePlan')}
       </Link>
     </div>
   );
