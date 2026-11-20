@@ -470,6 +470,20 @@
         "occasionAddFailed": "Erreur lors de l'ajout."
       }
     },
+    "preview": {
+      "loading": "Chargement de l'aperçu…",
+      "notFound": "Cérémonie introuvable",
+      "loadError": "Erreur de chargement",
+      "backToList": "Retour aux cérémonies",
+      "banner": "Mode aperçu — vous voyez l'invitation comme vos invités la verront.",
+      "backToEditorAria": "Retour à l'éditeur",
+      "headerLabel": "INVITATION — APERÇU",
+      "genericGreeting": "Cher·e invité·e",
+      "rsvpDisabled": "(RSVP désactivé en mode aperçu)",
+      "qrTitle": "Aperçu du QR",
+      "qrHint": "Chaque invité aura son propre QR unique, encodant son lien personnel.",
+      "backToEditor": "← Retour à l'éditeur"
+    },
     "status": {
       "DRAFT": "Brouillon",
       "ACTIVE": "Active",

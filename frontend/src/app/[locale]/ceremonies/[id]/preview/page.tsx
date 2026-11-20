@@ -5,8 +5,9 @@
 // would see it, minus the RSVP buttons / state. No real slug, no guest
 // touched, no companionCount persistence — this is a visual dry-run.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Link } from '@/i18n/navigation';
 import { Icon } from '@/components/Icon';
@@ -54,17 +55,34 @@ const CEREMONY_EMOJI: Record<string, string> = {
   AUTRE: '✨',
 };
 
-const DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
-const TIME_FMT = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' });
+const LOCALE_TAG: Record<string, string> = { fr: 'fr-FR', en: 'en-US' };
 
 export default function CeremonyPreviewPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useTranslations('ceremonies.preview');
+  const tInv = useTranslations('invitation');
+  const locale = useLocale();
   const ceremonyId = params.id;
+
+  // Same formatters as /i/[slug] so the preview matches what guests see.
+  const dateFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(LOCALE_TAG[locale] ?? 'fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+    [locale],
+  );
+  const timeFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(LOCALE_TAG[locale] ?? 'fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [locale],
+  );
 
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'not-found' | 'error'>('loading');
@@ -94,7 +112,7 @@ export default function CeremonyPreviewPage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Chargement de l’aperçu…</p>
+        <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </div>
     );
   }
@@ -105,10 +123,10 @@ export default function CeremonyPreviewPage() {
         <div className="max-w-sm text-center">
           <div className="text-5xl mb-3 opacity-30">💌</div>
           <h1 className="font-headings font-bold text-xl mb-2">
-            {status === 'not-found' ? 'Cérémonie introuvable' : 'Erreur de chargement'}
+            {status === 'not-found' ? t('notFound') : t('loadError')}
           </h1>
           <Link href="/ceremonies" className="text-primary font-bold text-sm">
-            Retour aux cérémonies
+            {t('backToList')}
           </Link>
         </div>
       </div>
@@ -126,7 +144,7 @@ export default function CeremonyPreviewPage() {
       {/* Preview-mode banner */}
       <div className="bg-gold text-background px-4 py-2 flex items-center justify-center gap-2 text-xs font-bold">
         <Icon name="eye" size={12} />
-        <span>Mode aperçu — vous voyez l’invitation comme vos invités la verront.</span>
+        <span>{t('banner')}</span>
       </div>
 
       {/* Header (same as /i/[slug]) */}
@@ -134,11 +152,11 @@ export default function CeremonyPreviewPage() {
         <Link
           href={`/ceremonies/${ceremony.id}/editor`}
           className="text-primary-foreground"
-          aria-label="Retour à l’éditeur"
+          aria-label={t('backToEditorAria')}
         >
           <Icon name="arrow-left" size={18} />
         </Link>
-        <div className="text-xs text-gold font-bold tracking-widest">INVITATION — APERÇU</div>
+        <div className="text-xs text-gold font-bold tracking-widest">{t('headerLabel')}</div>
         <span aria-hidden className="w-[18px]" />
       </div>
 
@@ -179,7 +197,7 @@ export default function CeremonyPreviewPage() {
                 className="text-[11px] font-body uppercase tracking-[0.25em] mb-3"
                 style={{ color: 'var(--inv-gold)' }}
               >
-                Cher·e invité·e
+                {t('genericGreeting')}
               </div>
 
               {ceremony.invitationJson ? (
@@ -225,14 +243,14 @@ export default function CeremonyPreviewPage() {
                 <div className="grid grid-cols-3 gap-2 mb-8 max-w-md mx-auto">
                   {[
                     {
-                      label: 'Date',
-                      value: DATE_FMT.format(new Date(firstOcc.startsAt)),
+                      label: tInv('details.dateLabel'),
+                      value: dateFmt.format(new Date(firstOcc.startsAt)),
                     },
                     {
-                      label: 'Heure',
-                      value: TIME_FMT.format(new Date(firstOcc.startsAt)),
+                      label: tInv('details.timeLabel'),
+                      value: timeFmt.format(new Date(firstOcc.startsAt)),
                     },
-                    { label: 'Lieu', value: firstOcc.locationName },
+                    { label: tInv('details.placeLabel'), value: firstOcc.locationName },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -266,24 +284,22 @@ export default function CeremonyPreviewPage() {
                   disabled
                   className="text-sm font-body font-bold px-6 py-3.5 rounded-full w-full bg-success text-primary-foreground"
                 >
-                  ✓ Je confirme ma présence
+                  {tInv('rsvp.confirmBtn')}
                 </button>
                 <button
                   type="button"
                   disabled
                   className="text-sm font-body px-4 py-2.5 rounded-full text-muted-foreground"
                 >
-                  Je ne peux pas venir
+                  {tInv('rsvp.declineBtn')}
                 </button>
               </div>
-              <p className="mt-2 text-[11px] text-muted-foreground italic">
-                (RSVP désactivé en mode aperçu)
-              </p>
+              <p className="mt-2 text-[11px] text-muted-foreground italic">{t('rsvpDisabled')}</p>
 
               {ceremony.musicLabel && (
                 <div className="mt-8 pt-6 border-t border-gold/20 flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <Icon name="music" size={12} className="text-gold" />
-                  <span>Musique : {ceremony.musicLabel}</span>
+                  <span>{tInv('music', { label: ceremony.musicLabel })}</span>
                 </div>
               )}
             </div>
@@ -296,7 +312,9 @@ export default function CeremonyPreviewPage() {
                 <div className="flex items-start gap-3">
                   <Icon name="map-pin" size={14} className="text-primary mt-1 shrink-0" />
                   <div className="flex-1 text-xs">
-                    <div className="font-bold text-foreground mb-0.5">Lieu complet</div>
+                    <div className="font-bold text-foreground mb-0.5">
+                      {tInv('details.fullAddressLabel')}
+                    </div>
                     <div className="text-muted-foreground">{firstOcc.locationAddress}</div>
                   </div>
                 </div>
@@ -304,7 +322,9 @@ export default function CeremonyPreviewPage() {
                   <div className="flex items-start gap-3">
                     <Icon name="info" size={14} className="text-primary mt-1 shrink-0" />
                     <div className="flex-1 text-xs">
-                      <div className="font-bold text-foreground mb-0.5">Indications</div>
+                      <div className="font-bold text-foreground mb-0.5">
+                        {tInv('details.instructionsLabel')}
+                      </div>
                       <div className="text-muted-foreground">{firstOcc.instructions}</div>
                     </div>
                   </div>
@@ -313,12 +333,14 @@ export default function CeremonyPreviewPage() {
                   <div className="flex items-start gap-3 pt-3 border-t border-border">
                     <Icon name="calendar" size={14} className="text-primary mt-1 shrink-0" />
                     <div className="flex-1 text-xs">
-                      <div className="font-bold text-foreground mb-1">Autres occasions</div>
+                      <div className="font-bold text-foreground mb-1">
+                        {tInv('details.otherOccasionsLabel')}
+                      </div>
                       <ul className="text-muted-foreground space-y-0.5">
                         {ceremony.occasions.slice(1).map((o) => (
                           <li key={o.id}>
-                            {o.label} — {DATE_FMT.format(new Date(o.startsAt))}{' '}
-                            {TIME_FMT.format(new Date(o.startsAt))} · {o.locationName}
+                            {o.label} — {dateFmt.format(new Date(o.startsAt))}{' '}
+                            {timeFmt.format(new Date(o.startsAt))} · {o.locationName}
                           </li>
                         ))}
                       </ul>
@@ -331,7 +353,7 @@ export default function CeremonyPreviewPage() {
             {/* Accompagnants — disabled in preview */}
             <div className="bg-secondary border border-border rounded-xl p-4 opacity-60 pointer-events-none">
               <div className="text-sm font-body font-bold text-secondary-foreground mb-3">
-                Nombre d&apos;accompagnants
+                {tInv('companions.title')}
               </div>
               <div className="flex gap-2 mb-2">
                 {[1, 2, 3, 4].map((n) => (
@@ -341,25 +363,25 @@ export default function CeremonyPreviewPage() {
                     disabled
                     className="flex-1 py-2 rounded-lg text-sm font-body font-bold border border-border text-foreground"
                   >
-                    {n === 1 ? '+ Moi seul' : `+ ${n - 1}`}
+                    {n === 1
+                      ? tInv('companions.aloneOption')
+                      : tInv('companions.plusN', { n: n - 1 })}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="bg-card border border-border rounded-xl p-5 flex flex-col items-center gap-3">
-              <div className="text-sm font-body font-bold text-foreground">Aperçu du QR</div>
+              <div className="text-sm font-body font-bold text-foreground">{t('qrTitle')}</div>
               <QRCode value={previewUrl} size={180} />
-              <p className="text-xs text-muted-foreground text-center max-w-xs">
-                Chaque invité aura son propre QR unique, encodant son lien personnel.
-              </p>
+              <p className="text-xs text-muted-foreground text-center max-w-xs">{t('qrHint')}</p>
             </div>
 
             <Link
               href={`/ceremonies/${ceremony.id}/editor`}
               className="block w-full text-center bg-primary text-primary-foreground font-body font-bold py-3 rounded-lg text-sm"
             >
-              ← Retour à l’éditeur
+              {t('backToEditor')}
             </Link>
           </div>
         </div>

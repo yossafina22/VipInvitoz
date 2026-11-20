@@ -470,6 +470,20 @@
         "occasionAddFailed": "Error while adding."
       }
     },
+    "preview": {
+      "loading": "Loading preview…",
+      "notFound": "Ceremony not found",
+      "loadError": "Loading error",
+      "backToList": "Back to ceremonies",
+      "banner": "Preview mode — you see the invitation exactly as your guests will.",
+      "backToEditorAria": "Back to the editor",
+      "headerLabel": "INVITATION — PREVIEW",
+      "genericGreeting": "Dear guest",
+      "rsvpDisabled": "(RSVP disabled in preview mode)",
+      "qrTitle": "QR preview",
+      "qrHint": "Each guest will get their own unique QR code, encoding their personal link.",
+      "backToEditor": "← Back to the editor"
+    },
     "status": {
       "DRAFT": "Draft",
       "ACTIVE": "Active",
