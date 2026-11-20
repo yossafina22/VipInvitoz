@@ -136,12 +136,34 @@ describe('toBudgetCsv', () => {
         },
       ],
       headers,
+      'fr',
     );
-    expect(csv.startsWith('﻿')).toBe(true);
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
     const lines = csv.slice(1).split('\r\n');
     expect(lines[0]).toBe(headers.join(';'));
-    expect(lines[1]).toBe("2026-12-01;Traiteur;'=SUM(A1);1.00;10.00;10.00;Payé");
-    expect(lines[2]).toBe(';"a;b""c";ok;2.00;5.00;10.00;Prévu');
+    expect(lines[1]).toBe("2026-12-01;Traiteur;'=SUM(A1);1,00;10,00;10,00;Payé");
+    expect(lines[2]).toBe(';"a;b""c";ok;2,00;5,00;10,00;Prévu');
+  });
+
+  it('uses comma separator and dot decimals for English Excel', () => {
+    const csv = toBudgetCsv(
+      [
+        {
+          date: null,
+          category: 'Venue, decor',
+          label: 'Chairs',
+          quantity: '200.00',
+          unitAmount: '5.50',
+          total: '1100.00',
+          status: 'Paid',
+        },
+      ],
+      ['Date', 'Category', 'Label', 'Quantity', 'Unit amount', 'Total', 'Status'],
+      'en',
+    );
+    const lines = csv.slice(1).split('\r\n');
+    expect(lines[0]).toBe('Date,Category,Label,Quantity,Unit amount,Total,Status');
+    expect(lines[1]).toBe(',"Venue, decor",Chairs,200.00,5.50,1100.00,Paid');
   });
 });
 
@@ -155,5 +177,17 @@ describe('MoneySchema / QuantitySchema', () => {
     expect(MoneySchema.safeParse(-1).success).toBe(false);
     expect(QuantitySchema.safeParse(0).success).toBe(false);
     expect(QuantitySchema.safeParse(0.5).success).toBe(true);
+  });
+});
+
+describe('MoneySchema precision on large amounts', () => {
+  it('accepts cents on amounts above 131072', () => {
+    expect(MoneySchema.safeParse(1234567.89).success).toBe(true);
+    expect(MoneySchema.safeParse(131072.11).success).toBe(true);
+    expect(MoneySchema.safeParse(999999999999.99).success).toBe(true);
+  });
+
+  it('still rejects a third decimal on large amounts', () => {
+    expect(MoneySchema.safeParse(1234567.891).success).toBe(false);
   });
 });

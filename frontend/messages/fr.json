@@ -682,6 +682,7 @@
     "loading": "Chargement…",
     "loadError": "Impossible de charger le budget.",
     "retry": "Réessayer",
+    "ceremonyLabel": "Cérémonie",
     "export": "Exporter",
     "addExpense": "Dépense",
     "noCeremony": {

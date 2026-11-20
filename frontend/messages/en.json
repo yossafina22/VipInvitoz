@@ -682,6 +682,7 @@
     "loading": "Loading…",
     "loadError": "Could not load the budget.",
     "retry": "Try again",
+    "ceremonyLabel": "Ceremony",
     "export": "Export",
     "addExpense": "Expense",
     "noCeremony": {

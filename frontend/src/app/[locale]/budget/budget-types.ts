@@ -39,12 +39,43 @@ export interface BudgetResponse {
   summary: BudgetSummaryDto;
 }
 
-// Accepts "11,99" and "250 000" (JS \s also matches the no-break spaces used as
-// FR thousands separators). Returns NaN when not a number.
+const PLAIN = /^(\d+)(?:[.,](\d{1,2}))?$/;
+// Thousands groups use one separator (`.` or `,`) followed by exactly 3 digits;
+// the optional decimal part must use the other separator.
+const GROUPED = /^([1-9]\d{0,2})([.,])(\d{3}(?:\2\d{3})*)(?:([.,])(\d{1,2}))?$/;
+
+// Reads "250 000", "250.000", "1,500", "1 500,50", "1.234,56", "1,234.56".
+// Whitespace (incl. the no-break spaces FR uses, matched by JS \s) is a
+// thousands separator. Ambiguous or malformed input returns NaN rather than
+// guessing a value 1000x off.
 export function parseAmountInput(raw: string): number {
-  const cleaned = raw.replace(/\s/g, '').replace(',', '.');
-  if (cleaned === '') return NaN;
-  return Number(cleaned);
+  const s = raw.replace(/\s/g, '');
+  const plain = PLAIN.exec(s);
+  if (plain) return Number(`${plain[1]}.${plain[2] ?? '0'}`);
+  const grouped = GROUPED.exec(s);
+  if (!grouped) return NaN;
+  const [, head, groupSep, groups, decimalSep, decimals] = grouped;
+  if (decimalSep !== undefined && decimalSep === groupSep) return NaN;
+  const intPart = `${head}${(groups ?? '').split(groupSep ?? '').join('')}`;
+  return Number(`${intPart}.${decimals ?? '0'}`);
+}
+
+export function budgetQuery(locale: string, ceremonyId: string | null): string {
+  const base = `?locale=${encodeURIComponent(locale)}`;
+  return ceremonyId ? `${base}&ceremonyId=${encodeURIComponent(ceremonyId)}` : base;
+}
+
+// The export is a plain browser navigation, which bypasses api()'s token
+// refresh. Calling an authenticated JSON endpoint first refreshes an expired
+// session and surfaces 403/404 in the page instead of a raw JSON tab.
+export async function prepareExportUrl(
+  fetchJson: (path: string) => Promise<unknown>,
+  locale: string,
+  ceremonyId: string,
+): Promise<string> {
+  const query = budgetQuery(locale, ceremonyId);
+  await fetchJson(`/api/budget${query}`);
+  return `/api/budget/export${query}`;
 }
 
 export const LOCALE_TAG: Record<string, string> = { fr: 'fr-FR', en: 'en-US' };

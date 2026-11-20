@@ -57,13 +57,13 @@ describe('GET /api/budget/export', () => {
     // TextDecoder strips the BOM by default, so the decoded text starts at the header.
     const lines = new TextDecoder().decode(bytes).split('\r\n');
     expect(lines[0]).toBe('Date;Poste;Libellé;Quantité;Prix unitaire;Total;Statut');
-    expect(lines[1]).toBe('2026-12-01;Salle & décor;Chaises;200.00;500.00;100000.00;Payé');
+    expect(lines[1]).toBe('2026-12-01;Salle & décor;Chaises;200,00;500,00;100000,00;Payé');
   });
 
   it('uses English headers and statuses for locale=en', async () => {
     prismaMock.ceremony.findFirst.mockResolvedValue({ id: 'cer1' } as never);
     prismaMock.budgetExpense.findMany.mockResolvedValue([]);
     const text = await (await GET(get('?ceremonyId=cer1&locale=en'))).text();
-    expect(text).toBe('Date;Category;Label;Quantity;Unit amount;Total;Status');
+    expect(text).toBe('Date,Category,Label,Quantity,Unit amount,Total,Status');
   });
 });

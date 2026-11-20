@@ -1,4 +1,5 @@
-// VIP budget — CSV export (opens in Excel: `;` separator + UTF-8 BOM).
+// VIP budget — CSV export for Excel (UTF-8 BOM; fr: `;` + decimal comma,
+// en: `,` + decimal point — see CSV_FORMAT in budget.ts).
 //
 // GET /api/budget/export?ceremonyId=<cuid>&locale=fr|en
 // auth + VIP. Foreign ceremony → 404. Headers and status words follow locale.
@@ -67,6 +68,7 @@ export async function GET(req: NextRequest) {
         status: STATUS_WORDS[locale][e.status as ExpenseStatus] ?? e.status,
       })),
       HEADERS[locale],
+      locale,
     );
 
     return new NextResponse(csv, {

@@ -20,8 +20,10 @@ export function toBudgetLocale(value: string | null | undefined): BudgetLocale {
   return value === 'en' ? 'en' : 'fr';
 }
 
+// Decimal parses the number's shortest round-trip string, so this is exact
+// (a float tolerance check fails for cents above ~131 072).
 function hasAtMostTwoDecimals(x: number): boolean {
-  return Math.abs(x * 100 - Math.round(x * 100)) < 1e-9;
+  return new Prisma.Decimal(x).decimalPlaces() <= 2;
 }
 
 export const MoneySchema = z
@@ -180,27 +182,40 @@ export interface BudgetCsvRow {
 // Excel needs a BOM to read the file as UTF-8 (accents).
 const UTF8_BOM = String.fromCharCode(0xfeff);
 
-function csvCell(value: string): string {
+// Excel reads CSV with the OS list separator and decimal mark: FR Excel expects
+// `;` and `1,50`, EN Excel expects `,` and `1.50`. Otherwise numbers import as text.
+const CSV_FORMAT: Record<BudgetLocale, { separator: string; decimal: string }> = {
+  fr: { separator: ';', decimal: ',' },
+  en: { separator: ',', decimal: '.' },
+};
+
+function csvCell(value: string, separator: string): string {
   // Spreadsheet formula injection: a leading = + - @ would be executed by Excel.
   const safe = /^[=+\-@]/.test(value) ? `'${value}` : value;
-  return /[;"\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  const needsQuotes = safe.includes(separator) || /["\r\n]/.test(safe);
+  return needsQuotes ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
-export function toBudgetCsv(rows: BudgetCsvRow[], headers: readonly string[]): string {
-  const lines = [headers.map(csvCell).join(';')];
+export function toBudgetCsv(
+  rows: BudgetCsvRow[],
+  headers: readonly string[],
+  locale: BudgetLocale,
+): string {
+  const { separator, decimal } = CSV_FORMAT[locale];
+  const num = (v: string) => (decimal === '.' ? v : v.replace('.', decimal));
+  const line = (cells: string[]) => cells.map((c) => csvCell(c, separator)).join(separator);
+  const lines = [line([...headers])];
   for (const r of rows) {
     lines.push(
-      [
+      line([
         r.date ? r.date.toISOString().slice(0, 10) : '',
         r.category,
         r.label,
-        r.quantity,
-        r.unitAmount,
-        r.total,
+        num(r.quantity),
+        num(r.unitAmount),
+        num(r.total),
         r.status,
-      ]
-        .map(csvCell)
-        .join(';'),
+      ]),
     );
   }
   return `${UTF8_BOM}${lines.join('\r\n')}`;

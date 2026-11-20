@@ -9,7 +9,18 @@ import { Icon } from '@/components/Icon';
 import { api, ApiError } from '@/lib/api';
 import { CategoryRow } from './CategoryRow';
 import { ExpenseDialog, type ExpensePayload } from './ExpenseDialog';
-import { LOCALE_TAG, type BudgetExpenseDto, type BudgetResponse } from './budget-types';
+import {
+  LOCALE_TAG,
+  budgetQuery,
+  prepareExportUrl,
+  type BudgetExpenseDto,
+  type BudgetResponse,
+} from './budget-types';
+
+interface CeremonyOption {
+  id: string;
+  title: string;
+}
 
 type Status = 'loading' | 'ready' | 'vip-required' | 'error';
 type DialogState = { mode: 'create' } | { mode: 'edit'; expense: BudgetExpenseDto } | null;
@@ -31,6 +42,9 @@ export default function BudgetPage() {
   const [addingCategory, setAddingCategory] = useState(false);
   const [dialog, setDialog] = useState<DialogState>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
+  // null = let the server pick the most recent active ceremony.
+  const [selectedCeremonyId, setSelectedCeremonyId] = useState<string | null>(null);
+  const [ceremonies, setCeremonies] = useState<CeremonyOption[]>([]);
 
   const numberFmt = useMemo(
     () =>
@@ -53,17 +67,25 @@ export default function BudgetPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await api<BudgetResponse>(`/api/budget?locale=${locale}`);
+      const res = await api<BudgetResponse>(
+        `/api/budget${budgetQuery(locale, selectedCeremonyId)}`,
+      );
       setData(res);
       setStatus('ready');
     } catch (err) {
       setStatus(err instanceof ApiError && err.code === 'TIER_REQUIRED' ? 'vip-required' : 'error');
     }
-  }, [locale]);
+  }, [locale, selectedCeremonyId]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    api<{ ceremonies: CeremonyOption[] }>('/api/ceremonies')
+      .then((res) => setCeremonies(res.ceremonies.map((c) => ({ id: c.id, title: c.title }))))
+      .catch(() => setCeremonies([]));
+  }, []);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -136,9 +158,13 @@ export default function BudgetPage() {
     setDialog({ mode: 'create' });
   }
 
-  function exportCsv() {
+  async function exportCsv() {
     if (!data?.ceremonyId) return;
-    window.location.href = `/api/budget/export?ceremonyId=${encodeURIComponent(data.ceremonyId)}&locale=${locale}`;
+    try {
+      window.location.href = await prepareExportUrl((path) => api(path), locale, data.ceremonyId);
+    } catch (err) {
+      showToast(errorMessage(err));
+    }
   }
 
   const categoryLabel = useMemo(() => {
@@ -160,7 +186,7 @@ export default function BudgetPage() {
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={exportCsv}
+              onClick={() => void exportCsv()}
               className="bg-secondary text-secondary-foreground font-body font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2"
             >
               <Icon name="download" size={14} />
@@ -178,6 +204,27 @@ export default function BudgetPage() {
           </div>
         )}
       </PageHeader>
+
+      {ceremonies.length > 1 && status !== 'vip-required' && (
+        <label className="mb-5 flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{t('ceremonyLabel')}</span>
+          <select
+            value={selectedCeremonyId ?? data?.ceremonyId ?? ''}
+            onChange={(e) => {
+              setStatus('loading');
+              setAddingCategory(false);
+              setSelectedCeremonyId(e.target.value);
+            }}
+            className="bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary sm:max-w-sm"
+          >
+            {ceremonies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       {status === 'loading' && (
         <div className="min-h-[30vh] flex items-center justify-center">
