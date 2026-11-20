@@ -205,3 +205,25 @@ export function toBudgetCsv(rows: BudgetCsvRow[], headers: readonly string[]): s
   }
   return `${UTF8_BOM}${lines.join('\r\n')}`;
 }
+
+export function serializeExpense(
+  e: Pick<
+    BudgetExpense,
+    'id' | 'categoryId' | 'label' | 'quantity' | 'unitAmount' | 'status' | 'date'
+  >,
+) {
+  return {
+    id: e.id,
+    categoryId: e.categoryId,
+    label: e.label,
+    quantity: e.quantity.toFixed(2),
+    unitAmount: e.unitAmount.toFixed(2),
+    total: lineTotal(e.quantity, e.unitAmount).toFixed(2),
+    status: e.status,
+    date: e.date ? e.date.toISOString().slice(0, 10) : null,
+  };
+}
+
+export function serializeCategory(c: Pick<BudgetCategory, 'id' | 'label' | 'planned' | 'order'>) {
+  return { id: c.id, label: c.label, planned: c.planned.toFixed(2), order: c.order };
+}
