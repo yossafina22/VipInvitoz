@@ -269,6 +269,87 @@
         "occasionLabel": "Cérémonie principale"
       }
     },
+    "types": {
+      "MARIAGE": "Mariage",
+      "BAPTEME": "Baptême",
+      "ANNIVERSAIRE": "Anniversaire",
+      "DEUIL": "Deuil",
+      "AUTRE": "Autre"
+    },
+    "defaultOccasionLabel": {
+      "MARIAGE": "Cérémonie",
+      "BAPTEME": "Baptême",
+      "ANNIVERSAIRE": "Fête",
+      "DEUIL": "Cérémonie",
+      "AUTRE": "Célébration"
+    },
+    "new": {
+      "pageTitle": "Créer une cérémonie",
+      "steps": {
+        "details": "Détails",
+        "aiBrief": "Description IA",
+        "preview": "Prévisualiser",
+        "guests": "Invités"
+      },
+      "formTitle": "Décrivez votre cérémonie",
+      "formSubtitle": "Étape 1 : Informations de base",
+      "cover": {
+        "label": "Photo de couverture",
+        "alt": "Couverture",
+        "remove": "Retirer",
+        "uploading": "Upload en cours…",
+        "pick": "Cliquez pour choisir une image",
+        "formats": "JPG, PNG, WebP — Max 10 Mo",
+        "hint": "Cette image sera affichée comme fond de l'invitation."
+      },
+      "uploadErrors": {
+        "STORAGE_NOT_CONFIGURED": "Upload non configuré côté serveur (Cloudinary manquant).",
+        "FILE_TOO_LARGE": "Fichier trop volumineux (max 10 Mo).",
+        "INVALID_FORMAT": "Format non pris en charge. Utilisez JPG, PNG ou WebP.",
+        "generic": "Erreur lors de l'upload de l'image.",
+        "network": "Erreur réseau lors de l'upload."
+      },
+      "typeLabel": "Type de cérémonie",
+      "titleLabel": "Titre de l'événement",
+      "titlePlaceholder": "Ex: Mariage de Fatoumata & Ibrahima",
+      "dateLabel": "Date principale",
+      "timeLabel": "Heure",
+      "placeLabel": "Lieu principal",
+      "placePlaceholder": "Hôtel Terrou-Bi, Dakar",
+      "placeHint": "Vous pourrez ajouter d'autres lieux après (civil, religieux, réception…).",
+      "aiTitle": "Description pour l'IA",
+      "aiSubtitle": "En une phrase, décrivez l'ambiance souhaitée (10 caractères minimum)",
+      "aiLabel": "Inspirez l'IA",
+      "aiPlaceholder": "Ex: Mariage traditionnel africain avec touches modernes, ambiance chaleureuse et festive...",
+      "aiWillGenerate": {
+        "title": "L'IA va générer :",
+        "text": "Texte d'invitation personnalisé",
+        "layout": "Mise en page et couleurs adaptées",
+        "mobile": "Structure optimisée mobile",
+        "credits": "Vous pourrez modifier avec vos crédits IA"
+      },
+      "errors": {
+        "limitReached": "Votre palier actuel ne permet pas de créer une nouvelle cérémonie. Passez en VIP.",
+        "generic": "Impossible de créer la cérémonie. Vérifiez vos informations.",
+        "network": "Erreur réseau. Réessayez."
+      },
+      "cancel": "Annuler",
+      "submit": "Créer la cérémonie",
+      "submitting": "Création…",
+      "previewTitle": "Aperçu de l'invitation",
+      "previewSubtitle": "Voici ce que vos invités verront",
+      "previewTitleFallback": "Votre événement",
+      "previewBodyFallback": "Décrivez votre ambiance (10+ caractères) — un aperçu stylisé par l'IA apparaîtra sur l'invitation finale.",
+      "previewLocationFallback": "Lieu à définir",
+      "draftState": "État : Brouillon",
+      "nextStepsTitle": "Étapes suivantes",
+      "nextSteps": {
+        "details": "Compléter les détails",
+        "editor": "Modifier dans l'éditeur",
+        "guests": "Ajouter les invités",
+        "send": "Envoyer les invitations"
+      }
+    },
     "status": {
       "DRAFT": "Brouillon",
       "ACTIVE": "Active",

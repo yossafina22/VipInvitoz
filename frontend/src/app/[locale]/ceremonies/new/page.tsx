@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { AppLayout } from '@/components/AppLayout';
@@ -12,9 +13,10 @@ import { Icon } from '@/components/Icon';
 import { api, ApiError } from '@/lib/api';
 import { uploadFile } from '@/lib/upload-client';
 
-const STEPS = ['Détails', 'Description IA', 'Prévisualiser', 'Invités'];
+const STEP_KEYS = ['details', 'aiBrief', 'preview', 'guests'] as const;
 
-type CeremonyType = 'MARIAGE' | 'BAPTEME' | 'ANNIVERSAIRE' | 'DEUIL' | 'AUTRE';
+const CEREMONY_TYPES = ['MARIAGE', 'BAPTEME', 'ANNIVERSAIRE', 'DEUIL', 'AUTRE'] as const;
+type CeremonyType = (typeof CEREMONY_TYPES)[number];
 
 const EMOJI: Record<CeremonyType, string> = {
   MARIAGE: '💍',
@@ -24,13 +26,7 @@ const EMOJI: Record<CeremonyType, string> = {
   AUTRE: '✨',
 };
 
-const TYPE_DEFAULT_LABEL: Record<CeremonyType, string> = {
-  MARIAGE: 'Cérémonie',
-  BAPTEME: 'Baptême',
-  ANNIVERSAIRE: 'Fête',
-  DEUIL: 'Cérémonie',
-  AUTRE: 'Célébration',
-};
+const LOCALE_TAG: Record<string, string> = { fr: 'fr-FR', en: 'en-US' };
 
 function todayIsoDate(): string {
   const d = new Date();
@@ -40,22 +36,28 @@ function todayIsoDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-function formatHumanDate(isoDate: string): string {
+function formatHumanDate(isoDate: string, localeTag: string): string {
   if (!isoDate) return '';
   const d = new Date(`${isoDate}T00:00:00`);
   if (Number.isNaN(d.getTime())) return isoDate;
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString(localeTag, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function formatHumanTime(hhmm: string): string {
+function formatHumanTime(hhmm: string, locale: string, localeTag: string): string {
   if (!hhmm) return '';
   const [h, m] = hhmm.split(':');
   if (!h) return hhmm;
-  return `${h}h${m ?? '00'}`;
+  if (locale === 'fr') return `${h}h${m ?? '00'}`;
+  const d = new Date(2000, 0, 1, Number(h), Number(m ?? '0'));
+  if (Number.isNaN(d.getTime())) return hhmm;
+  return d.toLocaleTimeString(localeTag, { hour: 'numeric', minute: '2-digit' });
 }
 
 export default function CreateCeremonyPage() {
   const router = useRouter();
+  const t = useTranslations('ceremonies');
+  const locale = useLocale();
+  const localeTag = LOCALE_TAG[locale] ?? 'fr-FR';
 
   const [type, setType] = useState<CeremonyType>('MARIAGE');
   const [title, setTitle] = useState('');
@@ -69,6 +71,8 @@ export default function CreateCeremonyPage() {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
 
+  const steps = STEP_KEYS.map((key) => t(`new.steps.${key}`));
+
   async function handleCoverPick(file: File) {
     setError(null);
     setUploadingCover(true);
@@ -78,13 +82,13 @@ export default function CreateCeremonyPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.code === 'STORAGE_NOT_CONFIGURED')
-          setError('Upload non configuré côté serveur (Cloudinary manquant).');
-        else if (err.code === 'FILE_TOO_LARGE') setError('Fichier trop volumineux (max 10 Mo).');
+          setError(t('new.uploadErrors.STORAGE_NOT_CONFIGURED'));
+        else if (err.code === 'FILE_TOO_LARGE') setError(t('new.uploadErrors.FILE_TOO_LARGE'));
         else if (err.code === 'INVALID_MIME' || err.code === 'MAGIC_BYTE_MISMATCH')
-          setError('Format non pris en charge. Utilisez JPG, PNG ou WebP.');
-        else setError('Erreur lors de l’upload de l’image.');
+          setError(t('new.uploadErrors.INVALID_FORMAT'));
+        else setError(t('new.uploadErrors.generic'));
       } else {
-        setError('Erreur réseau lors de l’upload.');
+        setError(t('new.uploadErrors.network'));
       }
     } finally {
       setUploadingCover(false);
@@ -119,7 +123,7 @@ export default function CreateCeremonyPage() {
           description: aiBrief.trim(),
           occasions: [
             {
-              label: TYPE_DEFAULT_LABEL[type],
+              label: t(`defaultOccasionLabel.${type}`),
               startsAt,
               locationName,
               locationAddress,
@@ -135,7 +139,7 @@ export default function CreateCeremonyPage() {
           setError(
             typeof err.body?.message === 'string'
               ? (err.body.message as string)
-              : 'Votre palier actuel ne permet pas de créer une nouvelle cérémonie. Passez en VIP.',
+              : t('new.errors.limitReached'),
           );
         } else if (err.status === 401) {
           router.push('/auth/login?next=/ceremonies/new');
@@ -144,11 +148,11 @@ export default function CreateCeremonyPage() {
           setError(
             typeof err.body?.message === 'string'
               ? (err.body.message as string)
-              : 'Impossible de créer la cérémonie. Vérifiez vos informations.',
+              : t('new.errors.generic'),
           );
         }
       } else {
-        setError('Erreur réseau. Réessayez.');
+        setError(t('new.errors.network'));
       }
     } finally {
       setSubmitting(false);
@@ -156,26 +160,26 @@ export default function CreateCeremonyPage() {
   }
 
   return (
-    <AppLayout pageTitle="Créer une cérémonie" tier="premium">
+    <AppLayout pageTitle={t('new.pageTitle')} tier="premium">
       <div className="mb-6">
-        <StepIndicator steps={STEPS} currentStep={1} />
+        <StepIndicator steps={steps} currentStep={1} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Left — Form */}
         <div className="flex flex-col gap-5">
-          <PageHeader title="Décrivez votre cérémonie" subtitle="Étape 1 : Informations de base" />
+          <PageHeader title={t('new.formTitle')} subtitle={t('new.formSubtitle')} />
 
           <div className="bg-card border border-border rounded-xl p-5 md:p-6 flex flex-col gap-5">
             <div>
               <label className="text-sm font-body font-medium text-foreground block mb-2">
-                Photo de couverture
+                {t('new.cover.label')}
               </label>
               {coverImageUrl ? (
                 <div className="relative group">
                   <img
                     src={coverImageUrl}
-                    alt="Couverture"
+                    alt={t('new.cover.alt')}
                     className="w-full h-40 object-cover rounded-xl border border-border"
                   />
                   <button
@@ -183,7 +187,7 @@ export default function CreateCeremonyPage() {
                     onClick={() => setCoverImageUrl(null)}
                     className="absolute top-2 right-2 bg-background/90 text-foreground text-xs font-bold px-2 py-1 rounded-md border border-border"
                   >
-                    Retirer
+                    {t('new.cover.remove')}
                   </button>
                 </div>
               ) : (
@@ -201,37 +205,29 @@ export default function CreateCeremonyPage() {
                   />
                   <Icon name="image-plus" size={32} className="text-muted-foreground mb-2" />
                   <div className="text-sm font-body text-foreground mb-1">
-                    {uploadingCover ? 'Upload en cours…' : 'Cliquez pour choisir une image'}
+                    {uploadingCover ? t('new.cover.uploading') : t('new.cover.pick')}
                   </div>
-                  <div className="text-xs text-muted-foreground">JPG, PNG, WebP — Max 10 Mo</div>
+                  <div className="text-xs text-muted-foreground">{t('new.cover.formats')}</div>
                 </label>
               )}
-              <p className="text-xs text-muted-foreground mt-2">
-                Cette image sera affichée comme fond de l&apos;invitation.
-              </p>
+              <p className="text-xs text-muted-foreground mt-2">{t('new.cover.hint')}</p>
             </div>
 
             <div className="border-t border-border pt-5">
               <FormField
                 name="type"
-                label="Type de cérémonie"
+                label={t('new.typeLabel')}
                 type="select"
                 value={type}
                 onChange={(v) => setType(v as CeremonyType)}
-                options={[
-                  { value: 'MARIAGE', label: 'Mariage' },
-                  { value: 'BAPTEME', label: 'Baptême' },
-                  { value: 'ANNIVERSAIRE', label: 'Anniversaire' },
-                  { value: 'DEUIL', label: 'Deuil' },
-                  { value: 'AUTRE', label: 'Autre' },
-                ]}
+                options={CEREMONY_TYPES.map((value) => ({ value, label: t(`types.${value}`) }))}
                 required
               />
             </div>
             <FormField
               name="title"
-              label="Titre de l'événement"
-              placeholder="Ex: Mariage de Fatoumata & Ibrahima"
+              label={t('new.titleLabel')}
+              placeholder={t('new.titlePlaceholder')}
               value={title}
               onChange={setTitle}
               required
@@ -239,7 +235,8 @@ export default function CreateCeremonyPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 flex flex-col gap-1.5">
                 <label htmlFor="date" className="text-sm font-body font-medium text-foreground">
-                  Date principale<span className="text-primary ml-1">*</span>
+                  {t('new.dateLabel')}
+                  <span className="text-primary ml-1">*</span>
                 </label>
                 <input
                   id="date"
@@ -253,7 +250,7 @@ export default function CreateCeremonyPage() {
               </div>
               <div className="sm:w-36 flex flex-col gap-1.5">
                 <label htmlFor="time" className="text-sm font-body font-medium text-foreground">
-                  Heure
+                  {t('new.timeLabel')}
                 </label>
                 <input
                   id="time"
@@ -267,24 +264,21 @@ export default function CreateCeremonyPage() {
             </div>
             <FormField
               name="place"
-              label="Lieu principal"
-              placeholder="Hôtel Terrou-Bi, Dakar"
+              label={t('new.placeLabel')}
+              placeholder={t('new.placePlaceholder')}
               value={place}
               onChange={setPlace}
               required
-              hint="Vous pourrez ajouter d'autres lieux après (civil, religieux, réception…)."
+              hint={t('new.placeHint')}
             />
 
             <div className="border-t border-border pt-5">
-              <PageHeader
-                title="Description pour l'IA"
-                subtitle="En une phrase, décrivez l'ambiance souhaitée (10 caractères minimum)"
-              />
+              <PageHeader title={t('new.aiTitle')} subtitle={t('new.aiSubtitle')} />
               <FormField
                 name="aiBrief"
-                label="Inspirez l'IA"
+                label={t('new.aiLabel')}
                 type="textarea"
-                placeholder="Ex: Mariage traditionnel africain avec touches modernes, ambiance chaleureuse et festive..."
+                placeholder={t('new.aiPlaceholder')}
                 value={aiBrief}
                 onChange={setAiBrief}
                 required
@@ -294,12 +288,12 @@ export default function CreateCeremonyPage() {
             <div className="bg-gold-light border border-gold rounded-lg p-3 flex items-start gap-2">
               <Icon name="info" size={14} className="text-gold mt-0.5 shrink-0" />
               <div className="text-xs text-gold">
-                <div className="font-bold mb-1">L&apos;IA va générer :</div>
+                <div className="font-bold mb-1">{t('new.aiWillGenerate.title')}</div>
                 <ul className="list-disc list-inside space-y-0.5">
-                  <li>Texte d&apos;invitation personnalisé</li>
-                  <li>Mise en page et couleurs adaptées</li>
-                  <li>Structure optimisée mobile</li>
-                  <li>Vous pourrez modifier avec vos crédits IA</li>
+                  <li>{t('new.aiWillGenerate.text')}</li>
+                  <li>{t('new.aiWillGenerate.layout')}</li>
+                  <li>{t('new.aiWillGenerate.mobile')}</li>
+                  <li>{t('new.aiWillGenerate.credits')}</li>
                 </ul>
               </div>
             </div>
@@ -315,7 +309,7 @@ export default function CreateCeremonyPage() {
                 href="/dashboard"
                 className="flex-1 text-center bg-secondary text-secondary-foreground font-body font-bold py-3 rounded-xl text-sm"
               >
-                Annuler
+                {t('new.cancel')}
               </Link>
               <button
                 type="button"
@@ -323,7 +317,7 @@ export default function CreateCeremonyPage() {
                 disabled={!canSubmit || submitting}
                 className="flex-1 text-center bg-primary text-primary-foreground font-body font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {submitting ? 'Création…' : 'Créer la cérémonie'}
+                {submitting ? t('new.submitting') : t('new.submit')}
               </button>
             </div>
           </div>
@@ -331,40 +325,40 @@ export default function CreateCeremonyPage() {
 
         {/* Right — Preview */}
         <div className="flex flex-col gap-5">
-          <PageHeader title="Aperçu de l'invitation" subtitle="Voici ce que vos invités verront" />
+          <PageHeader title={t('new.previewTitle')} subtitle={t('new.previewSubtitle')} />
           <InvitationPreview
             emoji={EMOJI[type]}
-            title={title || 'Votre événement'}
-            body={
-              aiBrief.trim().length >= 10
-                ? aiBrief
-                : 'Décrivez votre ambiance (10+ caractères) — un aperçu stylisé par l’IA apparaîtra sur l’invitation finale.'
-            }
-            date={formatHumanDate(date)}
-            time={formatHumanTime(time)}
-            location={(place.split(',')[0] ?? place).trim() || 'Lieu à définir'}
+            title={title || t('new.previewTitleFallback')}
+            body={aiBrief.trim().length >= 10 ? aiBrief : t('new.previewBodyFallback')}
+            date={formatHumanDate(date, localeTag)}
+            time={formatHumanTime(time, locale, localeTag)}
+            location={(place.split(',')[0] ?? place).trim() || t('new.previewLocationFallback')}
             family=""
           />
 
           <div className="bg-card border border-border rounded-xl p-4">
-            <div className="text-xs font-body text-muted-foreground mb-2">État : Brouillon</div>
-            <div className="font-body font-bold text-sm text-foreground mb-3">Étapes suivantes</div>
+            <div className="text-xs font-body text-muted-foreground mb-2">
+              {t('new.draftState')}
+            </div>
+            <div className="font-body font-bold text-sm text-foreground mb-3">
+              {t('new.nextStepsTitle')}
+            </div>
             <ul className="flex flex-col gap-2 text-xs text-foreground">
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">→</span>
-                <span>Compléter les détails</span>
+                <span>{t('new.nextSteps.details')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-muted-foreground mt-0.5">→</span>
-                <span>Modifier dans l’éditeur</span>
+                <span>{t('new.nextSteps.editor')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-muted-foreground mt-0.5">→</span>
-                <span>Ajouter les invités</span>
+                <span>{t('new.nextSteps.guests')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-muted-foreground mt-0.5">→</span>
-                <span>Envoyer les invitations</span>
+                <span>{t('new.nextSteps.send')}</span>
               </li>
             </ul>
           </div>

@@ -269,6 +269,87 @@
         "occasionLabel": "Main ceremony"
       }
     },
+    "types": {
+      "MARIAGE": "Wedding",
+      "BAPTEME": "Baptism",
+      "ANNIVERSAIRE": "Birthday",
+      "DEUIL": "Funeral",
+      "AUTRE": "Other"
+    },
+    "defaultOccasionLabel": {
+      "MARIAGE": "Ceremony",
+      "BAPTEME": "Baptism",
+      "ANNIVERSAIRE": "Party",
+      "DEUIL": "Ceremony",
+      "AUTRE": "Celebration"
+    },
+    "new": {
+      "pageTitle": "Create a ceremony",
+      "steps": {
+        "details": "Details",
+        "aiBrief": "AI brief",
+        "preview": "Preview",
+        "guests": "Guests"
+      },
+      "formTitle": "Describe your ceremony",
+      "formSubtitle": "Step 1: Basic information",
+      "cover": {
+        "label": "Cover photo",
+        "alt": "Cover",
+        "remove": "Remove",
+        "uploading": "Uploading…",
+        "pick": "Click to choose an image",
+        "formats": "JPG, PNG, WebP — Max 10 MB",
+        "hint": "This image will be used as the invitation background."
+      },
+      "uploadErrors": {
+        "STORAGE_NOT_CONFIGURED": "Uploads are not configured on the server (Cloudinary missing).",
+        "FILE_TOO_LARGE": "File too large (max 10 MB).",
+        "INVALID_FORMAT": "Unsupported format. Use JPG, PNG or WebP.",
+        "generic": "Error while uploading the image.",
+        "network": "Network error while uploading."
+      },
+      "typeLabel": "Ceremony type",
+      "titleLabel": "Event title",
+      "titlePlaceholder": "E.g. Wedding of Fatoumata & Ibrahima",
+      "dateLabel": "Main date",
+      "timeLabel": "Time",
+      "placeLabel": "Main venue",
+      "placePlaceholder": "Hôtel Terrou-Bi, Dakar",
+      "placeHint": "You can add more venues later (civil, religious, reception…).",
+      "aiTitle": "Brief for the AI",
+      "aiSubtitle": "In one sentence, describe the atmosphere you want (10 characters minimum)",
+      "aiLabel": "Inspire the AI",
+      "aiPlaceholder": "E.g. Traditional African wedding with modern touches, warm and festive atmosphere...",
+      "aiWillGenerate": {
+        "title": "The AI will generate:",
+        "text": "Personalised invitation text",
+        "layout": "Matching layout and colours",
+        "mobile": "Mobile-optimised structure",
+        "credits": "You can edit it with your AI credits"
+      },
+      "errors": {
+        "limitReached": "Your current plan does not allow creating a new ceremony. Upgrade to VIP.",
+        "generic": "Could not create the ceremony. Please check your information.",
+        "network": "Network error. Please try again."
+      },
+      "cancel": "Cancel",
+      "submit": "Create the ceremony",
+      "submitting": "Creating…",
+      "previewTitle": "Invitation preview",
+      "previewSubtitle": "This is what your guests will see",
+      "previewTitleFallback": "Your event",
+      "previewBodyFallback": "Describe your atmosphere (10+ characters) — an AI-styled preview will appear on the final invitation.",
+      "previewLocationFallback": "Venue to be confirmed",
+      "draftState": "Status: Draft",
+      "nextStepsTitle": "Next steps",
+      "nextSteps": {
+        "details": "Complete the details",
+        "editor": "Edit in the editor",
+        "guests": "Add guests",
+        "send": "Send the invitations"
+      }
+    },
     "status": {
       "DRAFT": "Draft",
       "ACTIVE": "Active",
