@@ -86,7 +86,9 @@ describe('DELETE /api/budget/expenses/[id]', () => {
 
   it('deletes an owned expense', async () => {
     prismaMock.budgetExpense.findFirst.mockResolvedValue(ownedExpense as never);
-    expect((await DELETE(jsonRequest(URL, 'DELETE'), params('e1'))).status).toBe(204);
+    const res = await DELETE(jsonRequest(URL, 'DELETE'), params('e1'));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
     expect(prismaMock.budgetExpense.delete).toHaveBeenCalledWith({ where: { id: 'e1' } });
   });
 });

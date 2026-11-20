@@ -1,7 +1,7 @@
 // VIP budget — update / delete a category.
 //
 // PATCH  /api/budget/categories/[id] — body: { label?, planned?, order? }
-// DELETE /api/budget/categories/[id] — 409 CATEGORY_NOT_EMPTY if it still has
+// DELETE /api/budget/categories/[id] → { ok: true }; 409 CATEGORY_NOT_EMPTY if it still has
 //        expenses (nothing is deleted silently).
 // CSRF + auth + VIP. Category not owned by the caller → 404.
 
@@ -68,6 +68,6 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
     }
 
     await prisma.budgetCategory.delete({ where: { id: owned.id } });
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json({ ok: true });
   });
 }

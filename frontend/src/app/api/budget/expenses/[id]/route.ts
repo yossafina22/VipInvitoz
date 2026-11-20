@@ -85,6 +85,6 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
     if (!owned) return notFound('EXPENSE_NOT_FOUND');
 
     await prisma.budgetExpense.delete({ where: { id: owned.id } });
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json({ ok: true });
   });
 }

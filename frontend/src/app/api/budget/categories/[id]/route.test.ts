@@ -78,7 +78,8 @@ describe('DELETE /api/budget/categories/[id]', () => {
     prismaMock.budgetCategory.findFirst.mockResolvedValue(owned as never);
     prismaMock.budgetExpense.count.mockResolvedValue(0);
     const res = await DELETE(jsonRequest(URL, 'DELETE'), params('c1'));
-    expect(res.status).toBe(204);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
     expect(prismaMock.budgetCategory.delete).toHaveBeenCalledWith({ where: { id: 'c1' } });
   });
 
