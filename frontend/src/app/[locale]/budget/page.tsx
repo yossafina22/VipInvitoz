@@ -399,27 +399,40 @@ export default function BudgetPage() {
                     <div className="text-sm font-body font-bold tabular-nums shrink-0 w-24 text-right">
                       {fmt(e.total)}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDialogError(null);
-                        setDialog({ mode: 'edit', expense: e });
-                      }}
-                      disabled={busy}
-                      aria-label={t('expenses.edit')}
-                      className="text-muted-foreground hover:text-primary disabled:opacity-40"
-                    >
-                      <Icon name="pencil" size={12} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteExpense(e)}
-                      disabled={busy}
-                      aria-label={t('expenses.delete')}
-                      className="text-muted-foreground hover:text-danger disabled:opacity-40"
-                    >
-                      <Icon name="trash-2" size={12} />
-                    </button>
+                    {e.vendorId ? (
+                      <Link
+                        href="/vendors"
+                        title={t('expenses.fromVendor')}
+                        aria-label={t('expenses.fromVendor')}
+                        className="text-muted-foreground hover:text-primary"
+                      >
+                        <Icon name="users" size={12} />
+                      </Link>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDialogError(null);
+                            setDialog({ mode: 'edit', expense: e });
+                          }}
+                          disabled={busy}
+                          aria-label={t('expenses.edit')}
+                          className="text-muted-foreground hover:text-primary disabled:opacity-40"
+                        >
+                          <Icon name="pencil" size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteExpense(e)}
+                          disabled={busy}
+                          aria-label={t('expenses.delete')}
+                          className="text-muted-foreground hover:text-danger disabled:opacity-40"
+                        >
+                          <Icon name="trash-2" size={12} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

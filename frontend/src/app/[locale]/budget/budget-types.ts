@@ -20,6 +20,8 @@ export interface BudgetExpenseDto {
   total: string;
   status: ExpenseStatus;
   date: string | null;
+  /** Set when the expense mirrors a vendor amount (read-only here). */
+  vendorId: string | null;
 }
 
 export interface BudgetSummaryDto {

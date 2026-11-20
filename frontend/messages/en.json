@@ -725,6 +725,7 @@
       "edit": "Edit",
       "delete": "Delete",
       "confirmDelete": "Delete the expense “{label}”?",
+      "fromVendor": "Managed from Vendors",
       "needCategory": "Create an expense category first."
     },
     "status": {
@@ -749,6 +750,87 @@
     },
     "errors": {
       "invalid": "Invalid values (2 decimals max, no negative amounts).",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "vendors": {
+    "pageTitle": "Vendors",
+    "title": "Vendors",
+    "subtitle": "Your vendors, their contacts and amounts — added to the budget automatically.",
+    "loading": "Loading…",
+    "loadError": "Could not load vendors.",
+    "retry": "Try again",
+    "ceremonyLabel": "Ceremony",
+    "seeBudget": "See the budget",
+    "noCeremony": {
+      "title": "No ceremony",
+      "desc": "Create a ceremony first to add its vendors.",
+      "cta": "Create a ceremony"
+    },
+    "vipRequired": {
+      "title": "VIP only",
+      "desc": "Vendor management is included in the VIP plan.",
+      "cta": "Back to dashboard"
+    },
+    "summary": {
+      "total": "Vendors total",
+      "paid": "Already paid",
+      "remaining": "Left to pay"
+    },
+    "add": {
+      "title": "Add a vendor",
+      "custom": "Other"
+    },
+    "presets": {
+      "venue": "Venue",
+      "catering": "Caterer",
+      "cake": "Cake maker",
+      "photo": "Photographer",
+      "video": "Videographer",
+      "dj": "DJ & music",
+      "griot": "Griot / host",
+      "decor": "Decoration",
+      "florist": "Florist",
+      "outfits": "Outfits & tailoring",
+      "beauty": "Hair & make-up",
+      "transport": "Transport"
+    },
+    "list": {
+      "title": "My vendors",
+      "empty": "No vendors yet. Pick one above.",
+      "paid": "Paid",
+      "unpaid": "To pay",
+      "whatsapp": "WhatsApp",
+      "call": "Call",
+      "saveContact": "Add to contacts",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete “{name}”? Its amount will be removed from the budget.",
+      "noPhone": "No number"
+    },
+    "dialog": {
+      "createTitle": "New vendor",
+      "editTitle": "Edit vendor",
+      "name": "Name",
+      "namePlaceholder": "E.g. Chez Mama Fatou",
+      "amount": "Amount",
+      "paid": "Already paid",
+      "phone": "WhatsApp / phone number",
+      "phonePlaceholder": "+44 7911 123456",
+      "phoneHint": "Include the country code (+221, +44, +33…).",
+      "phoneInvalid": "Invalid number: add the country code (e.g. +221).",
+      "image": "Photo",
+      "imagePick": "Choose a photo",
+      "imageUploading": "Uploading…",
+      "imageRemove": "Remove photo",
+      "budgetNote": "This amount is added to the budget automatically.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…"
+    },
+    "errors": {
+      "invalid": "Invalid values (amount, number or photo).",
+      "upload": "Photo upload failed (JPG, PNG or WebP, 10 MB max).",
       "generic": "Something went wrong. Please try again."
     }
   },

@@ -725,6 +725,7 @@
       "edit": "Modifier",
       "delete": "Supprimer",
       "confirmDelete": "Supprimer la dépense « {label} » ?",
+      "fromVendor": "Géré depuis Prestataires",
       "needCategory": "Créez d'abord un poste de dépense."
     },
     "status": {
@@ -749,6 +750,87 @@
     },
     "errors": {
       "invalid": "Valeurs invalides (2 décimales maximum, pas de montant négatif).",
+      "generic": "Une erreur est survenue. Réessayez."
+    }
+  },
+  "vendors": {
+    "pageTitle": "Prestataires",
+    "title": "Prestataires",
+    "subtitle": "Vos prestataires, leurs contacts et leurs montants — ajoutés automatiquement au budget.",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger les prestataires.",
+    "retry": "Réessayer",
+    "ceremonyLabel": "Cérémonie",
+    "seeBudget": "Voir le budget",
+    "noCeremony": {
+      "title": "Aucune cérémonie",
+      "desc": "Créez d'abord une cérémonie pour ajouter ses prestataires.",
+      "cta": "Créer une cérémonie"
+    },
+    "vipRequired": {
+      "title": "Réservé au VIP",
+      "desc": "La gestion des prestataires est incluse dans le plan VIP.",
+      "cta": "Retour au tableau de bord"
+    },
+    "summary": {
+      "total": "Total prestataires",
+      "paid": "Déjà payé",
+      "remaining": "Reste à payer"
+    },
+    "add": {
+      "title": "Ajouter un prestataire",
+      "custom": "Autre"
+    },
+    "presets": {
+      "venue": "Salle",
+      "catering": "Traiteur",
+      "cake": "Pâtissier",
+      "photo": "Photographe",
+      "video": "Vidéaste",
+      "dj": "DJ & musique",
+      "griot": "Griot / animation",
+      "decor": "Décoration",
+      "florist": "Fleuriste",
+      "outfits": "Tenues & couture",
+      "beauty": "Coiffure & maquillage",
+      "transport": "Transport"
+    },
+    "list": {
+      "title": "Mes prestataires",
+      "empty": "Aucun prestataire pour le moment. Choisissez-en un ci-dessus.",
+      "paid": "Payé",
+      "unpaid": "À payer",
+      "whatsapp": "WhatsApp",
+      "call": "Appeler",
+      "saveContact": "Ajouter aux contacts",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "confirmDelete": "Supprimer « {name} » ? Son montant sera retiré du budget.",
+      "noPhone": "Pas de numéro"
+    },
+    "dialog": {
+      "createTitle": "Nouveau prestataire",
+      "editTitle": "Modifier le prestataire",
+      "name": "Nom",
+      "namePlaceholder": "Ex : Chez Mama Fatou",
+      "amount": "Montant",
+      "paid": "Déjà payé",
+      "phone": "Numéro WhatsApp / téléphone",
+      "phonePlaceholder": "+221 77 123 45 67",
+      "phoneHint": "Avec l'indicatif du pays (+221, +225, +33…).",
+      "phoneInvalid": "Numéro invalide : ajoutez l'indicatif du pays (ex : +221).",
+      "image": "Photo",
+      "imagePick": "Choisir une photo",
+      "imageUploading": "Envoi…",
+      "imageRemove": "Retirer la photo",
+      "budgetNote": "Ce montant est ajouté automatiquement au budget.",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…"
+    },
+    "errors": {
+      "invalid": "Valeurs invalides (montant, numéro ou photo).",
+      "upload": "L'envoi de la photo a échoué (JPG, PNG ou WebP, 10 Mo max).",
       "generic": "Une erreur est survenue. Réessayez."
     }
   },
