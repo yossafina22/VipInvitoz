@@ -227,3 +227,12 @@ export function serializeExpense(
 export function serializeCategory(c: Pick<BudgetCategory, 'id' | 'label' | 'planned' | 'order'>) {
   return { id: c.id, label: c.label, planned: c.planned.toFixed(2), order: c.order };
 }
+
+export const ExpenseStatusSchema = z.enum(EXPENSE_STATUSES);
+
+// Calendar date only ('YYYY-MM-DD'), stored at UTC midnight.
+export const ExpenseDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), { message: 'INVALID_DATE' })
+  .transform((s) => new Date(`${s}T00:00:00Z`));
