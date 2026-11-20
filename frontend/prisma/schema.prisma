@@ -414,6 +414,12 @@ model Ceremony {
   aiGens           AiGeneration[]
   guestbookEntries GuestbookEntry[]
   seatingTables    SeatingTable[]
+  budgetCategories BudgetCategory[]
+  budgetExpenses   BudgetExpense[]
+
+  // Set once the default budget categories were created, so deleting them all
+  // never re-seeds them.
+  budgetSeededAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -594,4 +600,47 @@ model SeatingTable {
   updatedAt DateTime @updatedAt
 
   @@index([ceremonyId, order])
+}
+
+// ─── Budget (VIP) ──────────────────────────────────────────────────────
+// User-defined expense categories. Amounts are currency-less numbers (the
+// organiser counts in their own currency). Never Float: Decimal(14,2).
+model BudgetCategory {
+  id         String   @id @default(cuid())
+  ceremonyId String
+  ceremony   Ceremony @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+
+  label   String
+  planned Decimal @default(0) @db.Decimal(14, 2)
+  order   Int     @default(0)
+
+  expenses BudgetExpense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ceremonyId, order])
+}
+
+// Line total = quantity × unitAmount (computed server-side, not stored).
+// status: PAID | PENDING (both count as spent) | PLANNED (upcoming).
+// Category deletion is Restrict: a non-empty category cannot be dropped.
+model BudgetExpense {
+  id         String         @id @default(cuid())
+  ceremonyId String
+  ceremony   Ceremony       @relation(fields: [ceremonyId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  label      String
+  quantity   Decimal   @default(1) @db.Decimal(10, 2)
+  unitAmount Decimal   @db.Decimal(14, 2)
+  status     String    @default("PLANNED")
+  date       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ceremonyId, date])
+  @@index([categoryId])
 }
