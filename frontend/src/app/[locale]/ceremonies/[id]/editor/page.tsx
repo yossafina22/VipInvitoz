@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Link } from '@/i18n/navigation';
 import { AppLayout } from '@/components/AppLayout';
@@ -14,7 +15,8 @@ import { uploadFile } from '@/lib/upload-client';
 import type { InvitationPalette, PaletteId } from '@/lib/invitation-palettes';
 import { paletteStyle, resolvePalette } from '@/lib/invitation-palettes';
 
-type CeremonyType = 'MARIAGE' | 'BAPTEME' | 'ANNIVERSAIRE' | 'DEUIL' | 'AUTRE';
+const CEREMONY_TYPES = ['MARIAGE', 'BAPTEME', 'ANNIVERSAIRE', 'DEUIL', 'AUTRE'] as const;
+type CeremonyType = (typeof CEREMONY_TYPES)[number];
 type Status = 'DRAFT' | 'ACTIVE' | 'PAST' | 'ARCHIVED';
 
 interface Occasion {
@@ -61,20 +63,21 @@ const EMOJI: Record<CeremonyType, string> = {
   AUTRE: '✨',
 };
 
-const TYPE_LABEL: Record<CeremonyType, string> = {
-  MARIAGE: 'Mariage',
-  BAPTEME: 'Baptême',
-  ANNIVERSAIRE: 'Anniversaire',
-  DEUIL: 'Deuil',
-  AUTRE: 'Autre',
-};
-
+// `value` is persisted as Ceremony.musicLabel — keep it stable so existing rows still match.
 const MUSIC_TRACKS = [
-  'Jazz africain doux',
-  'Kora traditionnelle',
-  'Rythme moderne joyeux',
-  'Silence',
+  { key: 'softJazz', value: 'Jazz africain doux' },
+  { key: 'kora', value: 'Kora traditionnelle' },
+  { key: 'modern', value: 'Rythme moderne joyeux' },
+  { key: 'silence', value: 'Silence' },
 ] as const;
+
+const LOCALE_TAG: Record<string, string> = { fr: 'fr-FR', en: 'en-US' };
+const AI_LOCALES = ['fr', 'en', 'de'] as const;
+type AiLocale = (typeof AI_LOCALES)[number];
+
+function toAiLocale(locale: string): AiLocale {
+  return (AI_LOCALES as readonly string[]).includes(locale) ? (locale as AiLocale) : 'fr';
+}
 
 function splitIso(iso: string): { date: string; time: string } {
   const d = new Date(iso);
@@ -91,18 +94,26 @@ function combineIso(date: string, time: string): string {
   return new Date(`${date}T${time || '00:00'}:00`).toISOString();
 }
 
-function fmtHuman(iso: string): { date: string; time: string } {
+function fmtHuman(iso: string, locale: string): { date: string; time: string } {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return { date: '—', time: '—' };
+  const tag = LOCALE_TAG[locale] ?? 'fr-FR';
+  const time =
+    locale === 'fr'
+      ? d.toLocaleTimeString(tag, { hour: '2-digit', minute: '2-digit' }).replace(':', 'h')
+      : d.toLocaleTimeString(tag, { hour: 'numeric', minute: '2-digit' });
   return {
-    date: d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
-    time: d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h'),
+    date: d.toLocaleDateString(tag, { day: 'numeric', month: 'long', year: 'numeric' }),
+    time,
   };
 }
 
 export default function InvitationEditorPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useTranslations('ceremonies');
+  const tPalettes = useTranslations('palettes');
+  const locale = useLocale();
   const ceremonyId = params.id;
 
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
@@ -157,9 +168,9 @@ export default function InvitationEditorPage() {
 
   async function saveTopFields() {
     if (!ceremony || !topDirty) return;
-    if (draftTitle.trim().length === 0) return showToast('Le titre est obligatoire.');
+    if (draftTitle.trim().length === 0) return showToast(t('editor.toasts.titleRequired'));
     if (draftDescription.trim().length < 10)
-      return showToast('La description doit faire au moins 10 caractères.');
+      return showToast(t('editor.toasts.descriptionTooShort'));
 
     setBusy(true);
     try {
@@ -172,9 +183,9 @@ export default function InvitationEditorPage() {
         },
       });
       setCeremony(res.ceremony);
-      showToast('Modifications enregistrées.');
+      showToast(t('editor.toasts.saved'));
     } catch {
-      showToast('Impossible d’enregistrer.');
+      showToast(t('editor.toasts.saveFailed'));
     } finally {
       setBusy(false);
     }
@@ -194,7 +205,7 @@ export default function InvitationEditorPage() {
       setCeremony(res.ceremony);
     } catch {
       setCeremony({ ...ceremony, invitationPalette: prev });
-      showToast('Impossible de changer la palette.');
+      showToast(t('editor.toasts.paletteFailed'));
     }
   }
 
@@ -208,7 +219,7 @@ export default function InvitationEditorPage() {
       });
       setCeremony(res.ceremony);
     } catch {
-      showToast('Erreur lors de la sélection musicale.');
+      showToast(t('editor.toasts.musicFailed'));
     } finally {
       setBusy(false);
     }
@@ -224,20 +235,20 @@ export default function InvitationEditorPage() {
         body: { coverImageUrl: uploaded.url },
       });
       setCeremony(res.ceremony);
-      showToast('Photo de couverture ajoutée.');
+      showToast(t('editor.toasts.coverAdded'));
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.code === 'STORAGE_NOT_CONFIGURED') {
-          showToast('Upload non configuré côté serveur (Cloudinary manquant).');
+          showToast(t('editor.toasts.uploadNotConfigured'));
         } else if (err.code === 'FILE_TOO_LARGE') {
-          showToast('Fichier trop volumineux (max 10 Mo).');
+          showToast(t('editor.toasts.fileTooLarge'));
         } else if (err.code === 'INVALID_MIME' || err.code === 'MAGIC_BYTE_MISMATCH') {
-          showToast('Format non pris en charge. Utilisez JPG, PNG ou WebP.');
+          showToast(t('editor.toasts.invalidFormat'));
         } else {
-          showToast('Erreur lors de l’upload.');
+          showToast(t('editor.toasts.uploadFailed'));
         }
       } else {
-        showToast('Erreur réseau lors de l’upload.');
+        showToast(t('editor.toasts.uploadNetwork'));
       }
     } finally {
       setUploadingCover(false);
@@ -246,7 +257,7 @@ export default function InvitationEditorPage() {
 
   async function handleCoverRemove() {
     if (!ceremony || uploadingCover) return;
-    if (!confirm('Retirer la photo de couverture ?')) return;
+    if (!confirm(t('editor.confirm.removeCover'))) return;
     setUploadingCover(true);
     try {
       const res = await api<{ ceremony: Ceremony }>(`/api/ceremonies/${ceremonyId}`, {
@@ -254,9 +265,9 @@ export default function InvitationEditorPage() {
         body: { coverImageUrl: null },
       });
       setCeremony(res.ceremony);
-      showToast('Photo retirée.');
+      showToast(t('editor.toasts.coverRemoved'));
     } catch {
-      showToast('Erreur lors du retrait.');
+      showToast(t('editor.toasts.coverRemoveFailed'));
     } finally {
       setUploadingCover(false);
     }
@@ -265,10 +276,10 @@ export default function InvitationEditorPage() {
   async function handleGenerate() {
     if (!ceremony || generating) return;
     if (ceremony.description.trim().length < 10) {
-      return showToast('Enregistrez d’abord une description (10 caractères minimum).');
+      return showToast(t('editor.toasts.needDescription'));
     }
     if (ceremony.occasions.length === 0) {
-      return showToast('Ajoutez au moins une occasion avant de générer.');
+      return showToast(t('editor.toasts.needOccasion'));
     }
     setGenerating(true);
     try {
@@ -277,32 +288,32 @@ export default function InvitationEditorPage() {
         aiCreditsRemaining: number;
       }>(`/api/ceremonies/${ceremonyId}/ai-generate`, {
         method: 'POST',
-        body: { locale: 'fr' },
+        body: { locale: toAiLocale(locale) },
       });
       setCeremony(res.ceremony);
       setAiCreditsRemaining(res.aiCreditsRemaining);
-      showToast('Invitation générée avec succès.');
+      showToast(t('editor.toasts.generated'));
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.code === 'AI_QUOTA_EXCEEDED') {
-          showToast('Crédits IA épuisés. Passez en VIP pour la génération illimitée.');
+          showToast(t('editor.toasts.aiQuota'));
         } else if (err.code === 'AI_NOT_CONFIGURED') {
-          showToast('IA non configurée côté serveur (crédit non débité).');
+          showToast(t('editor.toasts.aiNotConfigured'));
         } else if (err.code === 'AI_PROVIDER_AUTH') {
-          showToast('Clé API Anthropic invalide (crédit remboursé).');
+          showToast(t('editor.toasts.aiAuth'));
         } else if (err.code === 'AI_PROVIDER_RATE_LIMITED') {
-          showToast('Trop de requêtes — réessayez (crédit remboursé).');
+          showToast(t('editor.toasts.aiRateLimited'));
         } else if (err.code === 'AI_PROVIDER_UNAVAILABLE') {
-          showToast('Service IA indisponible — réessayez plus tard (crédit remboursé).');
+          showToast(t('editor.toasts.aiUnavailable'));
         } else if (err.code === 'AI_CALL_FAILED') {
-          showToast('La génération a échoué. Réessayez.');
+          showToast(t('editor.toasts.aiFailed'));
         } else if (err.code === 'CEREMONY_NO_OCCASIONS') {
-          showToast('Ajoutez au moins une occasion avant de générer.');
+          showToast(t('editor.toasts.needOccasion'));
         } else {
-          showToast('Erreur lors de la génération.');
+          showToast(t('editor.toasts.aiGeneric'));
         }
       } else {
-        showToast('Erreur réseau.');
+        showToast(t('editor.toasts.network'));
       }
     } finally {
       setGenerating(false);
@@ -310,16 +321,16 @@ export default function InvitationEditorPage() {
   }
 
   async function deleteOccasion(occId: string) {
-    if (!confirm('Supprimer cette occasion ?')) return;
+    if (!confirm(t('editor.confirm.deleteOccasion'))) return;
     setBusy(true);
     try {
       await api(`/api/ceremonies/${ceremonyId}/occasions/${occId}`, { method: 'DELETE' });
       await refetch();
     } catch (err) {
       if (err instanceof ApiError && err.code === 'OCCASION_LAST_REMAINING') {
-        showToast('Chaque cérémonie doit garder au moins une occasion.');
+        showToast(t('editor.toasts.lastOccasion'));
       } else {
-        showToast('Erreur lors de la suppression.');
+        showToast(t('editor.toasts.deleteFailed'));
       }
     } finally {
       setBusy(false);
@@ -328,9 +339,9 @@ export default function InvitationEditorPage() {
 
   if (loading) {
     return (
-      <AppLayout pageTitle="Éditer l'invitation" tier="premium">
+      <AppLayout pageTitle={t('editor.pageTitle')} tier="premium">
         <div className="min-h-[40vh] flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Chargement…</p>
+          <p className="text-sm text-muted-foreground">{t('editor.loading')}</p>
         </div>
       </AppLayout>
     );
@@ -338,12 +349,12 @@ export default function InvitationEditorPage() {
 
   if (notFound || !ceremony) {
     return (
-      <AppLayout pageTitle="Éditer l'invitation" tier="premium">
+      <AppLayout pageTitle={t('editor.pageTitle')} tier="premium">
         <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3">
           <div className="text-4xl opacity-40">🔎</div>
-          <p className="text-sm text-muted-foreground">Cérémonie introuvable.</p>
+          <p className="text-sm text-muted-foreground">{t('editor.notFound')}</p>
           <Link href="/ceremonies" className="text-sm text-primary font-medium">
-            Retour aux cérémonies
+            {t('editor.backToList')}
           </Link>
         </div>
       </AppLayout>
@@ -351,10 +362,10 @@ export default function InvitationEditorPage() {
   }
 
   const firstOcc = ceremony.occasions[0];
-  const firstHuman = firstOcc ? fmtHuman(firstOcc.startsAt) : { date: '—', time: '—' };
+  const firstHuman = firstOcc ? fmtHuman(firstOcc.startsAt, locale) : { date: '—', time: '—' };
 
   return (
-    <AppLayout pageTitle="Éditer l'invitation" tier="premium">
+    <AppLayout pageTitle={t('editor.pageTitle')} tier="premium">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
         {/* Left — AI panel + top-level + music */}
         <div className="flex flex-col gap-5">
@@ -362,16 +373,17 @@ export default function InvitationEditorPage() {
             <div className="flex items-start gap-3">
               <Icon name="sparkles" size={20} className="text-gold mt-0.5 shrink-0" />
               <div className="flex-1">
-                <h3 className="font-headings font-bold text-sm text-foreground">Génération IA</h3>
+                <h3 className="font-headings font-bold text-sm text-foreground">
+                  {t('editor.ai.title')}
+                </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {ceremony?.invitationJson
-                    ? 'Invitation générée. Régénérez pour ré-essayer avec la description actuelle.'
-                    : 'Transformez votre description en texte d’invitation personnalisé.'}
+                    ? t('editor.ai.descGenerated')
+                    : t('editor.ai.descEmpty')}
                 </p>
                 {aiCreditsRemaining !== null && aiCreditsRemaining !== -1 && (
                   <p className="text-xs text-gold mt-1 font-bold">
-                    {aiCreditsRemaining} crédit{aiCreditsRemaining > 1 ? 's' : ''} IA restant
-                    {aiCreditsRemaining > 1 ? 's' : ''}
+                    {t('editor.ai.creditsRemaining', { count: aiCreditsRemaining })}
                   </p>
                 )}
               </div>
@@ -380,18 +392,18 @@ export default function InvitationEditorPage() {
               type="button"
               onClick={handleGenerate}
               disabled={generating || busy || topDirty}
-              title={topDirty ? 'Enregistrez d’abord les modifications' : undefined}
+              title={topDirty ? t('editor.ai.saveFirst') : undefined}
               className="bg-gold text-background font-body font-bold py-2.5 rounded-lg text-sm hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {generating ? (
                 <>
                   <span className="animate-pulse">●</span>
-                  Génération en cours…
+                  {t('editor.ai.generating')}
                 </>
               ) : ceremony?.invitationJson ? (
-                '🔁 Régénérer'
+                t('editor.ai.regenerate')
               ) : (
-                '✨ Générer avec l’IA'
+                t('editor.ai.generate')
               )}
             </button>
           </div>
@@ -404,11 +416,11 @@ export default function InvitationEditorPage() {
           />
 
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-4">
-            <PageHeader title="Détails principaux" subtitle="Image, titre, type, texte" />
+            <PageHeader title={t('editor.details.title')} subtitle={t('editor.details.subtitle')} />
 
             <div className="flex flex-col gap-2">
               <label className="text-xs font-body font-medium text-muted-foreground">
-                Photo de couverture
+                {t('editor.details.coverLabel')}
               </label>
               {ceremony.coverImageUrl ? (
                 <div className="relative group">
@@ -426,13 +438,13 @@ export default function InvitationEditorPage() {
                     />
                     <img
                       src={ceremony.coverImageUrl}
-                      alt="Couverture"
+                      alt={t('editor.details.coverAlt')}
                       className="relative w-full h-full object-contain"
                     />
                   </div>
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
                     <label className="bg-background text-foreground text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer">
-                      Remplacer
+                      {t('editor.details.replace')}
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
@@ -451,7 +463,7 @@ export default function InvitationEditorPage() {
                       disabled={uploadingCover || busy}
                       className="bg-danger text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-md disabled:opacity-50"
                     >
-                      Retirer
+                      {t('editor.details.remove')}
                     </button>
                   </div>
                 </div>
@@ -474,15 +486,19 @@ export default function InvitationEditorPage() {
                     className="text-muted-foreground mx-auto mb-1"
                   />
                   <div className="text-xs text-foreground font-bold">
-                    {uploadingCover ? 'Upload en cours…' : 'Cliquez pour ajouter'}
+                    {uploadingCover
+                      ? t('editor.details.uploading')
+                      : t('editor.details.clickToAdd')}
                   </div>
-                  <div className="text-xs text-muted-foreground">JPG, PNG ou WebP — max 10 Mo</div>
+                  <div className="text-xs text-muted-foreground">{t('editor.details.formats')}</div>
                 </label>
               )}
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-body font-medium text-muted-foreground">Titre</label>
+              <label className="text-xs font-body font-medium text-muted-foreground">
+                {t('editor.details.titleLabel')}
+              </label>
               <input
                 value={draftTitle}
                 onChange={(e) => setDraftTitle(e.target.value)}
@@ -491,15 +507,17 @@ export default function InvitationEditorPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-body font-medium text-muted-foreground">Type</label>
+              <label className="text-xs font-body font-medium text-muted-foreground">
+                {t('editor.details.typeLabel')}
+              </label>
               <select
                 value={draftType}
                 onChange={(e) => setDraftType(e.target.value as CeremonyType)}
                 className="w-full bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary"
               >
-                {(Object.keys(TYPE_LABEL) as CeremonyType[]).map((t) => (
-                  <option key={t} value={t}>
-                    {TYPE_LABEL[t]}
+                {CEREMONY_TYPES.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`types.${value}`)}
                   </option>
                 ))}
               </select>
@@ -507,7 +525,7 @@ export default function InvitationEditorPage() {
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-body font-medium text-muted-foreground">
-                Description / ambiance
+                {t('editor.details.descriptionLabel')}
               </label>
               <textarea
                 value={draftDescription}
@@ -516,7 +534,7 @@ export default function InvitationEditorPage() {
                 className="w-full bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary leading-relaxed"
               />
               <p className="text-xs text-muted-foreground">
-                {draftDescription.trim().length} / 1000 caractères (min. 10).
+                {t('editor.details.charCount', { count: draftDescription.trim().length })}
               </p>
             </div>
 
@@ -526,20 +544,24 @@ export default function InvitationEditorPage() {
               disabled={!topDirty || busy}
               className="bg-primary text-primary-foreground font-body font-bold py-2.5 rounded-lg text-sm disabled:opacity-50"
             >
-              {busy ? 'Enregistrement…' : topDirty ? 'Enregistrer' : 'À jour'}
+              {busy
+                ? t('editor.details.saving')
+                : topDirty
+                  ? t('editor.details.save')
+                  : t('editor.details.upToDate')}
             </button>
           </div>
 
           <div className="bg-card border border-border rounded-xl p-5">
-            <PageHeader title="Musique de fond" subtitle="Choisir une ambiance" />
+            <PageHeader title={t('editor.music.title')} subtitle={t('editor.music.subtitle')} />
             <div className="flex flex-col gap-2 mt-3">
-              {MUSIC_TRACKS.map((song) => {
-                const active = ceremony.musicLabel === song;
+              {MUSIC_TRACKS.map((track) => {
+                const active = ceremony.musicLabel === track.value;
                 return (
                   <button
-                    key={song}
+                    key={track.key}
                     type="button"
-                    onClick={() => selectMusic(song)}
+                    onClick={() => selectMusic(track.value)}
                     disabled={busy}
                     className={`p-3 rounded-lg border flex items-start gap-3 text-left transition-colors disabled:opacity-60 ${
                       active
@@ -557,26 +579,32 @@ export default function InvitationEditorPage() {
                       <Icon name={active ? 'check' : 'play'} size={12} />
                     </div>
                     <div className="flex-1 text-xs min-w-0">
-                      <div className="font-body font-bold text-foreground truncate">{song}</div>
+                      <div className="font-body font-bold text-foreground truncate">
+                        {t(`editor.music.tracks.${track.key}`)}
+                      </div>
                     </div>
                   </button>
                 );
               })}
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              L’upload d’un fichier audio personnel arrive bientôt.
-            </p>
+            <p className="text-xs text-muted-foreground mt-3">{t('editor.music.comingSoon')}</p>
           </div>
         </div>
 
         {/* Center — Live preview */}
         <div className="flex flex-col gap-4">
           <PageHeader
-            title={ceremony.invitationJson ? 'Invitation générée' : 'Aperçu en direct'}
+            title={
+              ceremony.invitationJson
+                ? t('editor.preview.generatedTitle')
+                : t('editor.preview.liveTitle')
+            }
             subtitle={
               ceremony.invitationJson
-                ? `Palette ${resolvePalette(ceremony.invitationPalette).name}`
-                : 'Rendu mobile'
+                ? t('editor.preview.paletteSubtitle', {
+                    name: tPalettes(`items.${resolvePalette(ceremony.invitationPalette).id}.name`),
+                  })
+                : t('editor.preview.mobileSubtitle')
             }
           />
           <div className="mx-auto w-full max-w-sm">
@@ -609,8 +637,8 @@ export default function InvitationEditorPage() {
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <PageHeader
-                title="Lieux & dates"
-                subtitle={`${ceremony.occasions.length} occasion${ceremony.occasions.length > 1 ? 's' : ''}`}
+                title={t('editor.occasions.title')}
+                subtitle={t('editor.occasions.count', { count: ceremony.occasions.length })}
               />
               <button
                 type="button"
@@ -619,13 +647,13 @@ export default function InvitationEditorPage() {
                 className="text-xs bg-secondary text-secondary-foreground px-3 py-1.5 rounded-md flex items-center gap-1 font-bold disabled:opacity-50"
               >
                 <Icon name="plus" size={12} />
-                Ajouter
+                {t('editor.occasions.add')}
               </button>
             </div>
 
             <div className="flex flex-col gap-2">
               {ceremony.occasions.map((o) => {
-                const h = fmtHuman(o.startsAt);
+                const h = fmtHuman(o.startsAt, locale);
                 return (
                   <div
                     key={o.id}
@@ -640,7 +668,7 @@ export default function InvitationEditorPage() {
                           type="button"
                           onClick={() => setEditOccasion(o)}
                           disabled={busy}
-                          aria-label="Modifier"
+                          aria-label={t('editor.occasions.edit')}
                           className="text-muted-foreground hover:text-primary disabled:opacity-40"
                         >
                           <Icon name="pencil" size={12} />
@@ -649,7 +677,7 @@ export default function InvitationEditorPage() {
                           type="button"
                           onClick={() => deleteOccasion(o.id)}
                           disabled={busy}
-                          aria-label="Supprimer"
+                          aria-label={t('editor.occasions.delete')}
                           className="text-muted-foreground hover:text-danger disabled:opacity-40"
                         >
                           <Icon name="trash-2" size={12} />
@@ -657,7 +685,7 @@ export default function InvitationEditorPage() {
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {h.date} à {h.time}
+                      {t('editor.occasions.dateAtTime', { date: h.date, time: h.time })}
                     </div>
                     <div className="text-xs text-foreground truncate">{o.locationName}</div>
                     <div className="text-xs text-muted-foreground truncate">
@@ -670,28 +698,21 @@ export default function InvitationEditorPage() {
           </div>
 
           <div className="bg-card border border-border rounded-xl p-5 flex flex-col gap-2">
-            <div className="text-xs font-body text-muted-foreground">Statut</div>
+            <div className="text-xs font-body text-muted-foreground">{t('editor.statusLabel')}</div>
             <div className="font-body font-bold text-sm text-foreground">
-              {ceremony.status === 'DRAFT'
-                ? 'Brouillon'
-                : ceremony.status === 'ACTIVE'
-                  ? 'Active'
-                  : ceremony.status === 'PAST'
-                    ? 'Passée'
-                    : 'Archivée'}
+              {t(`status.${ceremony.status}`)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {ceremony._count?.guests ?? 0} invité
-              {(ceremony._count?.guests ?? 0) > 1 ? 's' : ''} · {ceremony._count?.invitations ?? 0}{' '}
-              invitation
-              {(ceremony._count?.invitations ?? 0) > 1 ? 's' : ''} envoyée
-              {(ceremony._count?.invitations ?? 0) > 1 ? 's' : ''}
+              {t('editor.statsLine', {
+                guests: ceremony._count?.guests ?? 0,
+                sent: ceremony._count?.invitations ?? 0,
+              })}
             </p>
           </div>
 
           <div className="bg-secondary border border-border rounded-xl p-4 flex flex-col gap-3">
             <div className="font-body font-bold text-sm text-secondary-foreground">
-              Étapes suivantes
+              {t('editor.nextSteps.title')}
             </div>
             <Link
               href={`/ceremonies/${ceremonyId}/preview`}
@@ -700,19 +721,19 @@ export default function InvitationEditorPage() {
               className="bg-gold text-background text-center font-body font-bold py-2.5 rounded-lg text-sm hover:bg-gold/90 transition-colors flex items-center justify-center gap-2"
             >
               <Icon name="eye" size={14} />
-              Voir en tant qu&apos;invité
+              {t('editor.nextSteps.viewAsGuest')}
             </Link>
             <Link
               href="/guests"
               className="bg-primary text-primary-foreground text-center font-body font-bold py-2.5 rounded-lg text-sm hover:bg-primary/90 transition-colors"
             >
-              Gérer les invités →
+              {t('editor.nextSteps.manageGuests')}
             </Link>
             <Link
               href="/seating"
               className="bg-background border border-border text-center font-body font-bold py-2.5 rounded-lg text-sm hover:border-primary transition-colors"
             >
-              Plan de table
+              {t('editor.nextSteps.seating')}
             </Link>
           </div>
         </div>
@@ -732,9 +753,9 @@ export default function InvitationEditorPage() {
               });
               await refetch();
               setEditOccasion(null);
-              showToast('Occasion mise à jour.');
+              showToast(t('editor.toasts.occasionUpdated'));
             } catch {
-              showToast('Erreur lors de la mise à jour.');
+              showToast(t('editor.toasts.occasionUpdateFailed'));
             } finally {
               setBusy(false);
             }
@@ -755,9 +776,9 @@ export default function InvitationEditorPage() {
               });
               await refetch();
               setShowAddOccasion(false);
-              showToast('Occasion ajoutée.');
+              showToast(t('editor.toasts.occasionAdded'));
             } catch {
-              showToast('Erreur lors de l’ajout.');
+              showToast(t('editor.toasts.occasionAddFailed'));
             } finally {
               setBusy(false);
             }
@@ -874,9 +895,10 @@ function OccasionDialog(props: {
   onSave: (payload: OccasionPayload) => void | Promise<void>;
 }) {
   const { mode, initial, onClose, onSave } = props;
+  const t = useTranslations('ceremonies.editor.dialog');
   const now = useMemo(() => splitIso(initial?.startsAt ?? new Date().toISOString()), [initial]);
 
-  const [label, setLabel] = useState(initial?.label ?? 'Cérémonie');
+  const [label, setLabel] = useState(initial?.label ?? t('defaultLabel'));
   const [date, setDate] = useState(now.date);
   const [time, setTime] = useState(now.time || '15:00');
   const [locationName, setLocationName] = useState(initial?.locationName ?? '');
@@ -911,10 +933,10 @@ function OccasionDialog(props: {
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-headings font-bold text-base text-foreground">
-          {mode === 'create' ? 'Nouvelle occasion' : 'Modifier l’occasion'}
+          {mode === 'create' ? t('createTitle') : t('editTitle')}
         </h3>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs text-muted-foreground">Nom (ex: Cérémonie civile)</label>
+          <label className="text-xs text-muted-foreground">{t('nameLabel')}</label>
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -923,7 +945,7 @@ function OccasionDialog(props: {
         </div>
         <div className="flex gap-3">
           <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground">Date</label>
+            <label className="text-xs text-muted-foreground">{t('dateLabel')}</label>
             <input
               type="date"
               value={date}
@@ -932,7 +954,7 @@ function OccasionDialog(props: {
             />
           </div>
           <div className="w-28 flex flex-col gap-1.5">
-            <label className="text-xs text-muted-foreground">Heure</label>
+            <label className="text-xs text-muted-foreground">{t('timeLabel')}</label>
             <input
               type="time"
               value={time}
@@ -942,20 +964,20 @@ function OccasionDialog(props: {
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs text-muted-foreground">Lieu (nom court)</label>
+          <label className="text-xs text-muted-foreground">{t('locationNameLabel')}</label>
           <input
             value={locationName}
             onChange={(e) => setLocationName(e.target.value)}
-            placeholder="Hôtel Terrou-Bi"
+            placeholder={t('locationNamePlaceholder')}
             className="bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs text-muted-foreground">Adresse complète</label>
+          <label className="text-xs text-muted-foreground">{t('addressLabel')}</label>
           <input
             value={locationAddress}
             onChange={(e) => setLocationAddress(e.target.value)}
-            placeholder="Route de la Corniche, Dakar"
+            placeholder={t('addressPlaceholder')}
             className="bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary"
           />
         </div>
@@ -966,7 +988,7 @@ function OccasionDialog(props: {
             disabled={saving}
             className="flex-1 py-2 text-sm text-muted-foreground"
           >
-            Annuler
+            {t('cancel')}
           </button>
           <button
             type="button"
@@ -974,7 +996,7 @@ function OccasionDialog(props: {
             disabled={!valid || saving}
             className="flex-1 bg-primary text-primary-foreground font-body font-bold py-2 rounded-lg text-sm disabled:opacity-50"
           >
-            {saving ? 'Enregistrement…' : mode === 'create' ? 'Ajouter' : 'Enregistrer'}
+            {saving ? t('saving') : mode === 'create' ? t('add') : t('save')}
           </button>
         </div>
       </div>

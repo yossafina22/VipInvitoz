@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { PaletteId } from '@/lib/invitation-palettes';
 import { INVITATION_PALETTES, PALETTE_IDS } from '@/lib/invitation-palettes';
 
@@ -18,16 +19,15 @@ export function PalettePicker({
   locked = false,
   disabled = false,
 }: PalettePickerProps) {
+  const t = useTranslations('palettes');
   return (
     <div className="bg-card border border-border rounded-xl p-3 md:p-4">
       <div className="mb-2.5">
         <h3 className="font-headings font-bold text-sm text-foreground leading-tight">
-          Palette de l'invitation
+          {t('title')}
         </h3>
         <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-          {locked
-            ? 'Palettes adaptées au recueillement.'
-            : 'Change le ton visuel de la carte sans toucher au texte.'}
+          {locked ? t('hintLocked') : t('hint')}
         </p>
       </div>
 
@@ -36,14 +36,16 @@ export function PalettePicker({
           const p = INVITATION_PALETTES[id];
           const isActive = value === id;
           const isDisabled = disabled || (locked && p.tone !== 'mourning');
+          const name = t(`items.${id}.name`);
+          const tagline = t(`items.${id}.tagline`);
           return (
             <button
               key={id}
               type="button"
               onClick={() => !isDisabled && onChange(id)}
               aria-pressed={isActive}
-              aria-label={p.name}
-              title={`${p.name} — ${p.tagline}`}
+              aria-label={name}
+              title={`${name} — ${tagline}`}
               disabled={isDisabled}
               className={`group relative text-left rounded-md border p-1.5 transition-all ${
                 isActive
@@ -62,7 +64,7 @@ export function PalettePicker({
                 ))}
               </div>
               <div className="text-[10px] font-body font-bold text-foreground leading-tight truncate">
-                {p.name}
+                {name}
               </div>
               {isActive && (
                 <span

@@ -350,12 +350,187 @@
         "send": "Send the invitations"
       }
     },
+    "editor": {
+      "pageTitle": "Edit invitation",
+      "loading": "Loading…",
+      "notFound": "Ceremony not found.",
+      "backToList": "Back to ceremonies",
+      "ai": {
+        "title": "AI generation",
+        "descGenerated": "Invitation generated. Regenerate to try again with the current description.",
+        "descEmpty": "Turn your description into a personalised invitation text.",
+        "creditsRemaining": "{count, plural, one {# AI credit left} other {# AI credits left}}",
+        "saveFirst": "Save your changes first",
+        "generating": "Generating…",
+        "regenerate": "🔁 Regenerate",
+        "generate": "✨ Generate with AI"
+      },
+      "details": {
+        "title": "Main details",
+        "subtitle": "Image, title, type, text",
+        "coverLabel": "Cover photo",
+        "coverAlt": "Cover",
+        "replace": "Replace",
+        "remove": "Remove",
+        "uploading": "Uploading…",
+        "clickToAdd": "Click to add",
+        "formats": "JPG, PNG or WebP — max 10 MB",
+        "titleLabel": "Title",
+        "typeLabel": "Type",
+        "descriptionLabel": "Description / atmosphere",
+        "charCount": "{count} / 1000 characters (min. 10).",
+        "saving": "Saving…",
+        "save": "Save",
+        "upToDate": "Up to date"
+      },
+      "music": {
+        "title": "Background music",
+        "subtitle": "Choose a mood",
+        "comingSoon": "Uploading your own audio file is coming soon.",
+        "tracks": {
+          "softJazz": "Soft African jazz",
+          "kora": "Traditional kora",
+          "modern": "Joyful modern rhythm",
+          "silence": "Silence"
+        }
+      },
+      "preview": {
+        "generatedTitle": "Generated invitation",
+        "liveTitle": "Live preview",
+        "paletteSubtitle": "{name} palette",
+        "mobileSubtitle": "Mobile view"
+      },
+      "occasions": {
+        "title": "Venues & dates",
+        "count": "{count, plural, one {# occasion} other {# occasions}}",
+        "add": "Add",
+        "edit": "Edit",
+        "delete": "Delete",
+        "dateAtTime": "{date} at {time}"
+      },
+      "statusLabel": "Status",
+      "statsLine": "{guests, plural, one {# guest} other {# guests}} · {sent, plural, one {# invitation sent} other {# invitations sent}}",
+      "nextSteps": {
+        "title": "Next steps",
+        "viewAsGuest": "View as a guest",
+        "manageGuests": "Manage guests →",
+        "seating": "Seating plan"
+      },
+      "dialog": {
+        "createTitle": "New occasion",
+        "editTitle": "Edit occasion",
+        "defaultLabel": "Ceremony",
+        "nameLabel": "Name (e.g. Civil ceremony)",
+        "dateLabel": "Date",
+        "timeLabel": "Time",
+        "locationNameLabel": "Venue (short name)",
+        "locationNamePlaceholder": "Hôtel Terrou-Bi",
+        "addressLabel": "Full address",
+        "addressPlaceholder": "Route de la Corniche, Dakar",
+        "cancel": "Cancel",
+        "saving": "Saving…",
+        "add": "Add",
+        "save": "Save"
+      },
+      "confirm": {
+        "removeCover": "Remove the cover photo?",
+        "deleteOccasion": "Delete this occasion?"
+      },
+      "toasts": {
+        "titleRequired": "The title is required.",
+        "descriptionTooShort": "The description must be at least 10 characters long.",
+        "saved": "Changes saved.",
+        "saveFailed": "Could not save.",
+        "paletteFailed": "Could not change the palette.",
+        "musicFailed": "Error while selecting the music.",
+        "coverAdded": "Cover photo added.",
+        "coverRemoved": "Photo removed.",
+        "coverRemoveFailed": "Error while removing the photo.",
+        "uploadNotConfigured": "Uploads are not configured on the server (Cloudinary missing).",
+        "fileTooLarge": "File too large (max 10 MB).",
+        "invalidFormat": "Unsupported format. Use JPG, PNG or WebP.",
+        "uploadFailed": "Error while uploading.",
+        "uploadNetwork": "Network error while uploading.",
+        "needDescription": "Save a description first (10 characters minimum).",
+        "needOccasion": "Add at least one occasion before generating.",
+        "generated": "Invitation generated successfully.",
+        "aiQuota": "No AI credits left. Upgrade to VIP for unlimited generation.",
+        "aiNotConfigured": "AI is not configured on the server (no credit charged).",
+        "aiAuth": "Invalid Anthropic API key (credit refunded).",
+        "aiRateLimited": "Too many requests — please try again (credit refunded).",
+        "aiUnavailable": "AI service unavailable — please try again later (credit refunded).",
+        "aiFailed": "Generation failed. Please try again.",
+        "aiGeneric": "Error during generation.",
+        "network": "Network error.",
+        "lastOccasion": "Each ceremony must keep at least one occasion.",
+        "deleteFailed": "Error while deleting.",
+        "occasionUpdated": "Occasion updated.",
+        "occasionUpdateFailed": "Error while updating.",
+        "occasionAdded": "Occasion added.",
+        "occasionAddFailed": "Error while adding."
+      }
+    },
     "status": {
       "DRAFT": "Draft",
       "ACTIVE": "Active",
       "PAST": "Past",
       "ARCHIVED": "Archived"
     }
+  },
+  "palettes": {
+    "title": "Invitation palette",
+    "hintLocked": "Palettes suited to remembrance.",
+    "hint": "Changes the card's visual tone without touching the text.",
+    "items": {
+      "sahel-or": {
+        "name": "Sahel Gold",
+        "tagline": "Warm and traditional"
+      },
+      "bordeaux-royal": {
+        "name": "Royal Burgundy",
+        "tagline": "Formal and deep"
+      },
+      "jade-imperial": {
+        "name": "Imperial Jade",
+        "tagline": "Elegant and vivid"
+      },
+      "pastel-celeste": {
+        "name": "Celestial Pastel",
+        "tagline": "Soft and light"
+      },
+      "indigo-nuit": {
+        "name": "Midnight Indigo",
+        "tagline": "Modern and formal"
+      },
+      "ocre-terracotta": {
+        "name": "Terracotta Ochre",
+        "tagline": "Handcrafted and earthy"
+      },
+      "lavande-royale": {
+        "name": "Royal Lavender",
+        "tagline": "Elegant and soft"
+      },
+      "turquoise-caraibes": {
+        "name": "Caribbean Turquoise",
+        "tagline": "Tropical and vibrant"
+      },
+      "noir-minimal": {
+        "name": "Minimal Black",
+        "tagline": "Sober and solemn"
+      },
+      "faire-part-classique": {
+        "name": "Classic Announcement",
+        "tagline": "White, black and gold"
+      }
+    }
+  },
+  "invitationPreview": {
+    "coverAlt": "Ceremony invitation",
+    "date": "Date",
+    "time": "Time",
+    "location": "Venue",
+    "accept": "✓ I will attend",
+    "decline": "I can't make it"
   },
   "footer": {
     "tagline": "The all-in-one platform for African families — from invitation to the big day.",
