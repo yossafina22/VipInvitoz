@@ -243,6 +243,39 @@
       "VIP": "VIP"
     }
   },
+  "ceremonies": {
+    "list": {
+      "pageTitle": "My ceremonies",
+      "loading": "Loading…",
+      "subtitleUnauth": "Sign in to see your ceremonies",
+      "subtitleCount": "{count, plural, one {# ceremony} other {# ceremonies}}",
+      "newCeremony": "New ceremony",
+      "newCeremonyShort": "New",
+      "unauthMessage": "You need to be signed in to access your ceremonies.",
+      "login": "Sign in",
+      "loadError": "Could not load your ceremonies.",
+      "retry": "Try again",
+      "emptyTitle": "No ceremonies yet",
+      "emptyDesc": "Create your first ceremony with the wizard, or generate a demo ceremony to try the app.",
+      "emptyCta": "Create my ceremony",
+      "quickCreate": "Create a quick demo",
+      "quickCreating": "Creating…",
+      "quickCreateError": "Could not create the ceremony.",
+      "guests": "{count, plural, one {# guest} other {# guests}}",
+      "sent": "{count, plural, one {# sent} other {# sent}}",
+      "demo": {
+        "title": "Demo wedding",
+        "description": "Demo ceremony created from the list page — replace it with a real ceremony using the wizard.",
+        "occasionLabel": "Main ceremony"
+      }
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "ACTIVE": "Active",
+      "PAST": "Past",
+      "ARCHIVED": "Archived"
+    }
+  },
   "footer": {
     "tagline": "The all-in-one platform for African families — from invitation to the big day.",
     "columns": {

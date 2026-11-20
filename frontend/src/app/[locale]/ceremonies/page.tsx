@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { PageHeader } from '@/components/PageHeader';
@@ -36,13 +37,27 @@ const CEREMONY_EMOJI: Record<string, string> = {
   AUTRE: '✨',
 };
 
-const DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
+const LOCALE_TAG: Record<string, string> = { fr: 'fr-FR', en: 'en-US' };
+
+const KNOWN_STATUSES = ['DRAFT', 'ACTIVE', 'PAST', 'ARCHIVED'] as const;
+type KnownStatus = (typeof KNOWN_STATUSES)[number];
+
+function isKnownStatus(value: string): value is KnownStatus {
+  return (KNOWN_STATUSES as readonly string[]).includes(value);
+}
 
 export default function CeremoniesListPage() {
+  const t = useTranslations('ceremonies');
+  const locale = useLocale();
+  const dateFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(LOCALE_TAG[locale] ?? 'fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+    [locale],
+  );
   const [status, setStatus] = useState<Status>('loading');
   const [ceremonies, setCeremonies] = useState<Ceremony[]>([]);
   const [creating, setCreating] = useState(false);
@@ -76,12 +91,11 @@ export default function CeremoniesListPage() {
         method: 'POST',
         body: {
           type: 'MARIAGE',
-          title: 'Mariage de démonstration',
-          description:
-            'Cérémonie de démonstration créée depuis la page liste — remplacez-la par une vraie cérémonie via le wizard.',
+          title: t('list.demo.title'),
+          description: t('list.demo.description'),
           occasions: [
             {
-              label: 'Cérémonie principale',
+              label: t('list.demo.occasionLabel'),
               startsAt: inThreeMonths.toISOString(),
               locationName: 'Hôtel Terrou-Bi',
               locationAddress: 'Boulevard Martin Luther King, Dakar, Sénégal',
@@ -95,7 +109,7 @@ export default function CeremoniesListPage() {
         const body = err.body as { message?: unknown } | undefined;
         setErrorMsg(typeof body?.message === 'string' ? body.message : err.message);
       } else {
-        setErrorMsg('Impossible de créer la cérémonie.');
+        setErrorMsg(t('list.quickCreateError'));
       }
     } finally {
       setCreating(false);
@@ -103,17 +117,17 @@ export default function CeremoniesListPage() {
   }
 
   return (
-    <AppLayout pageTitle="Mes cérémonies" tier="premium">
+    <AppLayout pageTitle={t('list.pageTitle')} tier="premium">
       {status === 'unauth' && <PreviewBanner />}
 
       <PageHeader
-        title="Mes cérémonies"
+        title={t('list.pageTitle')}
         subtitle={
           status === 'loading'
-            ? 'Chargement…'
+            ? t('list.loading')
             : status === 'unauth'
-              ? 'Connectez-vous pour voir vos cérémonies'
-              : `${ceremonies.length} cérémonie${ceremonies.length > 1 ? 's' : ''}`
+              ? t('list.subtitleUnauth')
+              : t('list.subtitleCount', { count: ceremonies.length })
         }
       >
         <Link
@@ -121,8 +135,8 @@ export default function CeremoniesListPage() {
           className="bg-primary text-primary-foreground font-body font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2"
         >
           <Icon name="plus" size={14} />
-          <span className="hidden sm:inline">Nouvelle cérémonie</span>
-          <span className="sm:hidden">Nouvelle</span>
+          <span className="hidden sm:inline">{t('list.newCeremony')}</span>
+          <span className="sm:hidden">{t('list.newCeremonyShort')}</span>
         </Link>
       </PageHeader>
 
@@ -138,19 +152,17 @@ export default function CeremoniesListPage() {
       ) : status === 'unauth' ? (
         <div className="bg-card border border-dashed border-border rounded-xl p-8 text-center">
           <div className="text-4xl mb-3 opacity-40">🔒</div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Vous devez être connecté pour accéder à vos cérémonies.
-          </p>
+          <p className="text-sm text-muted-foreground mb-4">{t('list.unauthMessage')}</p>
           <Link
             href="/auth/login"
             className="inline-block bg-primary text-primary-foreground font-body font-bold px-5 py-2.5 rounded-lg text-sm"
           >
-            Se connecter
+            {t('list.login')}
           </Link>
         </div>
       ) : status === 'error' ? (
         <div className="bg-card border border-danger/40 rounded-xl p-6 text-center">
-          <p className="text-sm text-danger mb-3">Impossible de charger vos cérémonies.</p>
+          <p className="text-sm text-danger mb-3">{t('list.loadError')}</p>
           <button
             type="button"
             onClick={() => {
@@ -159,25 +171,24 @@ export default function CeremoniesListPage() {
             }}
             className="text-sm text-primary font-bold hover:underline"
           >
-            Réessayer
+            {t('list.retry')}
           </button>
         </div>
       ) : ceremonies.length === 0 ? (
         <div className="bg-card border border-dashed border-border rounded-xl p-8 text-center">
           <div className="text-4xl mb-3 opacity-40">💍</div>
           <h3 className="font-headings font-bold text-base text-foreground mb-1">
-            Aucune cérémonie pour l&apos;instant
+            {t('list.emptyTitle')}
           </h3>
           <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
-            Créez votre première cérémonie depuis le wizard ou générez une cérémonie de
-            démonstration pour tester l&apos;app.
+            {t('list.emptyDesc')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Link
               href="/ceremonies/new"
               className="bg-primary text-primary-foreground font-body font-bold px-5 py-2.5 rounded-lg text-sm w-full sm:w-auto"
             >
-              Créer ma cérémonie
+              {t('list.emptyCta')}
             </Link>
             <button
               type="button"
@@ -185,7 +196,7 @@ export default function CeremoniesListPage() {
               disabled={creating}
               className="bg-secondary text-secondary-foreground font-body font-medium px-5 py-2.5 rounded-lg text-sm w-full sm:w-auto disabled:opacity-50"
             >
-              {creating ? 'Création…' : 'Créer une démo rapide'}
+              {creating ? t('list.quickCreating') : t('list.quickCreate')}
             </button>
           </div>
           {errorMsg && <p className="text-xs text-danger mt-4">{errorMsg}</p>}
@@ -214,13 +225,13 @@ export default function CeremoniesListPage() {
                         : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {c.status}
+                  {isKnownStatus(c.status) ? t(`status.${c.status}`) : c.status}
                 </span>
               </div>
               {c.occasions[0] && (
                 <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
                   <Icon name="calendar" size={12} />
-                  {DATE_FMT.format(new Date(c.occasions[0].startsAt))}
+                  {dateFmt.format(new Date(c.occasions[0].startsAt))}
                 </div>
               )}
               {c.occasions[0] && (
@@ -231,12 +242,8 @@ export default function CeremoniesListPage() {
               )}
               {c._count && (
                 <div className="flex gap-4 mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
-                  <span>
-                    {c._count.guests} invité{c._count.guests > 1 ? 's' : ''}
-                  </span>
-                  <span>
-                    {c._count.invitations} envoyée{c._count.invitations > 1 ? 's' : ''}
-                  </span>
+                  <span>{t('list.guests', { count: c._count.guests })}</span>
+                  <span>{t('list.sent', { count: c._count.invitations })}</span>
                 </div>
               )}
             </Link>

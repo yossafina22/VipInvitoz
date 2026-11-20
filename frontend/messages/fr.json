@@ -243,6 +243,39 @@
       "VIP": "VIP"
     }
   },
+  "ceremonies": {
+    "list": {
+      "pageTitle": "Mes cérémonies",
+      "loading": "Chargement…",
+      "subtitleUnauth": "Connectez-vous pour voir vos cérémonies",
+      "subtitleCount": "{count, plural, one {# cérémonie} other {# cérémonies}}",
+      "newCeremony": "Nouvelle cérémonie",
+      "newCeremonyShort": "Nouvelle",
+      "unauthMessage": "Vous devez être connecté pour accéder à vos cérémonies.",
+      "login": "Se connecter",
+      "loadError": "Impossible de charger vos cérémonies.",
+      "retry": "Réessayer",
+      "emptyTitle": "Aucune cérémonie pour l'instant",
+      "emptyDesc": "Créez votre première cérémonie depuis le wizard ou générez une cérémonie de démonstration pour tester l'app.",
+      "emptyCta": "Créer ma cérémonie",
+      "quickCreate": "Créer une démo rapide",
+      "quickCreating": "Création…",
+      "quickCreateError": "Impossible de créer la cérémonie.",
+      "guests": "{count, plural, one {# invité} other {# invités}}",
+      "sent": "{count, plural, one {# envoyée} other {# envoyées}}",
+      "demo": {
+        "title": "Mariage de démonstration",
+        "description": "Cérémonie de démonstration créée depuis la page liste — remplacez-la par une vraie cérémonie via le wizard.",
+        "occasionLabel": "Cérémonie principale"
+      }
+    },
+    "status": {
+      "DRAFT": "Brouillon",
+      "ACTIVE": "Active",
+      "PAST": "Passée",
+      "ARCHIVED": "Archivée"
+    }
+  },
   "footer": {
     "tagline": "La plateforme tout-en-un pour les familles africaines — de l'invitation au jour J.",
     "columns": {
